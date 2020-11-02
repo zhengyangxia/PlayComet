@@ -136,11 +136,11 @@ void PlayMode::update(float elapsed) {
 	{
 		//combine inputs into a move:
 		// constexpr float PlayerSpeed = 3.0f;
-		glm::vec2 move = glm::vec2(0.0f);
-		if (left.pressed && !right.pressed) move.x =-1.0f;
-		if (!left.pressed && right.pressed) move.x = 1.0f;
-		if (down.pressed && !up.pressed) move.y =-1.0f;
-		if (!down.pressed && up.pressed) move.y = 1.0f;
+		// glm::vec2 move = glm::vec2(0.0f);
+		// if (left.pressed && !right.pressed) move.x =-1.0f;
+		// if (!left.pressed && right.pressed) move.x = 1.0f;
+		// if (down.pressed && !up.pressed) move.y =-1.0f;
+		// if (!down.pressed && up.pressed) move.y = 1.0f;
 
 	}
 
