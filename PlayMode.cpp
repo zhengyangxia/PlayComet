@@ -60,9 +60,10 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 	comet.camera->fovy = glm::radians(60.0f);
 	comet.camera->near = 0.01f;
 	comet.camera->transform->parent = comet.transform;
-
+	
 	comet.camera->transform->position = glm::vec3(0.0f, -10.0f, 0.0f);
 	comet.camera->transform->rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
 
 	//rotate camera facing direction (-z) to player facing direction (+y):
 	// comet.camera->transform->rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -137,21 +138,22 @@ void PlayMode::update(float elapsed) {
 	//player walking:
 	{
 		//combine inputs into a move:
-		// constexpr float PlayerSpeed = 3.0f;
+		constexpr float PlayerSpeed = 0.1f;
 		glm::vec2 move = glm::vec2(0.0f);
 		if (left.pressed && !right.pressed) move.x =-1.0f;
 		if (!left.pressed && right.pressed) move.x = 1.0f;
 		if (down.pressed && !up.pressed) move.y =-1.0f;
 		if (!down.pressed && up.pressed) move.y = 1.0f;
+		// std::cout << "dot product " << glm::dot(comet_velocity, dirx) << std::endl;
+		glm::vec3 new_comet_velocity = comet_velocity + (move.x * dirx + move.y * diry) * PlayerSpeed * elapsed;
+		glm::quat rotation = glm::rotation(glm::normalize(comet_velocity), glm::normalize(new_comet_velocity));
 
-		comet_velocity += move.x * dirx * elapsed + move.y * diry * elapsed;
-		comet.transform->rotation = comet_velocity;
+		comet_velocity = new_comet_velocity;
+		dirx = rotation * dirx;
+		diry = rotation * diry;
+		comet.transform->rotation = rotation * comet.transform->rotation;
 		comet.transform->position += comet_velocity * elapsed;
-		// comet.camera->transform->position = -glm::normalize(comet_velocity)*10.0f;
-		//std::cout << "velocity " << comet_velocity.x << " " << comet_velocity.y << " " << comet_velocity.z << std::endl;
-		//std::cout << "rotation " << comet.transform->rotation.x << " " << comet.transform->rotation.y << " " << comet.transform->rotation.z << std::endl;
-		//std::cout << "camera position " << comet.camera->transform->position.x << " " << comet.camera->transform->position.y << " " << comet.camera->transform->position.z << std::endl;
-		//std::cout << "camera rotation " << comet.camera->transform->rotation.x << " " << comet.camera->transform->rotation.y << " " << comet.camera->transform->rotation.z << std::endl;
+		
 	}
 
 	//reset button press counters:

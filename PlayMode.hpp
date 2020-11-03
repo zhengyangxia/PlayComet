@@ -38,7 +38,7 @@ struct PlayMode : Mode {
 	Scene::Transform *planet = nullptr;
 	Scene::Transform *sun = nullptr;
 
-	glm::vec3 comet_velocity = glm::vec3(0.0f, 0.1f, 0.0f);
-	glm::vec3 dirx = glm::vec3(0.0f, 1.0f, 0.0f);
-	glm::vec3 diry = glm::vec3(1.0f, 0.0f, 0.0f);
+	glm::vec3 comet_velocity = glm::vec3(0.0f, 1.0f, 0.0f);
+	glm::vec3 dirx = glm::vec3(1.0f, 0.0f, 0.0f);
+	glm::vec3 diry = glm::vec3(0.0f, 0.0f, 1.0f);
 };
