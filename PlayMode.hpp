@@ -8,6 +8,7 @@
 #include <deque>
 
 #include "Revolve.hpp"
+#include "GravityUtil.hpp"
 
 struct PlayMode : Mode {
 	PlayMode();
@@ -44,4 +45,5 @@ struct PlayMode : Mode {
 	glm::vec3 dirx = glm::vec3(1.0f, 0.0f, 0.0f);
 	glm::vec3 diry = glm::vec3(0.0f, 0.0f, 1.0f);
 	Revolve revolve;
+	GravityUtil gravityUtil;
 };

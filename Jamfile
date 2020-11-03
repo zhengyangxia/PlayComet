@@ -120,6 +120,7 @@ COMMON_NAMES =
 	Scene
 	Mesh
 	Revolve
+	GravityUtil
 	load_save_png
 	gl_compile_program
 	Mode

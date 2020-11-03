@@ -68,6 +68,10 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 	// comet.camera->transform->rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	revolve.set_center(sun->position);
 	revolve.revolve(planet, 0.f);
+
+	// adding planet1 and sun to gravityUtil
+	gravityUtil.register_planet(planet, 100.0f);
+	gravityUtil.register_planet(sun, 200.0f);
 }
 
 PlayMode::~PlayMode() {
@@ -150,6 +154,9 @@ void PlayMode::update(float elapsed) {
 		// std::cout << "dot product " << glm::dot(comet_velocity, dirx) << std::endl;
 		glm::vec3 new_comet_velocity = comet_velocity + (move.x * dirx + move.y * diry) * PlayerSpeed * elapsed;
 		glm::quat rotation = glm::rotation(glm::normalize(comet_velocity), glm::normalize(new_comet_velocity));
+
+		// add gravity to new_comet_velocity
+		new_comet_velocity += gravityUtil.get_acceleration(comet.transform->position) * elapsed;
 
 		comet_velocity = new_comet_velocity;
 		dirx = rotation * dirx;
