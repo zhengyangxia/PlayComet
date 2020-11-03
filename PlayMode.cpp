@@ -64,9 +64,10 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 	comet.camera->transform->position = glm::vec3(0.0f, -10.0f, 0.0f);
 	comet.camera->transform->rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
-
 	//rotate camera facing direction (-z) to player facing direction (+y):
 	// comet.camera->transform->rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	revolve.set_center(sun->position);
+	revolve.revolve(planet, 0.f);
 }
 
 PlayMode::~PlayMode() {
@@ -135,6 +136,8 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 }
 
 void PlayMode::update(float elapsed) {
+	revolve.revolve(planet, elapsed);
+
 	//player walking:
 	{
 		//combine inputs into a move:
