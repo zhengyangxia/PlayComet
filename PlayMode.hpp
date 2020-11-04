@@ -30,6 +30,14 @@ struct PlayMode : Mode {
 	//local copy of the game scene (so code can change it during gameplay):
 	Scene scene;
 
+	enum class GameState {
+		InGame,
+		EndWin,
+		EndLose
+	};
+
+	GameState state = GameState::InGame;
+
 	//player info:
 	struct Comet {
 		//transform is at player's feet and will be yawed by mouse left/right motion:
@@ -37,6 +45,10 @@ struct PlayMode : Mode {
 		//camera is at player's head and will be pitched by mouse up/down motion:
 		Scene::Camera *camera = nullptr;
 	} comet;
+
+	static constexpr float COMET_RADIUS = 1.0f;
+	static constexpr float PLANET_RADIUS = 20.0f;
+	static constexpr float SUN_RADIUS = 30.0f;
 
 	Scene::Transform *planet = nullptr;
 	Scene::Transform *sun = nullptr;
@@ -46,4 +58,7 @@ struct PlayMode : Mode {
 	glm::vec3 diry = glm::vec3(0.0f, 0.0f, 1.0f);
 	Revolve revolve;
 	GravityUtil gravityUtil;
+
+private:
+	void detect_collision_and_update_state();
 };

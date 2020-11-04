@@ -140,6 +140,11 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 }
 
 void PlayMode::update(float elapsed) {
+	detect_collision_and_update_state();
+	if (state != GameState::InGame) {
+		return;
+	}
+
 	revolve.revolve(planet, elapsed);
 
 	//player walking:
@@ -214,6 +219,37 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + + 0.1f * H + ofs, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+
+		// Draw win/lose text
+		if (state == GameState::EndWin || state == GameState::EndLose) {
+			std::string prompt = state == GameState::EndWin ? "You win." : "You lose.";
+			constexpr float H = 0.20f;
+			lines.draw_text(prompt.c_str(),
+			                glm::vec3(-0.2f + 0.1f * H, -0.0f + 0.1f * H, 0.0),
+			                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+			                glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+			float ofs = 2.0f / drawable_size.y;
+			lines.draw_text(prompt.c_str(),
+			                glm::vec3(-0.2f + 0.1f * H + ofs, -0.0f + + 0.1f * H + ofs, 0.0),
+			                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+			                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+		}
 	}
 	GL_ERRORS();
+}
+
+void PlayMode::detect_collision_and_update_state() {
+	if (state != GameState::InGame) { return; }
+	glm::vec3 comet_pos = comet.transform->position;
+	glm::vec3 sun_pos = sun->position;
+	glm::vec3 planet_pos = planet->position;
+
+	float comet_sun_dist = glm::distance(comet_pos, sun_pos);
+	if (comet_sun_dist <= COMET_RADIUS + SUN_RADIUS) {
+		state = GameState::EndLose;
+	}
+	float comet_planet_dist = glm::distance(comet_pos, planet_pos);
+	if (comet_planet_dist <= COMET_RADIUS + PLANET_RADIUS) {
+		state = GameState::EndWin;
+	}
 }
