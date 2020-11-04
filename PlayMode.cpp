@@ -61,7 +61,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 	comet.camera->near = 0.01f;
 	comet.camera->transform->parent = comet.transform;
 	
-	comet.camera->transform->position = glm::vec3(0.0f, -200.0f, 0.0f);
+	comet.camera->transform->position = glm::vec3(0.0f, -50.0f, 10.0f);
 	comet.camera->transform->rotation = initial_camera_rotation;
 
 	//rotate camera facing direction (-z) to player facing direction (+y):
