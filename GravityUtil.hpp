@@ -17,6 +17,6 @@ public:
 	glm::vec3 get_acceleration(glm::vec3 position);
 
 private:
-	static constexpr float GRAVITY_COEFFICIENT = 10000.0f;
+	static constexpr float GRAVITY_COEFFICIENT = 100.0f;
 	std::vector<PlanetGravityProperty> planets;
 };

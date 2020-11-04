@@ -55,7 +55,7 @@ struct PlayMode : Mode {
 
 	glm::quat initial_camera_rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
-	glm::vec3 comet_velocity = glm::vec3(0.0f, 1.0f, 0.0f);
+	glm::vec3 comet_velocity = glm::vec3(0.0f, 0.5f, 0.0f);
 	glm::vec3 dirx = glm::vec3(1.0f, 0.0f, 0.0f);
 	glm::vec3 diry = glm::vec3(0.0f, 0.0f, 1.0f);
 	Revolve revolve;
