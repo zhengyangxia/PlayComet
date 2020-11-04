@@ -62,7 +62,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 	comet.camera->transform->parent = comet.transform;
 	
 	comet.camera->transform->position = glm::vec3(0.0f, -10.0f, 0.0f);
-	comet.camera->transform->rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	comet.camera->transform->rotation = initial_camera_rotation;
 
 	//rotate camera facing direction (-z) to player facing direction (+y):
 	// comet.camera->transform->rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -80,8 +80,19 @@ PlayMode::~PlayMode() {
 bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
 
 	if (evt.type == SDL_KEYDOWN) {
-		if (evt.key.keysym.sym == SDLK_ESCAPE) {
-			SDL_SetRelativeMouseMode(SDL_FALSE);
+		if (evt.key.keysym.sym == SDLK_SPACE)
+		{
+			// space.pressed = !space.pressed;
+			if (SDL_GetRelativeMouseMode() == SDL_FALSE)
+			{
+				SDL_SetRelativeMouseMode(SDL_TRUE);
+			}else{
+				comet.camera->transform->rotation = initial_camera_rotation;
+				SDL_SetRelativeMouseMode(SDL_FALSE);
+			}
+			return true;
+		} else if (SDL_GetRelativeMouseMode() == SDL_TRUE)
+		{
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_a) {
 			left.downs += 1;
@@ -100,6 +111,7 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			down.pressed = true;
 			return true;
 		}
+		
 	} else if (evt.type == SDL_KEYUP) {
 		if (evt.key.keysym.sym == SDLK_a) {
 			left.pressed = false;
@@ -121,7 +133,8 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			SDL_SetRelativeMouseMode(SDL_TRUE);
 			return true;
 		}
-	} else if (evt.type == SDL_MOUSEMOTION) {
+	} */
+	else if (evt.type == SDL_MOUSEMOTION) {
 		if (SDL_GetRelativeMouseMode() == SDL_TRUE) {
 			glm::vec2 motion = glm::vec2(
 				evt.motion.xrel / float(window_size.y),
@@ -135,7 +148,7 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			return true;
 		}
 	}
-	*/
+	
 	return false;
 }
 
