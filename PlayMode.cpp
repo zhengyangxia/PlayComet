@@ -61,8 +61,8 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 	comet.camera->near = 0.01f;
 	comet.camera->transform->parent = comet.transform;
 	
-	comet.camera->transform->position = glm::vec3(0.0f, -10.0f, 0.0f);
-	comet.camera->transform->rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	comet.camera->transform->position = glm::vec3(0.0f, -200.0f, 0.0f);
+	comet.camera->transform->rotation = initial_camera_rotation;
 
 	//rotate camera facing direction (-z) to player facing direction (+y):
 	// comet.camera->transform->rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -80,8 +80,19 @@ PlayMode::~PlayMode() {
 bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
 
 	if (evt.type == SDL_KEYDOWN) {
-		if (evt.key.keysym.sym == SDLK_ESCAPE) {
-			SDL_SetRelativeMouseMode(SDL_FALSE);
+		if (evt.key.keysym.sym == SDLK_SPACE)
+		{
+			// space.pressed = !space.pressed;
+			if (SDL_GetRelativeMouseMode() == SDL_FALSE)
+			{
+				SDL_SetRelativeMouseMode(SDL_TRUE);
+			}else{
+				comet.camera->transform->rotation = initial_camera_rotation;
+				SDL_SetRelativeMouseMode(SDL_FALSE);
+			}
+			return true;
+		} else if (SDL_GetRelativeMouseMode() == SDL_TRUE)
+		{
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_a) {
 			left.downs += 1;
@@ -100,6 +111,7 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			down.pressed = true;
 			return true;
 		}
+		
 	} else if (evt.type == SDL_KEYUP) {
 		if (evt.key.keysym.sym == SDLK_a) {
 			left.pressed = false;
@@ -121,7 +133,8 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			SDL_SetRelativeMouseMode(SDL_TRUE);
 			return true;
 		}
-	} else if (evt.type == SDL_MOUSEMOTION) {
+	} */
+	else if (evt.type == SDL_MOUSEMOTION) {
 		if (SDL_GetRelativeMouseMode() == SDL_TRUE) {
 			glm::vec2 motion = glm::vec2(
 				evt.motion.xrel / float(window_size.y),
@@ -135,17 +148,22 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			return true;
 		}
 	}
-	*/
+	
 	return false;
 }
 
 void PlayMode::update(float elapsed) {
+	detect_collision_and_update_state();
+	if (state != GameState::InGame) {
+		return;
+	}
+
 	revolve.revolve(planet, elapsed);
 
 	//player walking:
 	{
 		//combine inputs into a move:
-		constexpr float PlayerSpeed = 0.1f;
+		constexpr float PlayerSpeed = 100.f;
 		glm::vec2 move = glm::vec2(0.0f);
 		if (left.pressed && !right.pressed) move.x =-1.0f;
 		if (!left.pressed && right.pressed) move.x = 1.0f;
@@ -214,6 +232,37 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + + 0.1f * H + ofs, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+
+		// Draw win/lose text
+		if (state == GameState::EndWin || state == GameState::EndLose) {
+			std::string prompt = state == GameState::EndWin ? "You win." : "You lose.";
+			constexpr float H = 0.20f;
+			lines.draw_text(prompt.c_str(),
+			                glm::vec3(-0.2f + 0.1f * H, -0.0f + 0.1f * H, 0.0),
+			                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+			                glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+			float ofs = 2.0f / drawable_size.y;
+			lines.draw_text(prompt.c_str(),
+			                glm::vec3(-0.2f + 0.1f * H + ofs, -0.0f + + 0.1f * H + ofs, 0.0),
+			                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+			                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+		}
 	}
 	GL_ERRORS();
+}
+
+void PlayMode::detect_collision_and_update_state() {
+	if (state != GameState::InGame) { return; }
+	glm::vec3 comet_pos = comet.transform->position;
+	glm::vec3 sun_pos = sun->position;
+	glm::vec3 planet_pos = planet->position;
+
+	float comet_sun_dist = glm::distance(comet_pos, sun_pos);
+	if (comet_sun_dist <= COMET_RADIUS + SUN_RADIUS) {
+		state = GameState::EndLose;
+	}
+	float comet_planet_dist = glm::distance(comet_pos, planet_pos);
+	if (comet_planet_dist <= COMET_RADIUS + PLANET_RADIUS) {
+		state = GameState::EndWin;
+	}
 }
