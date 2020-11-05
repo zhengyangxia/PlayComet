@@ -66,4 +66,5 @@ struct PlayMode : Mode {
 
 private:
 	void detect_collision_and_update_state();
+	void shoot();
 };

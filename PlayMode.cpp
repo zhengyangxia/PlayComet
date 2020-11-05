@@ -64,6 +64,13 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 	comet.camera->transform->position = glm::vec3(0.0f, -50.0f, 10.0f);
 	comet.camera->transform->rotation = initial_camera_rotation;
 
+	scene.transforms.emplace_back();
+	scene.cameras.emplace_back(&scene.transforms.back());
+	universal_camera = &scene.cameras.back();
+	universal_camera->fovy = glm::radians(60.0f);
+	universal_camera->near = 0.01f;
+	universal_camera->transform->position = sun->position + glm::vec3(0, 0, 1000.0f);
+
 	//rotate camera facing direction (-z) to player facing direction (+y):
 	// comet.camera->transform->rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	revolve.set_center(sun->position);
@@ -193,7 +200,7 @@ void PlayMode::update(float elapsed) {
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	//update camera aspect ratio for drawable:
-	comet.camera->aspect = float(drawable_size.x) / float(drawable_size.y);
+	universal_camera->aspect = comet.camera->aspect = float(drawable_size.x) / float(drawable_size.y);
 
 	//set up light type and position for lit_color_texture_program:
 	// TODO: consider using the Light(s) in the scene to do this
@@ -210,7 +217,11 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS); //this is the default depth comparison function, but FYI you can change it.
 
-	scene.draw(*comet.camera);
+	if (state == GameState::Flying || state == GameState::EndLose) {
+		scene.draw(*comet.camera);
+	} else {
+		scene.draw(*universal_camera);
+	}
 
 	{ //use DrawLines to overlay some text:
 		glDisable(GL_DEPTH_TEST);
@@ -252,7 +263,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 }
 
 void PlayMode::detect_collision_and_update_state() {
-	if (state != GameState::Flying) { return; }
+	if (state == GameState::EndLose) { return; }
 	glm::vec3 comet_pos = comet.transform->position;
 	glm::vec3 sun_pos = sun->position;
 	glm::vec3 planet_pos = planet->position;
@@ -268,5 +279,6 @@ void PlayMode::detect_collision_and_update_state() {
 		glm::vec3 comet_world_position = comet.transform->position;
 		glm::vec3 planet_world_position = planet->position;
 		comet.transform->position = comet_world_position - planet_world_position;
+		state = GameState::Grounded;
 	}
 }
