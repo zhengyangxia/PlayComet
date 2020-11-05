@@ -200,8 +200,8 @@ void PlayMode::reset_speed(){
 
 	glm::vec3 center = comet.transform->parent->position;
 
-	// comet.transform->position += comet.transform->parent->position;
-	// comet.transform->parent = comet_parent;
+	comet.transform->position += comet.transform->parent->position;
+	comet.transform->parent = comet_parent;
 
 	glm::vec3 speed_vector = glm::normalize(comet.transform->position - center);
 
@@ -210,6 +210,12 @@ void PlayMode::reset_speed(){
 }
 
 void PlayMode::update(float elapsed) {
+	//loop planets
+	for (auto &p : planets.transforms)
+	{
+		revolve.revolve(p, elapsed);
+	}
+	
 	if (speed_is_reset)
 	{
 		speed_is_reset = false;
@@ -233,13 +239,6 @@ void PlayMode::update(float elapsed) {
 	if (state == GameState::EndLose || state == GameState::EndWin) {
 		return;
 	}
-
-	//loop planets
-	for (auto &p : planets.transforms)
-	{
-		revolve.revolve(p, elapsed);
-	}
-	
 
 	//player walking:
 	if (state != GameState::Grounded) {
