@@ -317,6 +317,8 @@ void PlayMode::detect_collision_and_update_state() {
 		if (comet_planet_dist <= COMET_RADIUS + planets.radius[i] && planets.hit_bitmap[i] == false) {
 			score++;
 			planets.hit_bitmap[i] = true;
+			state = GameState::Grounded;
+			comet_velocity = glm::vec3(0.0f);
 		}
 	}
 	if (score == planets.planet_num){
