@@ -40,6 +40,10 @@ struct PlayMode : Mode {
 
 	GameState state = GameState::Flying;
 
+	bool speed_is_reset = false;
+	float launch_duration = 0.f;
+	float launch_limit = 2.f;
+
 	//player info:
 	struct Comet {
 		//transform is at player's feet and will be yawed by mouse left/right motion:
@@ -76,4 +80,5 @@ struct PlayMode : Mode {
 private:
 	void detect_collision_and_update_state();
 	void shoot();
+	void reset_speed();
 };

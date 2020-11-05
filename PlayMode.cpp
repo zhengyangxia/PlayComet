@@ -88,8 +88,20 @@ PlayMode::~PlayMode() {
 }
 
 bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
+	if (state == GameState::Launched)
+	{
+		// not accept any input
+		return;
+	}
 
 	if (evt.type == SDL_KEYDOWN) {
+		if (state == GameState::Grounded)
+		{
+			speed_is_reset = true;
+			state == GameState::Launched;
+			return;
+		}
+		
 		if (evt.key.keysym.sym == SDLK_SPACE)
 		{
 			// space.pressed = !space.pressed;
@@ -176,7 +188,35 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 	return false;
 }
 
+void PlayMode::reset_speed(){
+	assert(comet.transform->parent);
+	glm::vec3 center = comet.transform->parent->position;
+	glm::vec3 speed_vector = glm::normalize(comet.transform->position - center);
+
+	comet_velocity = speed_vector;
+	return;
+}
+
 void PlayMode::update(float elapsed) {
+	if (speed_is_reset)
+	{
+		speed_is_reset = false;
+		reset_speed();
+		return;
+	}
+
+	if (state == GameState::Launched)
+	{
+		launch_duration += elapsed;
+		if (launch_duration < launch_limit)
+		{
+			return;
+		}
+		launch_duration = 0.f;
+		state = GameState::Flying;
+		return;
+	}
+
 	detect_collision_and_update_state();
 	if (state == GameState::EndLose || state == GameState::EndWin) {
 		return;
