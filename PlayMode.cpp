@@ -185,7 +185,7 @@ void PlayMode::update(float elapsed) {
 	// revolve.revolve(planet, elapsed);
 
 	//player walking:
-	{
+	if (state != GameState::Grounded) {
 		//combine inputs into a move:
 		constexpr float PlayerSpeed = 1.f;
 		glm::vec3 move = glm::vec3(0.0f);
