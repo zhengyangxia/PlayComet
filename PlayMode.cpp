@@ -71,7 +71,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 	universal_camera = &scene.cameras.back();
 	universal_camera->fovy = glm::radians(60.0f);
 	universal_camera->near = 0.01f;
-	universal_camera->transform->position = sun->position + glm::vec3(0, 0, 1000.0f);
+	universal_camera->transform->position = sun->position + glm::vec3(0, 0, 500.0f);
 
 	//rotate camera facing direction (-z) to player facing direction (+y):
 	// comet.camera->transform->rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -319,22 +319,15 @@ void PlayMode::detect_collision_and_update_state() {
 			planets.hit_bitmap[i] = true;
 			state = GameState::Grounded;
 			comet_velocity = glm::vec3(0.0f);
-		}
-	}
-	if (score == planets.planet_num){
-		state = GameState::EndWin;
-	}
 
-	for (int i = 0; i < planets.planet_num; i++) {
-		float comet_planet_dist = glm::distance(comet_pos, planets.transforms.at(i)->position);
-		if (comet_planet_dist <= COMET_RADIUS + PLANET_RADIUS) {
-			state = GameState::Grounded;
 			comet.transform->parent = planets.transforms.at(i);
 			glm::vec3 comet_world_position = comet.transform->position;
 			glm::vec3 planet_world_position = planets.transforms.at(i)->position;
 			comet.transform->position = comet_world_position - planet_world_position;
-			state = GameState::Grounded;
 		}
+	}
+	if (score == planets.planet_num){
+		state = GameState::EndWin;
 	}
 
 }
