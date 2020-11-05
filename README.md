@@ -1,6 +1,6 @@
-# (TODO: your game's title)
+# PlayComet
 
-Author: (TODO: your name)
+Author: Yunfei Cheng, Zizhuo Lin, Xiaoqiao Xu, Zhengyang Xia
 
 Design: (TODO: In two sentences or fewer, describe what is new and interesting about your game.)
 
@@ -10,7 +10,7 @@ Screen Shot:
 
 How To Play:
 
-(TODO: describe the controls and (if needed) goals/strategy.)
+Reach as many planets as you can before crashing into the Sun. Press wasd to move around and qe to tilt.
 
 Sources: (TODO: list a source URL for any assets you did not create yourself. Make sure you have a license for the asset.)
 
