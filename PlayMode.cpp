@@ -38,20 +38,22 @@ Load< Scene > comet_scene(LoadTagDefault, []() -> Scene const * {
 });
 
 PlayMode::PlayMode() : scene(*comet_scene) {
+	std::string planetPrefix = "Planet";
 	for (auto &transform : scene.transforms)
 	{
 		if (std::strlen(transform.name.c_str()) >= 6 && std::strncmp(transform.name.c_str(), "Player", 6) == 0)
 		{
 			comet.transform = &transform;
-		}else if (std::strlen(transform.name.c_str()) >= 7 && std::strncmp(transform.name.c_str(), "Planet1", 7) == 0)
+		}else if (transform.name.find(planetPrefix) == 0)
 		{
-			planet = &transform;
+			planets.transforms.push_back(&transform);
+			planets.planet_num ++;
 		}else if (std::strlen(transform.name.c_str()) >= 3 && std::strncmp(transform.name.c_str(), "Sun", 3) == 0)
 		{
 			sun = &transform;
 		}
 	}
-	
+	planets.hit_bitmap.resize(planets.planet_num, false);
 	//create a player camera attached to a child of the player transform:
 	scene.transforms.emplace_back();
 	scene.cameras.emplace_back(&scene.transforms.back());
@@ -64,13 +66,21 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 	comet.camera->transform->position = glm::vec3(0.0f, -50.0f, 10.0f);
 	comet.camera->transform->rotation = initial_camera_rotation;
 
+	scene.transforms.emplace_back();
+	scene.cameras.emplace_back(&scene.transforms.back());
+	universal_camera = &scene.cameras.back();
+	universal_camera->fovy = glm::radians(60.0f);
+	universal_camera->near = 0.01f;
+	universal_camera->transform->position = sun->position + glm::vec3(0, 0, 1000.0f);
+
 	//rotate camera facing direction (-z) to player facing direction (+y):
 	// comet.camera->transform->rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	revolve.set_center(sun->position);
-	revolve.revolve(planet, 0.f);
+	//TODO: loop through planets
+	// revolve.revolve(planet, 0.f);
 
 	// adding planet1 and sun to gravityUtil
-	gravityUtil.register_planet(planet, 100.0f);
+	// gravityUtil.register_planet(planet, 100.0f);
 	gravityUtil.register_planet(sun, 200.0f);
 }
 
@@ -168,11 +178,11 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 
 void PlayMode::update(float elapsed) {
 	detect_collision_and_update_state();
-	if (state != GameState::InGame) {
+	if (state == GameState::EndLose || state == GameState::EndWin) {
 		return;
 	}
-
-	revolve.revolve(planet, elapsed);
+	//TODO: loop planets
+	// revolve.revolve(planet, elapsed);
 
 	//player walking:
 	{
@@ -219,7 +229,7 @@ void PlayMode::update(float elapsed) {
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	//update camera aspect ratio for drawable:
-	comet.camera->aspect = float(drawable_size.x) / float(drawable_size.y);
+	universal_camera->aspect = comet.camera->aspect = float(drawable_size.x) / float(drawable_size.y);
 
 	//set up light type and position for lit_color_texture_program:
 	// TODO: consider using the Light(s) in the scene to do this
@@ -236,7 +246,11 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS); //this is the default depth comparison function, but FYI you can change it.
 
-	scene.draw(*comet.camera);
+	if (state == GameState::Flying || state == GameState::EndLose || state == GameState::EndWin) {
+		scene.draw(*comet.camera);
+	} else {
+		scene.draw(*universal_camera);
+	}
 
 	{ //use DrawLines to overlay some text:
 		glDisable(GL_DEPTH_TEST);
@@ -255,9 +269,19 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			glm::u8vec4(0x00, 0x00, 0x00, 0x00));
 		float ofs = 2.0f / drawable_size.y;
 		lines.draw_text("Mouse motion looks; WASD moves; escape ungrabs mouse",
-			glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + + 0.1f * H + ofs, 0.0),
+			glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + 0.1f * H + ofs, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+
+		std::string score_str = "Score: "+std::to_string(score);
+		lines.draw_text(score_str.c_str(),
+						glm::vec3(-0.2f + 0.1f * H, 0.7f + 0.1f * H, 0.0),
+						glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+						glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+		lines.draw_text(score_str.c_str(),
+						glm::vec3(-0.2f + 0.1f * H + ofs, 0.7f + 0.1f * H + ofs, 0.0),
+						glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+						glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 
 		// Draw win/lose text
 		if (state == GameState::EndWin || state == GameState::EndLose) {
@@ -269,7 +293,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			                glm::u8vec4(0x00, 0x00, 0x00, 0x00));
 			float ofs = 2.0f / drawable_size.y;
 			lines.draw_text(prompt.c_str(),
-			                glm::vec3(-0.2f + 0.1f * H + ofs, -0.0f + + 0.1f * H + ofs, 0.0),
+			                glm::vec3(-0.2f + 0.1f * H + ofs, -0.0f + 0.1f * H + ofs, 0.0),
 			                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 		}
@@ -278,17 +302,37 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 }
 
 void PlayMode::detect_collision_and_update_state() {
-	if (state != GameState::InGame) { return; }
+	if (state == GameState::EndLose) { return; }
 	glm::vec3 comet_pos = comet.transform->position;
 	glm::vec3 sun_pos = sun->position;
-	glm::vec3 planet_pos = planet->position;
 
 	float comet_sun_dist = glm::distance(comet_pos, sun_pos);
 	if (comet_sun_dist <= COMET_RADIUS + SUN_RADIUS) {
 		state = GameState::EndLose;
 	}
-	float comet_planet_dist = glm::distance(comet_pos, planet_pos);
-	if (comet_planet_dist <= COMET_RADIUS + PLANET_RADIUS) {
+
+	for (size_t i = 0; i< planets.planet_num; i++){
+		glm::vec3 planet_pos = planets.transforms[i]->position;
+		float comet_planet_dist = glm::distance(comet_pos, planet_pos);
+		if (comet_planet_dist <= COMET_RADIUS + planets.radius[i] && planets.hit_bitmap[i] == false) {
+			score++;
+			planets.hit_bitmap[i] = true;
+		}
+	}
+	if (score == planets.planet_num){
 		state = GameState::EndWin;
 	}
+
+	for (int i = 0; i < planets.planet_num; i++) {
+		float comet_planet_dist = glm::distance(comet_pos, planets.transforms.at(i)->position);
+		if (comet_planet_dist <= COMET_RADIUS + PLANET_RADIUS) {
+			state = GameState::Grounded;
+			comet.transform->parent = planets.transforms.at(i);
+			glm::vec3 comet_world_position = comet.transform->position;
+			glm::vec3 planet_world_position = planets.transforms.at(i)->position;
+			comet.transform->position = comet_world_position - planet_world_position;
+			state = GameState::Grounded;
+		}
+	}
+
 }

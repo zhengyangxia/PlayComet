@@ -31,12 +31,14 @@ struct PlayMode : Mode {
 	Scene scene;
 
 	enum class GameState {
-		InGame,
-		EndWin,
-		EndLose
+		Flying,
+		Grounded,
+		Launched,
+		EndLose,
+		EndWin
 	};
 
-	GameState state = GameState::InGame;
+	GameState state = GameState::Flying;
 
 	//player info:
 	struct Comet {
@@ -46,11 +48,12 @@ struct PlayMode : Mode {
 		Scene::Camera *camera = nullptr;
 	} comet;
 
+	Scene::Camera *universal_camera = nullptr;
+
 	static constexpr float COMET_RADIUS = 1.0f;
 	static constexpr float PLANET_RADIUS = 20.0f;
 	static constexpr float SUN_RADIUS = 30.0f;
 
-	Scene::Transform *planet = nullptr;
 	Scene::Transform *sun = nullptr;
 
 	glm::quat initial_camera_rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -61,6 +64,16 @@ struct PlayMode : Mode {
 	Revolve revolve;
 	GravityUtil gravityUtil;
 
+	int score = 0;
+	struct Planets{
+		std::vector<Scene::Transform *> transforms;
+		std::vector<bool> hit_bitmap;
+		std::vector<int> radius{20, 15, 10};
+		size_t planet_num = 0;
+	} planets;
+	
+
 private:
 	void detect_collision_and_update_state();
+	void shoot();
 };
