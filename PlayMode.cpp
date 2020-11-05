@@ -164,7 +164,7 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 
 void PlayMode::update(float elapsed) {
 	detect_collision_and_update_state();
-	if (state != GameState::Flying) {
+	if (state == GameState::EndLose || state == GameState::EndWin) {
 		return;
 	}
 	//TODO: loop planets
@@ -220,7 +220,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS); //this is the default depth comparison function, but FYI you can change it.
 
-	if (state == GameState::Flying || state == GameState::EndLose) {
+	if (state == GameState::Flying || state == GameState::EndLose || state == GameState::EndWin) {
 		scene.draw(*comet.camera);
 	} else {
 		scene.draw(*universal_camera);
@@ -258,8 +258,8 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 						glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 
 		// Draw win/lose text
-		if (state == GameState::Grounded || state == GameState::EndLose) {
-			std::string prompt = state == GameState::Grounded ? "You win." : "You lose.";
+		if (state == GameState::EndWin || state == GameState::EndLose) {
+			std::string prompt = state == GameState::EndWin ? "You win." : "You lose.";
 			constexpr float H = 0.20f;
 			lines.draw_text(prompt.c_str(),
 			                glm::vec3(-0.2f + 0.1f * H, -0.0f + 0.1f * H, 0.0),

@@ -34,7 +34,8 @@ struct PlayMode : Mode {
 		Flying,
 		Grounded,
 		Launched,
-		EndLose
+		EndLose,
+		EndWin
 	};
 
 	GameState state = GameState::Flying;
