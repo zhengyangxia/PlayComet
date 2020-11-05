@@ -72,7 +72,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 	universal_camera = &scene.cameras.back();
 	universal_camera->fovy = glm::radians(60.0f);
 	universal_camera->near = 0.01f;
-	universal_camera->transform->position = sun->position + glm::vec3(0, 0, 500.0f);
+	universal_camera->transform->position = sun->position + glm::vec3(0, 0, 250.0f);
 
 	//rotate camera facing direction (-z) to player facing direction (+y):
 	// comet.camera->transform->rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -206,6 +206,7 @@ void PlayMode::reset_speed(){
 	glm::vec3 speed_vector = glm::normalize(comet.transform->position - center);
 	glm::quat rotation = glm::rotation(glm::normalize(comet_velocity), glm::normalize(speed_vector));
 	comet.transform->rotation = rotation * comet.transform->rotation;
+	dirx = rotation * dirx;
 
 	comet_velocity = speed_vector;
 	return;
