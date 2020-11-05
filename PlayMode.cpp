@@ -44,6 +44,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 		if (std::strlen(transform.name.c_str()) >= 6 && std::strncmp(transform.name.c_str(), "Player", 6) == 0)
 		{
 			comet.transform = &transform;
+			comet_parent = comet.transform->parent;
 		}else if (transform.name.find(planetPrefix) == 0)
 		{
 			planets.transforms.push_back(&transform);
@@ -76,12 +77,18 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 	//rotate camera facing direction (-z) to player facing direction (+y):
 	// comet.camera->transform->rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	revolve.set_center(sun->position);
-	//TODO: loop through planets
-	// revolve.revolve(planet, 0.f);
+	//loop through planets
+	for (auto p : planets.transforms)
+	{
+		revolve.revolve(p, 0.f);
+	}
 
 	// adding planet1 and sun to gravityUtil
-	// gravityUtil.register_planet(planet, 100.0f);
 	gravityUtil.register_planet(sun, 200.0f);
+	for (auto &p : planets.transforms)
+	{
+		gravityUtil.register_planet(p, 100.f);
+	}
 }
 
 PlayMode::~PlayMode() {
@@ -91,15 +98,15 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 	if (state == GameState::Launched)
 	{
 		// not accept any input
-		return;
+		return true;
 	}
 
 	if (evt.type == SDL_KEYDOWN) {
 		if (state == GameState::Grounded)
 		{
 			speed_is_reset = true;
-			state == GameState::Launched;
-			return;
+			state = GameState::Launched;
+			return true;
 		}
 		
 		if (evt.key.keysym.sym == SDLK_SPACE)
@@ -190,7 +197,12 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 
 void PlayMode::reset_speed(){
 	assert(comet.transform->parent);
+
 	glm::vec3 center = comet.transform->parent->position;
+
+	// comet.transform->position += comet.transform->parent->position;
+	// comet.transform->parent = comet_parent;
+
 	glm::vec3 speed_vector = glm::normalize(comet.transform->position - center);
 
 	comet_velocity = speed_vector;
@@ -221,8 +233,13 @@ void PlayMode::update(float elapsed) {
 	if (state == GameState::EndLose || state == GameState::EndWin) {
 		return;
 	}
-	//TODO: loop planets
-	// revolve.revolve(planet, elapsed);
+
+	//loop planets
+	for (auto &p : planets.transforms)
+	{
+		revolve.revolve(p, elapsed);
+	}
+	
 
 	//player walking:
 	if (state != GameState::Grounded) {

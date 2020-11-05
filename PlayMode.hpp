@@ -52,6 +52,8 @@ struct PlayMode : Mode {
 		Scene::Camera *camera = nullptr;
 	} comet;
 
+	Scene::Transform *comet_parent = nullptr;
+
 	Scene::Camera *universal_camera = nullptr;
 
 	static constexpr float COMET_RADIUS = 1.0f;
