@@ -200,10 +200,12 @@ void PlayMode::reset_speed(){
 
 	glm::vec3 center = comet.transform->parent->position;
 
-	// comet.transform->position += comet.transform->parent->position;
-	// comet.transform->parent = comet_parent;
+	comet.transform->position += comet.transform->parent->position;
+	comet.transform->parent = comet_parent;
 
 	glm::vec3 speed_vector = glm::normalize(comet.transform->position - center);
+	glm::quat rotation = glm::rotation(glm::normalize(comet_velocity), glm::normalize(speed_vector));
+	comet.transform->rotation = rotation * comet.transform->rotation;
 
 	comet_velocity = speed_vector;
 	return;
@@ -375,7 +377,7 @@ void PlayMode::detect_collision_and_update_state() {
 			score++;
 			planets.hit_bitmap[i] = true;
 			state = GameState::Grounded;
-			comet_velocity = glm::vec3(0.0f);
+			// comet_velocity = glm::vec3(0.0f);
 
 			comet.transform->parent = planets.transforms.at(i);
 			glm::vec3 comet_world_position = comet.transform->position;
