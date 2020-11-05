@@ -25,7 +25,7 @@ struct PlayMode : Mode {
 	struct Button {
 		uint8_t downs = 0;
 		uint8_t pressed = 0;
-	} left, right, down, up;
+	} left, right, down, up, clock, aclock;
 
 	//local copy of the game scene (so code can change it during gameplay):
 	Scene scene;
@@ -57,7 +57,7 @@ struct PlayMode : Mode {
 
 	glm::vec3 comet_velocity = glm::vec3(0.0f, 0.5f, 0.0f);
 	glm::vec3 dirx = glm::vec3(1.0f, 0.0f, 0.0f);
-	glm::vec3 diry = glm::vec3(0.0f, 0.0f, 1.0f);
+	// glm::vec3 diry = glm::vec3(0.0f, 0.0f, 1.0f);
 	Revolve revolve;
 	GravityUtil gravityUtil;
 

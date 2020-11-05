@@ -110,6 +110,14 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			down.downs += 1;
 			down.pressed = true;
 			return true;
+		} else if (evt.key.keysym.sym == SDLK_q) {
+			aclock.downs += 1;
+			aclock.pressed = true;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_e) {
+			clock.downs += 1;
+			clock.pressed = true;
+			return true;
 		}
 		
 	} else if (evt.type == SDL_KEYUP) {
@@ -124,6 +132,12 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_s) {
 			down.pressed = false;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_q) {
+			aclock.pressed = false;
+			return true;
+		} else if (evt.key.keysym.sym == SDLK_e) {
+			clock.pressed = false;
 			return true;
 		}
 	} 
@@ -163,24 +177,34 @@ void PlayMode::update(float elapsed) {
 	//player walking:
 	{
 		//combine inputs into a move:
-		constexpr float PlayerSpeed = 100.f;
-		glm::vec2 move = glm::vec2(0.0f);
+		constexpr float PlayerSpeed = 1.f;
+		glm::vec3 move = glm::vec3(0.0f);
 		if (left.pressed && !right.pressed) move.x =-1.0f;
 		if (!left.pressed && right.pressed) move.x = 1.0f;
 		if (down.pressed && !up.pressed) move.y =-1.0f;
 		if (!down.pressed && up.pressed) move.y = 1.0f;
+		if (clock.pressed && !aclock.pressed) move.z = 1.0f;
+		if (!clock.pressed && aclock.pressed) move.z = -1.0f;
 		// std::cout << "dot product " << glm::dot(comet_velocity, dirx) << std::endl;
-		glm::vec3 new_comet_velocity = comet_velocity + (move.x * dirx + move.y * diry) * PlayerSpeed * elapsed;
-		glm::quat rotation = glm::rotation(glm::normalize(comet_velocity), glm::normalize(new_comet_velocity));
-
+		glm::vec3 new_comet_velocity = comet_velocity + move.x * dirx * PlayerSpeed * elapsed;
 		// add gravity to new_comet_velocity
 		new_comet_velocity += gravityUtil.get_acceleration(comet.transform->position) * elapsed;
+		glm::quat rotation = glm::rotation(glm::normalize(comet_velocity), glm::normalize(new_comet_velocity));
+		glm::vec3 deltav = glm::normalize(new_comet_velocity)*move.y;
+		if (glm::length2(new_comet_velocity) > 5.0f || move.y >= 0.0f)
+			comet_velocity = (deltav + new_comet_velocity) * 0.99f;
+		else
+			comet_velocity = new_comet_velocity * 0.99f;
 
-		comet_velocity = new_comet_velocity;
 		dirx = rotation * dirx;
-		diry = rotation * diry;
+		// diry = rotation * diry;
+
 		comet.transform->rotation = rotation * comet.transform->rotation;
 		comet.transform->position += comet_velocity * elapsed;
+		
+		rotation = glm::angleAxis(glm::radians(move.z*elapsed*45), comet_velocity);
+		comet.transform->rotation = rotation*comet.transform->rotation;
+		dirx = rotation * dirx;
 		
 	}
 
@@ -189,6 +213,8 @@ void PlayMode::update(float elapsed) {
 	right.downs = 0;
 	up.downs = 0;
 	down.downs = 0;
+	clock.downs = 0;
+	aclock.downs = 0;
 }
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
