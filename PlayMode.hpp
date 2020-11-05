@@ -31,12 +31,13 @@ struct PlayMode : Mode {
 	Scene scene;
 
 	enum class GameState {
-		InGame,
-		EndWin,
+		Flying,
+		Grounded,
+		Launched,
 		EndLose
 	};
 
-	GameState state = GameState::InGame;
+	GameState state = GameState::Flying;
 
 	//player info:
 	struct Comet {
@@ -45,6 +46,8 @@ struct PlayMode : Mode {
 		//camera is at player's head and will be pitched by mouse up/down motion:
 		Scene::Camera *camera = nullptr;
 	} comet;
+
+	Scene::Camera *universal_camera = nullptr;
 
 	static constexpr float COMET_RADIUS = 1.0f;
 	static constexpr float PLANET_RADIUS = 20.0f;
