@@ -157,7 +157,7 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 
 void PlayMode::update(float elapsed) {
 	detect_collision_and_update_state();
-	if (state != GameState::InGame) {
+	if (state != GameState::Flying) {
 		return;
 	}
 	//TODO: loop planets
@@ -247,8 +247,8 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 						glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 
 		// Draw win/lose text
-		if (state == GameState::EndWin || state == GameState::EndLose) {
-			std::string prompt = state == GameState::EndWin ? "You win." : "You lose.";
+		if (state == GameState::Grounded || state == GameState::EndLose) {
+			std::string prompt = state == GameState::Grounded ? "You win." : "You lose.";
 			constexpr float H = 0.20f;
 			lines.draw_text(prompt.c_str(),
 			                glm::vec3(-0.2f + 0.1f * H, -0.0f + 0.1f * H, 0.0),
@@ -265,7 +265,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 }
 
 void PlayMode::detect_collision_and_update_state() {
-	if (state != GameState::InGame) { return; }
+	if (state != GameState::Flying) { return; }
 	glm::vec3 comet_pos = comet.transform->position;
 	glm::vec3 sun_pos = sun->position;
 
@@ -286,4 +286,12 @@ void PlayMode::detect_collision_and_update_state() {
 		state = GameState::EndWin;
 	}
 
+	// float comet_planet_dist = glm::distance(comet_pos, planet_pos);
+	// if (comet_planet_dist <= COMET_RADIUS + PLANET_RADIUS) {
+	// 	state = GameState::Grounded;
+	// 	comet.transform->parent = planet;
+	// 	glm::vec3 comet_world_position = comet.transform->position;
+	// 	glm::vec3 planet_world_position = planet->position;
+	// 	comet.transform->position = comet_world_position - planet_world_position;
+	// }
 }
