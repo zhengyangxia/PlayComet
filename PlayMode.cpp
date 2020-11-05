@@ -212,7 +212,7 @@ void PlayMode::update(float elapsed) {
 		comet.transform->rotation = rotation * comet.transform->rotation;
 		comet.transform->position += comet_velocity * elapsed;
 		
-		rotation = glm::angleAxis(glm::radians(move.z*elapsed*45), comet_velocity);
+		rotation = glm::angleAxis(glm::radians(move.z*elapsed*45), glm::normalize(comet_velocity));
 		comet.transform->rotation = rotation*comet.transform->rotation;
 		dirx = rotation * dirx;
 		
