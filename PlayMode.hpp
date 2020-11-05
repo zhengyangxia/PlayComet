@@ -50,7 +50,6 @@ struct PlayMode : Mode {
 	static constexpr float PLANET_RADIUS = 20.0f;
 	static constexpr float SUN_RADIUS = 30.0f;
 
-	Scene::Transform *planet = nullptr;
 	Scene::Transform *sun = nullptr;
 
 	glm::quat initial_camera_rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -60,6 +59,15 @@ struct PlayMode : Mode {
 	glm::vec3 diry = glm::vec3(0.0f, 0.0f, 1.0f);
 	Revolve revolve;
 	GravityUtil gravityUtil;
+
+	int score = 0;
+	struct Planets{
+		std::vector<Scene::Transform *> transforms;
+		std::vector<bool> hit_bitmap;
+		std::vector<int> radius{20, 15, 10};
+		size_t planet_num = 0;
+	} planets;
+	
 
 private:
 	void detect_collision_and_update_state();
