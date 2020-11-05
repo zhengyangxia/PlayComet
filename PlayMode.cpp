@@ -212,6 +212,12 @@ void PlayMode::reset_speed(){
 }
 
 void PlayMode::update(float elapsed) {
+	//loop planets
+	for (auto &p : planets.transforms)
+	{
+		revolve.revolve(p, elapsed);
+	}
+	
 	if (speed_is_reset)
 	{
 		speed_is_reset = false;
@@ -235,13 +241,6 @@ void PlayMode::update(float elapsed) {
 	if (state == GameState::EndLose || state == GameState::EndWin) {
 		return;
 	}
-
-	//loop planets
-	for (auto &p : planets.transforms)
-	{
-		revolve.revolve(p, elapsed);
-	}
-	
 
 	//player walking:
 	if (state != GameState::Grounded) {
