@@ -320,17 +320,19 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			0.0f, 0.0f, 1.0f, 0.0f,
 			0.0f, 0.0f, 0.0f, 1.0f
 		));
-
 		constexpr float H = 0.09f;
-		lines.draw_text("Mouse motion looks; WASD moves; escape ungrabs mouse",
-			glm::vec3(-aspect + 0.1f * H, -1.0 + 0.1f * H, 0.0),
-			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-			glm::u8vec4(0x00, 0x00, 0x00, 0x00));
 		float ofs = 2.0f / drawable_size.y;
-		lines.draw_text("Mouse motion looks; WASD moves; escape ungrabs mouse",
-			glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + 0.1f * H + ofs, 0.0),
-			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+		if (state == GameState::Grounded){
+			lines.draw_text("Press any key to launch",
+				glm::vec3(-aspect + 0.1f * H, -1.0 + 0.1f * H, 0.0),
+				glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+				glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+
+			lines.draw_text("Press any key to launch",
+				glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + 0.1f * H + ofs, 0.0),
+				glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+				glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+		}
 
 		std::string score_str = "Score: "+std::to_string(score);
 		lines.draw_text(score_str.c_str(),
@@ -373,9 +375,11 @@ void PlayMode::detect_collision_and_update_state() {
 	for (size_t i = 0; i< planets.planet_num; i++){
 		glm::vec3 planet_pos = planets.transforms[i]->position;
 		float comet_planet_dist = glm::distance(comet_pos, planet_pos);
-		if (comet_planet_dist <= COMET_RADIUS + planets.radius[i] && planets.hit_bitmap[i] == false) {
-			score++;
-			planets.hit_bitmap[i] = true;
+		if (comet_planet_dist <= COMET_RADIUS + planets.radius[i]) {
+			if (planets.hit_bitmap[i] == false){
+				score++;
+				planets.hit_bitmap[i] = true;
+			}
 			state = GameState::Grounded;
 			// comet_velocity = glm::vec3(0.0f);
 

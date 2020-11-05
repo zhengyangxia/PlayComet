@@ -70,7 +70,7 @@ struct PlayMode : Mode {
 	Revolve revolve;
 	GravityUtil gravityUtil;
 
-	int score = 0;
+	size_t score = 0;
 	struct Planets{
 		std::vector<Scene::Transform *> transforms;
 		std::vector<bool> hit_bitmap;
