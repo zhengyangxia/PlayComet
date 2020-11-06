@@ -17,13 +17,13 @@ EXPORT_SCENE=export-scene.py
 DIST=../dist
 
 all : \
-	$(DIST)/Comet.pnct \
-	$(DIST)/Comet.scene
+	$(DIST)/comet.pnct \
+	$(DIST)/comet.scene
 
-$(DIST)/Comet.pnct : Comet.blend $(EXPORT_MESHES)
+$(DIST)/comet.pnct : comet.blend $(EXPORT_MESHES)
 	$(BLENDER) --background --python $(EXPORT_MESHES) -- '$<':Collection '$@'
 
-$(DIST)/Comet.scene : Comet.blend $(EXPORT_SCENE)
+$(DIST)/comet.scene : comet.blend $(EXPORT_SCENE)
 	$(BLENDER) --background --python $(EXPORT_SCENE) -- '$<':Collection '$@'
 
 # $(DIST)/phone-bank.w : Comet.blend $(EXPORT_WALKMESHES)
