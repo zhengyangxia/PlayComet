@@ -293,12 +293,13 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	//set up light type and position for lit_color_texture_program:
 	// TODO: consider using the Light(s) in the scene to do this
 	glUseProgram(lit_color_texture_program->program);
-	glUniform1i(lit_color_texture_program->LIGHT_TYPE_int, 1);
-	glUniform3fv(lit_color_texture_program->LIGHT_DIRECTION_vec3, 1, glm::value_ptr(glm::vec3(0.0f, 0.0f,-1.0f)));
-	glUniform3fv(lit_color_texture_program->LIGHT_ENERGY_vec3, 1, glm::value_ptr(glm::vec3(1.0f, 1.0f, 0.95f)));
+	glUniform1i(lit_color_texture_program->LIGHT_TYPE_int, 0);
+	glUniform3fv(lit_color_texture_program->LIGHT_DIRECTION_vec3, 1, glm::value_ptr(glm::vec3(4130.0f, 0.0f,0.0f)));
+	glUniform3fv(lit_color_texture_program->LIGHT_ENERGY_vec3, 1, glm::value_ptr(glm::vec3(100000.0f, 100000.0f, 100000.95f)));
 	glUseProgram(0);
 
-	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+	RenderCaptor::set_render_destination(render_ofb);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClearDepth(1.0f); //1.0 is actually the default value to clear the depth buffer to, but FYI you can change it.
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -360,6 +361,13 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		}
 	}
 	GL_ERRORS();
+	RenderCaptor::set_render_destination(nullptr);
+	threshold_processor.draw(render_ofb, threshold_ofb);
+	GL_ERRORS();
+	gaussian_processor.draw(threshold_ofb, tmp_ofb);
+	GL_ERRORS();
+	add_processor.draw(render_ofb, threshold_ofb, add_ofb);
+	tone_mapping_processor.draw(add_ofb, nullptr);
 }
 
 void PlayMode::detect_collision_and_update_state() {
@@ -393,4 +401,10 @@ void PlayMode::detect_collision_and_update_state() {
 		state = GameState::EndWin;
 	}
 
+}
+void PlayMode::on_resize(const glm::uvec2 &window_size, const glm::uvec2 &drawable_size) {
+	render_ofb->realloc(drawable_size.x, drawable_size.y);
+	threshold_ofb->realloc(drawable_size.x, drawable_size.y);
+	tmp_ofb->realloc(drawable_size.x, drawable_size.y);
+	add_ofb->realloc(drawable_size.x, drawable_size.y);
 }

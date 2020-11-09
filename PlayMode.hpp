@@ -9,6 +9,12 @@
 
 #include "Revolve.hpp"
 #include "GravityUtil.hpp"
+#include "PostProcessor.hpp"
+#include "TexFramebuffer.hpp"
+
+// xiaoqiao: dirty workaround for namespace stuff.. should fix it later if i have time
+using namespace game_graphics;
+using namespace game_graphics::post_processor;
 
 struct PlayMode : Mode {
 	PlayMode();
@@ -18,6 +24,7 @@ struct PlayMode : Mode {
 	virtual bool handle_event(SDL_Event const &, glm::uvec2 const &window_size) override;
 	virtual void update(float elapsed) override;
 	virtual void draw(glm::uvec2 const &drawable_size) override;
+	virtual void on_resize(glm::uvec2 const &window_size, glm::uvec2 const &drawable_size) override;
 
 	//----- game state -----
 
@@ -83,4 +90,17 @@ private:
 	void detect_collision_and_update_state();
 	void shoot();
 	void reset_speed();
+
+	Threshold threshold_processor{10.0f};
+	GaussianBlur gaussian_processor{5};
+	Identity identity_processor{};
+	ToneMapping tone_mapping_processor{};
+	AddTwo add_processor{};
+
+	// note: 100x100 is only a temporary value. the real value will be set at
+	// on_resize function
+	TexFramebufferPtr render_ofb = std::make_shared<TexFramebuffer>(100, 100);
+	TexFramebufferPtr threshold_ofb = std::make_shared<TexFramebuffer>(100, 100);
+	TexFramebufferPtr tmp_ofb = std::make_shared<TexFramebuffer>(100, 100);
+	TexFramebufferPtr add_ofb = std::make_shared<TexFramebuffer>(100, 100);
 };

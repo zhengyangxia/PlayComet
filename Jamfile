@@ -109,6 +109,8 @@ GAME_NAMES =
 	Sound
 	load_wav
 	load_opus
+	PostProcessor
+	TexFramebuffer
 	;
 
 COMMON_NAMES =

@@ -79,7 +79,7 @@ LitColorTextureProgram::LitColorTextureProgram() {
 		"in vec3 normal;\n"
 		"in vec4 color;\n"
 		"in vec2 texCoord;\n"
-		"out vec4 fragColor;\n"
+		"layout (location = 0) out vec4 fragColor;\n"
 		"void main() {\n"
 		"	vec3 n = normalize(normal);\n"
 		"	vec3 e;\n"
