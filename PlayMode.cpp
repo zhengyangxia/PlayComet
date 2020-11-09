@@ -29,6 +29,16 @@ Load< Scene > comet_scene(LoadTagDefault, []() -> Scene const * {
 
 		drawable.pipeline = lit_color_texture_program_pipeline;
 
+		// Sphere.001 is the mesh for the sun.
+		// TODO(xiaoqiao, zizhuol): change blender so the mesh for sun has a better name
+		bool is_emissive = mesh_name == "Sphere.001";
+		GLuint program_id = lit_color_texture_program_pipeline.program;
+		drawable.pipeline.set_uniforms = [=]() {
+			glUseProgram(program_id);
+			GLuint is_emissive_uniform_loc = glGetUniformLocation(program_id, "is_emissive");
+			glUniform1i(is_emissive_uniform_loc, is_emissive);
+		};
+
 		drawable.pipeline.vao = comet_meshes_for_lit_color_texture_program;
 		drawable.pipeline.type = mesh.type;
 		drawable.pipeline.start = mesh.start;
@@ -295,7 +305,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	glUseProgram(lit_color_texture_program->program);
 	glUniform1i(lit_color_texture_program->LIGHT_TYPE_int, 0);
 	glUniform3fv(lit_color_texture_program->LIGHT_DIRECTION_vec3, 1, glm::value_ptr(glm::vec3(4130.0f, 0.0f,0.0f)));
-	glUniform3fv(lit_color_texture_program->LIGHT_ENERGY_vec3, 1, glm::value_ptr(glm::vec3(100000.0f, 100000.0f, 100000.95f)));
+	glUniform3fv(lit_color_texture_program->LIGHT_ENERGY_vec3, 1, glm::value_ptr(glm::vec3(10000.0f, 10000.0f, 10000.95f)));
 	glUseProgram(0);
 
 	RenderCaptor::set_render_destination(render_ofb);

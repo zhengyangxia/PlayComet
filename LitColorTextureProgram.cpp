@@ -75,6 +75,7 @@ LitColorTextureProgram::LitColorTextureProgram() {
 		"uniform vec3 LIGHT_DIRECTION;\n"
 		"uniform vec3 LIGHT_ENERGY;\n"
 		"uniform float LIGHT_CUTOFF;\n"
+		"uniform bool is_emissive;\n"
 		"in vec3 position;\n"
 		"in vec3 normal;\n"
 		"in vec4 color;\n"
@@ -104,6 +105,7 @@ LitColorTextureProgram::LitColorTextureProgram() {
 		"	}\n"
 		"	vec4 albedo = texture(TEX, texCoord) * color;\n"
 		"	fragColor = vec4(e*albedo.rgb, albedo.a);\n"
+		"   if (is_emissive) { fragColor += vec4(2.0f, 1.5f, 0.3f, 0.0f); }"
 		"}\n"
 	);
 	//As you can see above, adjacent strings in C/C++ are concatenated.

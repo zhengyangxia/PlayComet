@@ -137,7 +137,7 @@ in vec2 TexCoords;
 uniform sampler2D screenTexture;
 
 uniform bool horizontal;
-uniform float weight[5] = float[] (0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
+uniform float weight[14] = float[] (0.132369, 0.125279, 0.10621, 0.080656, 0.054866, 0.033431, 0.018246, 0.008921, 0.003906, 0.001532, 0.000538, 0.000169, 0.000048, 0.000012);
 
 void main()
 {
@@ -145,7 +145,7 @@ void main()
     vec3 result = texture(screenTexture, TexCoords).rgb * weight[0]; // current fragment's contribution
     if(horizontal)
     {
-        for(int i = 1; i < 5; ++i)
+        for(int i = 1; i < 14; ++i)
         {
             result += texture(screenTexture, TexCoords + vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
             result += texture(screenTexture, TexCoords - vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
@@ -153,7 +153,7 @@ void main()
     }
     else
     {
-        for(int i = 1; i < 5; ++i)
+        for(int i = 1; i < 14; ++i)
         {
             result += texture(screenTexture, TexCoords + vec2(0.0, tex_offset.y * i)).rgb * weight[i];
             result += texture(screenTexture, TexCoords - vec2(0.0, tex_offset.y * i)).rgb * weight[i];

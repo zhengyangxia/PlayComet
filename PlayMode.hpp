@@ -91,8 +91,8 @@ private:
 	void shoot();
 	void reset_speed();
 
-	Threshold threshold_processor{10.0f};
-	GaussianBlur gaussian_processor{5};
+	Threshold threshold_processor{20.0f};
+	GaussianBlur gaussian_processor{1};
 	Identity identity_processor{};
 	ToneMapping tone_mapping_processor{};
 	AddTwo add_processor{};
