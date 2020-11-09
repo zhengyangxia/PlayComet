@@ -1,5 +1,5 @@
 #include "TexFramebuffer.hpp"
-#include <vector>
+#include <cassert>
 #include "gl_errors.hpp"
 namespace game_graphics {
 void RenderCaptor::set_render_destination(TexFramebufferPtr dest) {
