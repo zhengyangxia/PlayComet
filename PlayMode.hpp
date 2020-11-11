@@ -91,7 +91,10 @@ private:
 	void shoot();
 	void reset_speed();
 
-	Threshold threshold_processor{20.0f};
+	static constexpr int GAUSSIAN_BLUR_OUTPUT_WIDTH = 480;
+	static constexpr int GAUSSIAN_BLUR_OUTPUT_HEIGHT = 270;
+
+	Threshold threshold_processor{1.0f};
 	GaussianBlur gaussian_processor{1};
 	Identity identity_processor{};
 	ToneMapping tone_mapping_processor{};

@@ -374,10 +374,12 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	}
 	GL_ERRORS();
 	RenderCaptor::set_render_destination(nullptr);
+	glViewport(0, 0, GAUSSIAN_BLUR_OUTPUT_WIDTH, GAUSSIAN_BLUR_OUTPUT_HEIGHT);
 	threshold_processor.draw(render_ofb, threshold_ofb);
 	GL_ERRORS();
 	gaussian_processor.draw(threshold_ofb, tmp_ofb);
 	GL_ERRORS();
+	glViewport(0, 0, drawable_size.x, drawable_size.y);
 	add_processor.draw(render_ofb, threshold_ofb, add_ofb);
 	tone_mapping_processor.draw(add_ofb, nullptr);
 }
@@ -416,7 +418,7 @@ void PlayMode::detect_collision_and_update_state() {
 }
 void PlayMode::on_resize(const glm::uvec2 &window_size, const glm::uvec2 &drawable_size) {
 	render_ofb->realloc(drawable_size.x, drawable_size.y);
-	threshold_ofb->realloc(drawable_size.x, drawable_size.y);
-	tmp_ofb->realloc(drawable_size.x, drawable_size.y);
+	threshold_ofb->realloc(GAUSSIAN_BLUR_OUTPUT_WIDTH, GAUSSIAN_BLUR_OUTPUT_HEIGHT);
+	tmp_ofb->realloc(GAUSSIAN_BLUR_OUTPUT_WIDTH, GAUSSIAN_BLUR_OUTPUT_HEIGHT);
 	add_ofb->realloc(drawable_size.x, drawable_size.y);
 }

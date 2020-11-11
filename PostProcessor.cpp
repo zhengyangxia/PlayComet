@@ -91,6 +91,10 @@ void BaseProcessor::draw_quad(std::vector<TexFramebufferPtr> inputs, TexFramebuf
 	GL_ERRORS();
 
 	// specify the destination and draw
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	glUseProgram(0);
 	GL_ERRORS();
@@ -110,7 +114,7 @@ void main()
 {
 	vec4 inputColor = texture(screenTexture, TexCoords);
 	float luminance = dot(inputColor.rgb, vec3(0.2126, 0.7152, 0.0722));
-	FragColor = luminance > 1.0f ? inputColor : vec4(0.0f);
+	FragColor = luminance > threshold ? inputColor : vec4(0.0f);
 }
 )glsl"
 ), threshold{threshold} {
