@@ -4,11 +4,25 @@
 #include "gl_errors.hpp"
 
 ParticleGenerator::ParticleGenerator(){
-        this->shader.reset(new Shader());
-        this->texture.reset(new Texture2D());
-        this->texture->Generate(1, 1);
-        this->init();
+    this->shader.reset(new Shader());
+    this->texture.reset(new Texture2D());
+    this->texture->Generate(1, 1);
+    this->init();
 }
+
+ParticleGenerator::~ParticleGenerator(){
+    // Cleanup VBO and shader
+	glDeleteBuffers(1, &particles_color_buffer);
+	glDeleteBuffers(1, &particles_position_buffer);
+	glDeleteBuffers(1, &billboard_vertex_buffer);
+	glDeleteProgram(shader->ID);
+	glDeleteTextures(1, &texture->ID);
+	glDeleteVertexArrays(1, &VertexArrayID);
+    delete(g_particule_color_data);
+    delete(g_particule_position_size_data);
+    GL_ERRORS();
+}
+
 
 void ParticleGenerator::init(){
     // set up mesh and attribute properties
@@ -17,31 +31,39 @@ void ParticleGenerator::init(){
         this->particles[i].pos = glm::vec3(0.f);
     }
 
-
-    unsigned int VBO;
-    float particle_quad[] = {
-        0.0f, 1.0f, 0.0f, 1.0f,
-        1.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f,
-
-        0.0f, 1.0f, 0.0f, 1.0f,
-        1.0f, 1.0f, 1.0f, 1.0f,
-        1.0f, 0.0f, 1.0f, 0.0f
-    }; 
-    glGenVertexArrays(1, &this->VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(this->VAO);
+    g_particule_position_size_data = new GLfloat[MaxParticles * 4];
+    g_particule_color_data         = new GLubyte[MaxParticles * 4];
+    
+	glGenVertexArrays(1, &VertexArrayID);
+	glBindVertexArray(VertexArrayID);
     GL_ERRORS();
 
-    glGenVertexArrays(1, &this->VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(this->VAO);
-    // fill mesh buffer
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(particle_quad), particle_quad, GL_STATIC_DRAW);
-    // set mesh attributes
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    static const GLfloat g_vertex_buffer_data[] = {
+       	-0.5f, -0.5f, 0.0f, 0.0f,
+		0.5f, -0.5f, 1.0f, 0.0f,
+		-0.5f,  0.5f, 0.0f, 1.0f,
+		0.5f,  0.5f, 1.0f, 1.0f
+    }; 
+
+	glGenBuffers(1, &billboard_vertex_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+    GL_ERRORS();
+
+	// The VBO containing the positions and sizes of the particles
+	glGenBuffers(1, &particles_position_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, particles_position_buffer);
+	// Initialize with empty (NULL) buffer : it will be updated later, each frame.
+	glBufferData(GL_ARRAY_BUFFER, MaxParticles * 4 * sizeof(GLfloat), NULL, GL_STREAM_DRAW);
+    GL_ERRORS();
+
+	// The VBO containing the colors of the particles
+	glGenBuffers(1, &particles_color_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, particles_color_buffer);
+	// Initialize with empty (NULL) buffer : it will be updated later, each frame.
+	glBufferData(GL_ARRAY_BUFFER, MaxParticles * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW);
+    GL_ERRORS();
+
     glBindVertexArray(0);
 
     // create this->amount default particle instances
@@ -50,54 +72,115 @@ void ParticleGenerator::init(){
 
     std::cout << this->particles.size() << "\n";
     assert(this->particles.size()==500);
-
-    // fill mesh buffer
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(particle_quad), particle_quad, GL_STATIC_DRAW);
-    GL_ERRORS();
-
-    // set mesh attributes
-    // glEnableVertexAttribArray(0);
-    // glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-    // glBindVertexArray(0);
-
-    // set mesh attributes
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-    glBindVertexArray(0);
-    GL_ERRORS();
-
-    // create this->amount default particle instances
-    for (unsigned int i = 0; i < MaxParticles; ++i)
-        this->particles.push_back(Particle());
 }
 
+void ParticleGenerator::Update(float elapsed){
+    ParticlesCount = 0;
+    for (size_t i = 0; i < MaxParticles; i++)
+    {
+        Particle& p = particles[i];
+        // Fill the GPU buffer
+        g_particule_position_size_data[4*ParticlesCount+0] = p.pos.x + elapsed *0.1;
+        g_particule_position_size_data[4*ParticlesCount+1] = p.pos.y;
+        g_particule_position_size_data[4*ParticlesCount+2] = p.pos.z;
+                                        
+        g_particule_position_size_data[4*ParticlesCount+3] = 1.0f;
+                                        
+        g_particule_color_data[4*ParticlesCount+0] = 1.0f;
+        g_particule_color_data[4*ParticlesCount+1] = 1.0f;
+        g_particule_color_data[4*ParticlesCount+2] = 1.0f;
+        g_particule_color_data[4*ParticlesCount+3] = 1.0f;
+
+        ParticlesCount += 1;
+    }
+}
 // TODO -> update->position relative to camera
 
 void ParticleGenerator::Draw(){
+    glBindVertexArray(VertexArrayID);
+
     // use additive blending to give it a 'glow' effect
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    glBindBuffer(GL_ARRAY_BUFFER, particles_position_buffer);
+    glBufferData(GL_ARRAY_BUFFER, MaxParticles * 4 * sizeof(GLfloat), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
+    glBufferSubData(GL_ARRAY_BUFFER, 0, ParticlesCount * sizeof(GLfloat) * 4, g_particule_position_size_data);
+    GL_ERRORS();
+
+    glBindBuffer(GL_ARRAY_BUFFER, particles_color_buffer);
+    glBufferData(GL_ARRAY_BUFFER, MaxParticles * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW); // Buffer orphaning, a common way to improve streaming perf. See above link for details.
+    glBufferSubData(GL_ARRAY_BUFFER, 0, ParticlesCount * sizeof(GLubyte) * 4, g_particule_color_data);
+    GL_ERRORS();
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     this->shader->Use();
     GL_ERRORS();
 
-    // glUseProgram();
-    for (Particle particle : this->particles)
-    {
-        // if (particle.Life > 0.0f)
-        {
-            this->shader->SetVector2f("offset", glm::vec2(particle.pos.x, particle.pos.y));
-            GL_ERRORS();
-            this->shader->SetVector4f("color", particle.color);
-            GL_ERRORS();
-            this->texture->Bind();
-            glBindVertexArray(this->VAO);
-            GL_ERRORS();
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-            GL_ERRORS();
-            glBindVertexArray(0);
-        }
-    }
+    this->texture->Bind();
+    glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture->ID);
+
+    // 1rst attribute buffer : vertices
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
+    glVertexAttribPointer(
+        0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
+        4,                  // size
+        GL_FLOAT,           // type
+        GL_FALSE,           // normalized?
+        0,                  // stride
+        (void*)0            // array buffer offset
+    );
+    GL_ERRORS();
+
+    // 2nd attribute buffer : positions of particles' centers
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, particles_position_buffer);
+    glVertexAttribPointer(
+        1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+        4,                                // size : x + y + z + size => 4
+        GL_FLOAT,                         // type
+        GL_FALSE,                         // normalized?
+        0,                                // stride
+        (void*)0                          // array buffer offset
+    );
+    GL_ERRORS();
+
+    // 3rd attribute buffer : particles' colors
+    glEnableVertexAttribArray(2);
+    glBindBuffer(GL_ARRAY_BUFFER, particles_color_buffer);
+    glVertexAttribPointer(
+        2,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+        4,                                // size : r + g + b + a => 4
+        GL_UNSIGNED_BYTE,                 // type
+        GL_TRUE,                          // normalized?    *** YES, this means that the unsigned char[4] will be accessible with a vec4 (floats) in the shader ***
+        0,                                // stride
+        (void*)0                          // array buffer offset
+    );
+    GL_ERRORS();
+
+    // These functions are specific to glDrawArrays*Instanced*.
+    // The first parameter is the attribute buffer we're talking about.
+    // The second parameter is the "rate at which generic vertex attributes advance when rendering multiple instances"
+    // http://www.opengl.org/sdk/docs/man/xhtml/glVertexAttribDivisor.xml
+    glVertexAttribDivisor(0, 0); // particles vertices : always reuse the same 4 vertices -> 0
+    glVertexAttribDivisor(1, 1); // positions : one per quad (its center)                 -> 1
+    glVertexAttribDivisor(2, 1); // color : one per quad                                  -> 1
+    GL_ERRORS();
+
+    // Draw the particules !
+    // This draws many times a small triangle_strip (which looks like a quad).
+    // This is equivalent to :
+    // for(i in ParticlesCount) : glDrawArrays(GL_TRIANGLE_STRIP, 0, 4), 
+    // but faster.
+    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, ParticlesCount);
+
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(2);
+
     GL_ERRORS();
     // don't forget to reset to default blending mode
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBindVertexArray(0);
+    GL_ERRORS();
 }

@@ -20,14 +20,26 @@ class ParticleGenerator
 {
     public:
         ParticleGenerator();
+        ~ParticleGenerator();
         // update all particles
         // void Update(float dt, GameObject &object, unsigned int newParticles, glm::vec2 offset = glm::vec2(0.0f, 0.0f));
         // render all particles
+        void Update(float elapsed);
         void Draw();
     private:
+        void init();
+
         std::vector<Particle> particles;
         std::shared_ptr<Shader> shader;
         std::shared_ptr<Texture2D> texture;
-        unsigned int VAO;
-        void init();
+        GLuint VertexArrayID;
+        GLfloat *g_particule_position_size_data;
+    	GLubyte *g_particule_color_data;
+        GLuint billboard_vertex_buffer;
+	    GLuint particles_position_buffer;
+	    GLuint particles_color_buffer;
+
+        int ParticlesCount = 0;
+
+
 };

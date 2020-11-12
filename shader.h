@@ -27,21 +27,25 @@ public:
     Shader() { 
         ID = gl_compile_program(R"glsl(
 #version 330 core
-layout (location = 0) in vec4 vertex; // <vec2 position, vec2 texCoords>
+// layout (location = 0) in vec4 vertex; // <vec2 position, vec2 texCoords>
+// Input vertex data, different for all executions of this shader.
+layout(location = 0) in vec4 squareVertices;
+layout(location = 1) in vec4 xyzs; // Position of the center of the particule and size of the square
+layout(location = 2) in vec4 color; // Position of the center of the particule and size of the square
 
 out vec2 TexCoords;
 out vec4 ParticleColor;
 
 //uniform mat4 projection;
-uniform vec2 offset;
-uniform vec4 color;
+// uniform vec2 offset;
+// uniform vec4 color;
 
 void main()
 {
     float scale = 10.0f;
-    TexCoords = vertex.zw;
+    TexCoords = squareVertices.zw;
     ParticleColor = color;
-    gl_Position = vec4(vertex.xy, 0.0f, 1.0f) /*projection * vec4((vertex.xy * scale) + offset, 0.0, 1.0)*/;
+    gl_Position = vec4(squareVertices.xy, 0.0f, 1.0f) /*projection * vec4((vertex.xy * scale) + offset, 0.0, 1.0)*/;
 }
 )glsl", R"glsl(
 #version 330 core
