@@ -1,6 +1,7 @@
 #include "Mode.hpp"
 
 #include "Scene.hpp"
+#include "ParticleGenerator.hpp"
 
 #include <glm/glm.hpp>
 
@@ -84,6 +85,8 @@ struct PlayMode : Mode {
 		std::vector<int> radius{20, 15, 10};
 		size_t planet_num = 0;
 	} planets;
+
+	ParticleGenerator *particle_comet_tail;
 	
 
 private:

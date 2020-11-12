@@ -99,6 +99,11 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 	{
 		gravityUtil.register_planet(p, 100.f);
 	}
+
+	particle_comet_tail = new ParticleGenerator();
+
+	// std::cout << comet.transform->position.x << " "comet.transform->position.x << " " comet.transform->position.x << "\n";
+
 }
 
 PlayMode::~PlayMode() {
@@ -323,6 +328,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	} else {
 		scene.draw(*universal_camera);
 	}
+	particle_comet_tail->Draw();
 
 	{ //use DrawLines to overlay some text:
 		glDisable(GL_DEPTH_TEST);
