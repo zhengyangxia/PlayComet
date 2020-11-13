@@ -111,6 +111,7 @@ GAME_NAMES =
 	load_opus
 	PostProcessor
 	TexFramebuffer
+	GridLines
 	;
 
 COMMON_NAMES =

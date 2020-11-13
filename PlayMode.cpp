@@ -320,6 +320,9 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
 	if (state == GameState::Flying || state == GameState::EndLose || state == GameState::EndWin) {
 		scene.draw(*comet.camera);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		grid_lines.draw(*comet.camera);
 	} else {
 		scene.draw(*universal_camera);
 	}
