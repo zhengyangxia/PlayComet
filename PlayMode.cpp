@@ -100,11 +100,8 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 		gravityUtil.register_planet(p, 100.f);
 	}
 
-	particle_comet_tail = new ParticleGenerator(glm::mat4(comet.camera->transform->make_world_to_local()), comet.camera->make_projection());
+	particle_comet_tail = new ParticleGenerator();
 
-	glm::vec4 comet_relative_to_camera = comet.camera->make_projection() * glm::mat4(comet.camera->transform->make_world_to_local()) * glm::mat4(comet.transform->make_local_to_world()) * glm::vec4(comet.transform->position, 1.0f);
-	
-	std::cout << comet_relative_to_camera.x << " " << comet_relative_to_camera.y << " " << comet_relative_to_camera.z << "\n";
 }
 
 PlayMode::~PlayMode() {
@@ -230,8 +227,7 @@ void PlayMode::reset_speed(){
 
 void PlayMode::update(float elapsed) {
 	glm::vec3 next_pos = comet.transform->position;
-	next_pos.z += 3.f;
-	particle_comet_tail->Update(elapsed, next_pos, comet.camera->transform->position);
+	particle_comet_tail->Update(elapsed, next_pos, comet.camera->transform->position, glm::mat4(comet.camera->transform->make_world_to_local()), comet.camera->make_projection());
 	//loop planets
 	for (auto &p : planets.transforms)
 	{
@@ -329,10 +325,11 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
 	if (state == GameState::Flying || state == GameState::EndLose || state == GameState::EndWin) {
 		scene.draw(*comet.camera);
+		particle_comet_tail->Draw();
 	} else {
 		scene.draw(*universal_camera);
 	}
-	particle_comet_tail->Draw();
+
 
 	{ //use DrawLines to overlay some text:
 		glDisable(GL_DEPTH_TEST);

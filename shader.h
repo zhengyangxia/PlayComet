@@ -70,7 +70,7 @@ uniform sampler2D sprite;
 void main()
 {
     // color = (texture(sprite, TexCoords) * ParticleColor);
-    color = vec4(1.0f);
+    color = ParticleColor;
 }
 )glsl");
     }
