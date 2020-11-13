@@ -228,7 +228,7 @@ void PlayMode::reset_speed(){
 }
 
 void PlayMode::update(float elapsed) {
-	particle_comet_tail->Update(elapsed);
+	particle_comet_tail->Update(elapsed, comet.transform->position, comet.camera->transform->position);
 	//loop planets
 	for (auto &p : planets.transforms)
 	{

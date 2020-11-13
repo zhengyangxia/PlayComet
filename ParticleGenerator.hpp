@@ -11,7 +11,13 @@ struct Particle
 	glm::vec4 color; // Color
 	float size, angle, weight;
 	float life; // Remaining life of the particle. if < 0 : dead and unused.
+    float cameradistance; // *Squared* distance to the camera. if dead : -1.0f
     Particle() : pos(0.f), speed(0.f), color(1.f, 1.f, 1.f, 1.f) {}; 
+
+	bool operator<(const Particle& that) const {
+		// Sort in reverse order : far particles drawn first.
+		return this->cameradistance > that.cameradistance;
+	}
 };
 
 const int MaxParticles = 500;
@@ -24,10 +30,12 @@ class ParticleGenerator
         // update all particles
         // void Update(float dt, GameObject &object, unsigned int newParticles, glm::vec2 offset = glm::vec2(0.0f, 0.0f));
         // render all particles
-        void Update(float elapsed);
+        void Update(float elapsed, glm::vec3 next_pos, glm::vec3 camera_pos);
         void Draw();
     private:
         void init();
+        int find_unused_particle();
+        void sort_particles();
 
         std::vector<Particle> particles;
         std::shared_ptr<Shader> shader;
@@ -40,6 +48,5 @@ class ParticleGenerator
 	    GLuint particles_color_buffer;
 
         int ParticlesCount = 0;
-
-
+        int LastUsedParticle = 0;
 };

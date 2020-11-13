@@ -2,6 +2,7 @@
 #include "shader.h"
 #include "texture.h"
 #include "gl_errors.hpp"
+#include <stdlib.h>
 
 ParticleGenerator::ParticleGenerator(){
     this->shader.reset(new Shader());
@@ -72,27 +73,92 @@ void ParticleGenerator::init(){
 
     std::cout << this->particles.size() << "\n";
     assert(this->particles.size()==500);
+
+    for(int i=0; i<MaxParticles; i++){
+		particles[i].life = -1.0f;
+        particles[i].cameradistance = -1.0f;
+	}
+
 }
 
-void ParticleGenerator::Update(float elapsed){
+
+// Finds a Particle in ParticlesContainer which isn't used yet.
+// (i.e. life < 0);
+int ParticleGenerator::find_unused_particle(){
+	for(int i=LastUsedParticle; i<MaxParticles; i++){
+		if (particles[i].life < 0){
+			LastUsedParticle = i;
+			return i;
+		}
+	}
+
+	for(int i=0; i<LastUsedParticle; i++){
+		if (particles[i].life < 0){
+			LastUsedParticle = i;
+			return i;
+		}
+	}
+
+	return 0; // All particles are taken, override the first one
+}
+
+void ParticleGenerator::sort_particles(){
+	std::sort(&particles[0], &particles[MaxParticles]);
+}
+
+void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 camera_pos){
     ParticlesCount = 0;
+    
+    int newparticles = (int)(elapsed*10000.0);
+    if (newparticles > (int)(0.016f*10000.0))
+        newparticles = (int)(0.016f*10000.0);
+
+    for (size_t i = 0; i < newparticles; i++)
+    {
+        int particleIndex = find_unused_particle();
+        particles[particleIndex].life = 5.f; // This particle will live 0.5 seconds.
+        particles[particleIndex].pos = next_pos;
+    }
+    
     for (size_t i = 0; i < MaxParticles; i++)
     {
         Particle& p = particles[i];
-        // Fill the GPU buffer
-        g_particule_position_size_data[4*ParticlesCount+0] = p.pos.x + elapsed *0.1;
-        g_particule_position_size_data[4*ParticlesCount+1] = p.pos.y;
-        g_particule_position_size_data[4*ParticlesCount+2] = p.pos.z;
-                                        
-        g_particule_position_size_data[4*ParticlesCount+3] = 1.0f;
-                                        
-        g_particule_color_data[4*ParticlesCount+0] = 1.0f;
-        g_particule_color_data[4*ParticlesCount+1] = 1.0f;
-        g_particule_color_data[4*ParticlesCount+2] = 1.0f;
-        g_particule_color_data[4*ParticlesCount+3] = 1.0f;
+        if (p.life > 0.f)
+        {
+            p.life -= elapsed;
+            if (p.life > 0.f)
+            {
+                // Fill the GPU buffer
+                g_particule_position_size_data[4*ParticlesCount+0] = 0.f;
+                g_particule_position_size_data[4*ParticlesCount+1] = 0.f;
+                g_particule_position_size_data[4*ParticlesCount+2] = 0.f;
+              
+                g_particule_position_size_data[4*ParticlesCount+3] = (rand()%1000)/200000.0f + 0.01f;
 
-        ParticlesCount += 1;
+                p.cameradistance = glm::length( p.pos - camera_pos );
+
+                g_particule_color_data[4*ParticlesCount+0] = 1.0f;
+                g_particule_color_data[4*ParticlesCount+1] = 1.0f;
+                g_particule_color_data[4*ParticlesCount+2] = 1.0f;
+                g_particule_color_data[4*ParticlesCount+3] = 1.0f;
+    
+                ParticlesCount += 1;
+            }else{
+				p.cameradistance = -1.0f;
+            }
+        }
+
     }
+
+    sort_particles();
+    for (size_t i = 0; i < ParticlesCount; i++)
+    {
+        if (particles[i].cameradistance == -1.f)
+        {
+            std::cout << i << " " <<particles[i].cameradistance << "\n";
+        }
+    }
+    
 }
 // TODO -> update->position relative to camera
 

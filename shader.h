@@ -42,10 +42,11 @@ out vec4 ParticleColor;
 
 void main()
 {
+    float particleSize = xyzs.w;
     float scale = 10.0f;
     TexCoords = squareVertices.zw;
     ParticleColor = color;
-    gl_Position = vec4(squareVertices.xy, 0.0f, 1.0f) /*projection * vec4((vertex.xy * scale) + offset, 0.0, 1.0)*/;
+    gl_Position = vec4(xyzs.x - squareVertices.x * particleSize, xyzs.y - squareVertices.y * particleSize, xyzs.z, 1.0f) /*projection * vec4((vertex.xy * scale) + offset, 0.0, 1.0)*/;
 }
 )glsl", R"glsl(
 #version 330 core
