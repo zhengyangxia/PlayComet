@@ -36,17 +36,28 @@ layout(location = 2) in vec4 color; // Position of the center of the particule a
 out vec2 TexCoords;
 out vec4 ParticleColor;
 
-//uniform mat4 projection;
-// uniform vec2 offset;
-// uniform vec4 color;
+// Values that stay constant for the whole mesh.
+uniform vec3 CameraRight_worldspace;
+uniform vec3 CameraUp_worldspace;
+uniform mat4 VP; // Model-View-Projection matrix, but without the Model (the position is in BillboardPos; the orientation depends on the camera)
 
 void main()
 {
     float particleSize = xyzs.w;
-    float scale = 10.0f;
+    vec3 particleCenter_wordspace = xyzs.xyz;
+
+    vec3 vertexPosition_worldspace = 
+		particleCenter_wordspace
+		+ CameraRight_worldspace * squareVertices.x * particleSize
+		+ CameraUp_worldspace * squareVertices.y * particleSize;
+
+    // Output position of the vertex
+	gl_Position = VP * vec4(vertexPosition_worldspace, 1.0f);
+
+    // float scale = 10.0f;
     TexCoords = squareVertices.zw;
     ParticleColor = color;
-    gl_Position = vec4(xyzs.x - squareVertices.x * particleSize, xyzs.y - squareVertices.y * particleSize, xyzs.z, 1.0f) /*projection * vec4((vertex.xy * scale) + offset, 0.0, 1.0)*/;
+    // gl_Position = vec4(xyzs.x - squareVertices.x * particleSize, xyzs.y - squareVertices.y * particleSize, xyzs.z, 1.0f) /*projection * vec4((vertex.xy * scale) + offset, 0.0, 1.0)*/;
 }
 )glsl", R"glsl(
 #version 330 core

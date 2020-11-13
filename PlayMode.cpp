@@ -100,10 +100,11 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 		gravityUtil.register_planet(p, 100.f);
 	}
 
-	particle_comet_tail = new ParticleGenerator();
+	particle_comet_tail = new ParticleGenerator(glm::mat4(comet.camera->transform->make_world_to_local()), comet.camera->make_projection());
 
-	// std::cout << comet.transform->position.x << " "comet.transform->position.x << " " comet.transform->position.x << "\n";
-
+	glm::vec4 comet_relative_to_camera = comet.camera->make_projection() * glm::mat4(comet.camera->transform->make_world_to_local()) * glm::mat4(comet.transform->make_local_to_world()) * glm::vec4(comet.transform->position, 1.0f);
+	
+	std::cout << comet_relative_to_camera.x << " " << comet_relative_to_camera.y << " " << comet_relative_to_camera.z << "\n";
 }
 
 PlayMode::~PlayMode() {
@@ -228,7 +229,9 @@ void PlayMode::reset_speed(){
 }
 
 void PlayMode::update(float elapsed) {
-	particle_comet_tail->Update(elapsed, comet.transform->position, comet.camera->transform->position);
+	glm::vec3 next_pos = comet.transform->position;
+	next_pos.z += 3.f;
+	particle_comet_tail->Update(elapsed, next_pos, comet.camera->transform->position);
 	//loop planets
 	for (auto &p : planets.transforms)
 	{

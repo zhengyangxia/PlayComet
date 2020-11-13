@@ -5,11 +5,29 @@
 #include <cstdlib>
 #include <algorithm>
 
-ParticleGenerator::ParticleGenerator(){
+ParticleGenerator::ParticleGenerator(glm::mat4 view_matrix, glm::mat4 projection_matrix)
+{
+    std::cout << "init" << "\n";
+
     this->shader.reset(new Shader());
     this->texture.reset(new Texture2D());
     this->texture->Generate(1, 1);
+    this->shader->Use();
+     // Vertex shader
+	GLuint CameraRight_worldspace_ID  = glGetUniformLocation(shader->ID, "CameraRight_worldspace");
+	GLuint CameraUp_worldspace_ID  = glGetUniformLocation(shader->ID, "CameraUp_worldspace");
+	GLuint ViewProjMatrixID = glGetUniformLocation(shader->ID, "VP");
+
+	glm::mat4 ViewProjectionMatrix = projection_matrix * view_matrix;    
+    
+    std::cout << "CameraRight_worldspace_ID: " << view_matrix[0][0] << " " << view_matrix[1][0] << " " << view_matrix[2][0] << "\n";
+    std::cout << "CameraUp_worldspace_ID: " << view_matrix[0][1] << " " << view_matrix[1][1] << " " << view_matrix[2][1] << "\n";
+    glUniform3f(CameraRight_worldspace_ID, view_matrix[0][0], view_matrix[1][0], view_matrix[2][0]);
+	glUniform3f(CameraUp_worldspace_ID, view_matrix[0][1], view_matrix[1][1], view_matrix[2][1]);
+	glUniformMatrix4fv(ViewProjMatrixID, 1, GL_FALSE, &ViewProjectionMatrix[0][0]);
+
     this->init();
+    glUseProgram(0);
 }
 
 ParticleGenerator::~ParticleGenerator(){
@@ -119,6 +137,7 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
         int particleIndex = find_unused_particle();
         particles[particleIndex].life = 5.f; // This particle will live 0.5 seconds.
         particles[particleIndex].pos = next_pos;
+        particles[particleIndex].size = (rand()%1000)/2000.0f + 0.1f;
     }
     
     for (size_t i = 0; i < MaxParticles; i++)
@@ -130,11 +149,13 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
             if (p.life > 0.f)
             {
                 // Fill the GPU buffer
-                g_particule_position_size_data[4*ParticlesCount+0] = 0.f;
-                g_particule_position_size_data[4*ParticlesCount+1] = 0.f;
-                g_particule_position_size_data[4*ParticlesCount+2] = 0.f;
+                g_particule_position_size_data[4*ParticlesCount+0] = p.pos.x;
+                g_particule_position_size_data[4*ParticlesCount+1] = p.pos.y;
+                g_particule_position_size_data[4*ParticlesCount+2] = p.pos.z;
               
-                g_particule_position_size_data[4*ParticlesCount+3] = (rand()%1000)/200000.0f + 0.01f;
+                g_particule_position_size_data[4*ParticlesCount+3] = p.size;
+                
+                // std::cout << p.pos.x << " " << p.pos.y << " " << p.pos.z <<"\n";
 
                 p.cameradistance = glm::length( p.pos - camera_pos );
 
@@ -152,13 +173,14 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
     }
 
     sort_particles();
-    for (int i = 0; i < ParticlesCount; i++)
-    {
-        if (particles[i].cameradistance == -1.f)
-        {
-            std::cout << i << " " <<particles[i].cameradistance << "\n";
-        }
-    }
+    
+    // for (int i = 0; i < ParticlesCount; i++)
+    // {
+    //     if (particles[i].cameradistance == -1.f)
+    //     {
+    //         std::cout << i << " " <<particles[i].cameradistance << "\n";
+    //     }
+    // }
     
 }
 // TODO -> update->position relative to camera

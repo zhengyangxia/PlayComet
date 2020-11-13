@@ -25,7 +25,7 @@ const int MaxParticles = 500;
 class ParticleGenerator
 {
     public:
-        ParticleGenerator();
+        ParticleGenerator(glm::mat4 view_matrix, glm::mat4 projection_matrix);
         ~ParticleGenerator();
         // update all particles
         // void Update(float dt, GameObject &object, unsigned int newParticles, glm::vec2 offset = glm::vec2(0.0f, 0.0f));
