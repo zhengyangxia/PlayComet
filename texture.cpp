@@ -7,6 +7,7 @@
 ** option) any later version.
 ******************************************************************/
 #include <iostream>
+#include <cassert>
 
 #include "texture.h"
 

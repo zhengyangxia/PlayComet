@@ -2,7 +2,8 @@
 #include "shader.h"
 #include "texture.h"
 #include "gl_errors.hpp"
-#include <stdlib.h>
+#include <cstdlib>
+#include <algorithm>
 
 ParticleGenerator::ParticleGenerator(){
     this->shader.reset(new Shader());
@@ -113,7 +114,7 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
     if (newparticles > (int)(0.016f*10000.0))
         newparticles = (int)(0.016f*10000.0);
 
-    for (size_t i = 0; i < newparticles; i++)
+    for (int i = 0; i < newparticles; i++)
     {
         int particleIndex = find_unused_particle();
         particles[particleIndex].life = 5.f; // This particle will live 0.5 seconds.
@@ -151,7 +152,7 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
     }
 
     sort_particles();
-    for (size_t i = 0; i < ParticlesCount; i++)
+    for (int i = 0; i < ParticlesCount; i++)
     {
         if (particles[i].cameradistance == -1.f)
         {
