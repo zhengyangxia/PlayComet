@@ -12,6 +12,7 @@
 #include "GravityUtil.hpp"
 #include "PostProcessor.hpp"
 #include "TexFramebuffer.hpp"
+#include "SkyBox.hpp"
 
 // xiaoqiao: dirty workaround for namespace stuff.. should fix it later if i have time
 using namespace game_graphics;
@@ -97,6 +98,7 @@ private:
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_WIDTH = 480;
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_HEIGHT = 270;
 
+	SkyBox skybox{};
 	Threshold threshold_processor{1.0f};
 	GaussianBlur gaussian_processor{1};
 	Identity identity_processor{};

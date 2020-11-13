@@ -324,14 +324,15 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	glClearDepth(1.0f); //1.0 is actually the default value to clear the depth buffer to, but FYI you can change it.
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	Scene::Camera *current_camera =
+		state == GameState::Flying || state == GameState::EndLose || state == GameState::EndWin ? comet.camera
+		                                                                                        : universal_camera;
+	skybox.draw(*current_camera);
+
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS); //this is the default depth comparison function, but FYI you can change it.
 
-	if (state == GameState::Flying || state == GameState::EndLose || state == GameState::EndWin) {
-		scene.draw(*comet.camera);
-	} else {
-		scene.draw(*universal_camera);
-	}
+	scene.draw(*current_camera);
 	particle_comet_tail->Draw();
 
 	{ //use DrawLines to overlay some text:

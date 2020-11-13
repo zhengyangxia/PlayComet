@@ -111,6 +111,7 @@ GAME_NAMES =
 	load_opus
 	PostProcessor
 	TexFramebuffer
+	SkyBox
 	;
 
 COMMON_NAMES =
