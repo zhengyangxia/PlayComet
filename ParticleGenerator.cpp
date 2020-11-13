@@ -115,9 +115,9 @@ void ParticleGenerator::sort_particles(){
 void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 camera_pos, glm::mat4 view_matrix, glm::mat4 projection_matrix){
     ParticlesCount = 0;
     
-    int newparticles = (int)(elapsed*1000.0);
-    if (newparticles > (int)(0.016f*1000.0))
-        newparticles = (int)(0.016f*1000.0);
+    int newparticles = (int)(elapsed*2000.0);
+    if (newparticles > (int)(0.016f*2000.0))
+        newparticles = (int)(0.016f*2000.0);
 
     this->shader->Use();
 
@@ -139,8 +139,14 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
     for (int i = 0; i < newparticles; i++)
     {
         int particleIndex = find_unused_particle();
-        particles[particleIndex].life = 3.f; // This particle will live 0.5 seconds.
-        particles[particleIndex].pos = next_pos;
+        particles[particleIndex].life = LifeSpan; // This particle will live LifeSpan seconds.
+
+        glm::vec3 offset = ((rand() % 8) / 20.0f) * right_speed;
+        offset = rand() % 2 == 1 ? offset:-offset;
+        offset += ((rand()%10) / 20.f) * up_vector;
+        offset = rand() % 2 == 1 ? offset:-offset;
+
+        particles[particleIndex].pos = next_pos + offset;
 
         float degree = rand() % 75 + 52.5f;
         glm::mat4 trans = glm::mat4(1.0f);
@@ -149,9 +155,9 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
         vec = trans * vec;
 
         particles[particleIndex].speed = vec;
-        particles[particleIndex].size = (rand()%1000)/2000.0f + 0.1f;
+        particles[particleIndex].size = (rand()%2500)/20000.0f + 0.075f;
         // Very bad way to generate a random color
-		particles[particleIndex].color = glm::vec4(rand() % 256, rand() % 256, rand() % 256, (rand() % 256) / 3);
+		particles[particleIndex].color = glm::vec4(254, 155, 120, 0.8);
     }
     
     for (size_t i = 0; i < MaxParticles; i++)
@@ -161,6 +167,13 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
         {
             p.life -= elapsed;
             p.pos += p.speed * elapsed;
+            p.size += elapsed * 1.5f / LifeSpan;
+
+            p.color.x -= elapsed;
+            p.color.y -= elapsed;
+            p.color.z -= elapsed * 30;
+
+            p.color.w = glm::pow((p.life / LifeSpan), 4) * 0.8 * 255;
             if (p.life > 0.f)
             {
                 // Fill the GPU buffer
