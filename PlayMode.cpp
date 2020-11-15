@@ -147,14 +147,13 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		
 		if (evt.key.keysym.sym == SDLK_SPACE)
 		{
-			// space.pressed = !space.pressed;
-			if (SDL_GetRelativeMouseMode() == SDL_FALSE)
-			{
-				SDL_SetRelativeMouseMode(SDL_TRUE);
-			}else{
-				comet.camera->transform->rotation = initial_camera_rotation;
-				SDL_SetRelativeMouseMode(SDL_FALSE);
-			}
+			// if (SDL_GetRelativeMouseMode() == SDL_FALSE)
+			// {
+			// 	SDL_SetRelativeMouseMode(SDL_TRUE);
+			// }else{
+			// 	comet.camera->transform->rotation = initial_camera_rotation;
+			// 	SDL_SetRelativeMouseMode(SDL_FALSE);
+			// }
 			return true;
 		} else if (SDL_GetRelativeMouseMode() == SDL_TRUE)
 		{
