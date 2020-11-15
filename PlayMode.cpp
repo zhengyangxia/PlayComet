@@ -23,7 +23,6 @@ Load< MeshBuffer > comet_meshes(LoadTagDefault, []() -> MeshBuffer const * {
 Load< Scene > comet_scene(LoadTagDefault, []() -> Scene const * {
 	return new Scene(data_path("comet.scene"), [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name){
 		Mesh const &mesh = comet_meshes->lookup(mesh_name);
-
 		scene.drawables.emplace_back(transform);
 		Scene::Drawable &drawable = scene.drawables.back();
 
@@ -47,8 +46,27 @@ Load< Scene > comet_scene(LoadTagDefault, []() -> Scene const * {
 	});
 });
 
+void initialize_asteroids(Scene::Transform& t, PlayMode::Asteroids* asteroids)
+{
+	asteroids->asteroids_num += 1;
+	asteroids->transforms.push_back(&t);
+}
+
+void scale_asteroids(PlayMode::Asteroids* asteroids, float scale)
+{
+	assert(scale >= 0.f);
+	for (auto& t: asteroids->transforms)
+	{
+		t->scale.x *= scale;
+		t->scale.y *= scale;
+		t->scale.z *= scale;
+	}
+	asteroids->radius *= scale;
+}
+
 PlayMode::PlayMode() : scene(*comet_scene) {
 	std::string planetPrefix = "Planet";
+	std::string asteroidPrefix = "Asteroid";
 	for (auto &transform : scene.transforms)
 	{
 		if (std::strlen(transform.name.c_str()) >= 6 && std::strncmp(transform.name.c_str(), "Player", 6) == 0)
@@ -62,8 +80,13 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 		}else if (std::strlen(transform.name.c_str()) >= 3 && std::strncmp(transform.name.c_str(), "Sun", 3) == 0)
 		{
 			sun = &transform;
+		}else if (transform.name.find(asteroidPrefix) == 0){
+			initialize_asteroids(transform, &asteroids);
 		}
 	}
+
+	scale_asteroids(&asteroids, 0.5f);
+	
 	planets.hit_bitmap.resize(planets.planet_num, false);
 	//create a player camera attached to a child of the player transform:
 	scene.transforms.emplace_back();
@@ -403,6 +426,14 @@ void PlayMode::detect_collision_and_update_state() {
 	float comet_sun_dist = glm::distance(comet_pos, sun_pos);
 	if (comet_sun_dist <= COMET_RADIUS + SUN_RADIUS) {
 		state = GameState::EndLose;
+	}
+
+	for(auto &t : asteroids.transforms){
+		if (glm::distance(comet_pos, t->position) <= COMET_RADIUS + asteroids.radius)
+		{
+			state = GameState::EndLose;
+			break;
+		}
 	}
 
 	for (size_t i = 0; i< planets.planet_num; i++){
