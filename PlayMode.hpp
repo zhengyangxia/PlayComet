@@ -92,7 +92,7 @@ struct PlayMode : Mode {
 	struct Asteroids
 	{
 		std::vector<Scene::Transform*> transforms;
-		int radius = 5.f;
+		float radius = 5.f;
 		size_t asteroids_num = 0;
 	}asteroids;
 

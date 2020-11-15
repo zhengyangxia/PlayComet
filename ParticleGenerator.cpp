@@ -175,7 +175,7 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
             p.color.y -= elapsed;
             p.color.z -= elapsed * 30;
 
-            p.color.w = glm::pow((p.life / LifeSpan), 4) * 0.8 * 255;
+            p.color.w = (float)(glm::pow((p.life / LifeSpan), 4) * 0.8 * 255.f);
             if (p.life > 0.f)
             {
                 // Fill the GPU buffer
@@ -189,10 +189,10 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
 
                 p.cameradistance = glm::length( p.pos - camera_pos );
 
-                g_particule_color_data[4*ParticlesCount+0] = p.color.x;
-                g_particule_color_data[4*ParticlesCount+1] = p.color.y;
-                g_particule_color_data[4*ParticlesCount+2] = p.color.z;
-                g_particule_color_data[4*ParticlesCount+3] = p.color.w;
+                g_particule_color_data[4*ParticlesCount+0] = (GLubyte)p.color.x;
+                g_particule_color_data[4*ParticlesCount+1] = (GLubyte)p.color.y;
+                g_particule_color_data[4*ParticlesCount+2] = (GLubyte)p.color.z;
+                g_particule_color_data[4*ParticlesCount+3] = (GLubyte)p.color.w;
     
             }else{
 				p.cameradistance = -1.0f;
