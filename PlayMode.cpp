@@ -213,18 +213,24 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		}
 	} */
 	else if (evt.type == SDL_MOUSEMOTION) {
-		if (SDL_GetRelativeMouseMode() == SDL_TRUE) {
-			glm::vec2 motion = glm::vec2(
-				evt.motion.xrel / float(window_size.y),
-				-evt.motion.yrel / float(window_size.y)
-			);
-			comet.camera->transform->rotation = glm::normalize(
-				comet.camera->transform->rotation
-				* glm::angleAxis(-motion.x * comet.camera->fovy, glm::vec3(0.0f, 1.0f, 0.0f))
-				* glm::angleAxis(motion.y * comet.camera->fovy, glm::vec3(1.0f, 0.0f, 0.0f))
-			);
-			return true;
-		}
+		glm::vec2 motion = glm::vec2(
+			evt.motion.xrel / float(window_size.y),
+			-evt.motion.yrel / float(window_size.y)
+		);
+		// comet.camera->transform->rotation = glm::normalize(
+		// 	comet.camera->transform->rotation
+		// 	* glm::angleAxis(-motion.x * comet.camera->fovy, glm::vec3(0.0f, 1.0f, 0.0f))
+		// 	* glm::angleAxis(motion.y * comet.camera->fovy, glm::vec3(1.0f, 0.0f, 0.0f))
+		// );
+		glm::quat rotation_x = glm::angleAxis(-motion.x * comet.camera->fovy, dirz);
+		glm::quat rotation_y = glm::angleAxis(motion.y * comet.camera->fovy, dirx);
+
+		comet_velocity =  rotation_x * rotation_y * comet_velocity;
+		comet.transform->rotation = rotation_x * rotation_y * comet.transform->rotation;
+		dirx = rotation_x * dirx;
+		dirz = rotation_y * dirz;
+
+		return true;
 	}
 	
 	return false;
@@ -242,6 +248,7 @@ void PlayMode::reset_speed(){
 	glm::quat rotation = glm::rotation(glm::normalize(comet_velocity), glm::normalize(speed_vector));
 	comet.transform->rotation = rotation * comet.transform->rotation;
 	dirx = rotation * dirx;
+	dirz = rotation * dirz;
 	constexpr float LaunchSpeed = 100.f;
 	comet_velocity = speed_vector*LaunchSpeed;
 	return;
@@ -285,14 +292,14 @@ void PlayMode::update(float elapsed) {
 		//combine inputs into a move:
 		constexpr float PlayerSpeed = 1.f;
 		glm::vec3 move = glm::vec3(0.0f);
-		if (left.pressed && !right.pressed) move.x =-1.0f;
-		if (!left.pressed && right.pressed) move.x = 1.0f;
+		// if (left.pressed && !right.pressed) move.x =-1.0f;
+		// if (!left.pressed && right.pressed) move.x = 1.0f;
 		if (down.pressed && !up.pressed) move.y =-1.0f;
 		if (!down.pressed && up.pressed) move.y = 1.0f;
 		if (clock.pressed && !aclock.pressed) move.z = 1.0f;
 		if (!clock.pressed && aclock.pressed) move.z = -1.0f;
 		// std::cout << "dot product " << glm::dot(comet_velocity, dirx) << std::endl;
-		glm::vec3 new_comet_velocity = comet_velocity + move.x * dirx * PlayerSpeed * elapsed;
+		glm::vec3 new_comet_velocity = comet_velocity;
 		// add gravity to new_comet_velocity
 		new_comet_velocity += gravityUtil.get_acceleration(comet.transform->position) * elapsed;
 		glm::quat rotation = glm::rotation(glm::normalize(comet_velocity), glm::normalize(new_comet_velocity));
@@ -303,7 +310,7 @@ void PlayMode::update(float elapsed) {
 			comet_velocity = new_comet_velocity * 0.99f;
 
 		dirx = rotation * dirx;
-		// diry = rotation * diry;
+		dirz = rotation * dirz;
 
 		comet.transform->rotation = rotation * comet.transform->rotation;
 		comet.transform->position += comet_velocity * elapsed;
@@ -311,6 +318,7 @@ void PlayMode::update(float elapsed) {
 		rotation = glm::angleAxis(glm::radians(move.z*elapsed*45), glm::normalize(comet_velocity));
 		comet.transform->rotation = rotation*comet.transform->rotation;
 		dirx = rotation * dirx;
+		dirz = rotation * dirz;
 		
 	}
 

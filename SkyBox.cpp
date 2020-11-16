@@ -117,7 +117,7 @@ uniform samplerCube skybox;
 
 void main()
 {
-    fragColor = texture(skybox, TexCoords) * 0.5f;
+    fragColor = texture(skybox, TexCoords) * 0.8;
 }
 )glsl");
 }
