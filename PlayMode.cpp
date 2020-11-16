@@ -242,8 +242,8 @@ void PlayMode::reset_speed(){
 	glm::quat rotation = glm::rotation(glm::normalize(comet_velocity), glm::normalize(speed_vector));
 	comet.transform->rotation = rotation * comet.transform->rotation;
 	dirx = rotation * dirx;
-
-	comet_velocity = speed_vector;
+	constexpr float LaunchSpeed = 100.f;
+	comet_velocity = speed_vector*LaunchSpeed;
 	return;
 }
 
