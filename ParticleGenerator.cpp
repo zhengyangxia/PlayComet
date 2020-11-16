@@ -290,6 +290,7 @@ void ParticleGenerator::Draw(){
 
     GL_ERRORS();
     // don't forget to reset to default blending mode
+    glDisable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBindVertexArray(0);
     GL_ERRORS();

@@ -103,7 +103,7 @@ LitColorTextureProgram::LitColorTextureProgram() {
 		"	} else { //(LIGHT_TYPE == 3) //directional light \n"
 		"		e = max(0.0, dot(n,-LIGHT_DIRECTION)) * LIGHT_ENERGY;\n"
 		"	}\n"
-		"	e += vec3(0.1f);\n"
+		"	e += vec3(0.25f);\n"
 		"	vec4 albedo = texture(TEX, texCoord) * color;\n"
 		"	fragColor = vec4(e*albedo.rgb, albedo.a);\n"
 		"   if (is_emissive) { fragColor += vec4(2.0f, 1.5f, 0.3f, 0.0f); }"
