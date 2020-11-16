@@ -88,7 +88,13 @@ struct PlayMode : Mode {
 	} planets;
 
 	ParticleGenerator *particle_comet_tail;
-	
+
+	struct Asteroids
+	{
+		std::vector<Scene::Transform*> transforms;
+		float radius = 5.f;
+		size_t asteroids_num = 0;
+	}asteroids;
 
 private:
 	void detect_collision_and_update_state();
