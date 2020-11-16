@@ -357,6 +357,17 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		scene.draw(*universal_camera);
 	}
 
+	GL_ERRORS();
+	RenderCaptor::set_render_destination(nullptr);
+	glViewport(0, 0, GAUSSIAN_BLUR_OUTPUT_WIDTH, GAUSSIAN_BLUR_OUTPUT_HEIGHT);
+	threshold_processor.draw(render_ofb, threshold_ofb);
+	GL_ERRORS();
+	gaussian_processor.draw(threshold_ofb, tmp_ofb);
+	GL_ERRORS();
+	glViewport(0, 0, drawable_size.x, drawable_size.y);
+	add_processor.draw(render_ofb, threshold_ofb, add_ofb);
+	tone_mapping_processor.draw(add_ofb, nullptr);
+
 	{ //use DrawLines to overlay some text:
 		glDisable(GL_DEPTH_TEST);
 		float aspect = float(drawable_size.x) / float(drawable_size.y);
@@ -370,25 +381,25 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		float ofs = 2.0f / drawable_size.y;
 		if (state == GameState::Grounded){
 			lines.draw_text("Press any key to launch",
-				glm::vec3(-aspect + 0.1f * H, -1.0 + 0.1f * H, 0.0),
-				glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-				glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+			                glm::vec3(-aspect + 0.1f * H, -1.0 + 0.1f * H, 0.0),
+			                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+			                glm::u8vec4(0x00, 0x00, 0x00, 0x00));
 
 			lines.draw_text("Press any key to launch",
-				glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + 0.1f * H + ofs, 0.0),
-				glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-				glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+			                glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + 0.1f * H + ofs, 0.0),
+			                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+			                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 		}
 
 		std::string score_str = "Score: "+std::to_string(score);
 		lines.draw_text(score_str.c_str(),
-						glm::vec3(-0.2f + 0.1f * H, 0.7f + 0.1f * H, 0.0),
-						glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-						glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+		                glm::vec3(-0.2f + 0.1f * H, 0.7f + 0.1f * H, 0.0),
+		                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+		                glm::u8vec4(0x00, 0x00, 0x00, 0x00));
 		lines.draw_text(score_str.c_str(),
-						glm::vec3(-0.2f + 0.1f * H + ofs, 0.7f + 0.1f * H + ofs, 0.0),
-						glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-						glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+		                glm::vec3(-0.2f + 0.1f * H + ofs, 0.7f + 0.1f * H + ofs, 0.0),
+		                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+		                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 
 		// Draw win/lose text
 		if (state == GameState::EndWin || state == GameState::EndLose) {
@@ -405,16 +416,6 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 		}
 	}
-	GL_ERRORS();
-	RenderCaptor::set_render_destination(nullptr);
-	glViewport(0, 0, GAUSSIAN_BLUR_OUTPUT_WIDTH, GAUSSIAN_BLUR_OUTPUT_HEIGHT);
-	threshold_processor.draw(render_ofb, threshold_ofb);
-	GL_ERRORS();
-	gaussian_processor.draw(threshold_ofb, tmp_ofb);
-	GL_ERRORS();
-	glViewport(0, 0, drawable_size.x, drawable_size.y);
-	add_processor.draw(render_ofb, threshold_ofb, add_ofb);
-	tone_mapping_processor.draw(add_ofb, nullptr);
 }
 
 void PlayMode::detect_collision_and_update_state() {
