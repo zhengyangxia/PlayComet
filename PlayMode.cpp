@@ -85,7 +85,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 		}
 	}
 
-	scale_asteroids(&asteroids, 0.5f);
+	scale_asteroids(&asteroids, .5f);
 	
 	planets.hit_bitmap.resize(planets.planet_num, false);
 	//create a player camera attached to a child of the player transform:
@@ -438,7 +438,6 @@ void PlayMode::detect_collision_and_update_state() {
 	if (comet_sun_dist <= COMET_RADIUS + SUN_RADIUS) {
 		state = GameState::EndLose;
 	}
-
 	for(auto &t : asteroids.transforms){
 		if (glm::distance(comet_pos, t->position) <= COMET_RADIUS + asteroids.radius)
 		{

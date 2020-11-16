@@ -149,7 +149,7 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
 
         particles[particleIndex].pos = next_pos + offset;
 
-        float degree = rand() % 75 + 52.5f;
+        float degree = rand() % 60 + 60.f;
         glm::mat4 trans = glm::mat4(1.0f);
         trans = glm::rotate(trans, glm::radians(degree), cross_vec);
         // trans = glm::rotate(trans, glm::radians(degree), up_vector);
@@ -157,9 +157,9 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
         vec = trans * vec;
 
         particles[particleIndex].speed = 5.f * vec;  
-        particles[particleIndex].size = (rand()%2500)/20000.0f + 0.075f;
+        particles[particleIndex].size = (rand()%3000)/20000.0f + 0.075f;
         // Very bad way to generate a random color
-		particles[particleIndex].color = glm::vec4(254, 155, 120, 0.8);
+		particles[particleIndex].color = glm::vec4(254, 220, 200, 1.0);
     }
     
     for (size_t i = 0; i < MaxParticles; i++)
@@ -175,7 +175,7 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
             p.color.y -= elapsed;
             p.color.z -= elapsed * 30;
 
-            p.color.w = (float)(glm::pow((p.life / LifeSpan), 4) * 0.8 * 255.f);
+            p.color.w = (float)(glm::pow((p.life / LifeSpan), 4) * 1.0 * 255.f);
             if (p.life > 0.f)
             {
                 // Fill the GPU buffer
