@@ -213,22 +213,17 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		}
 	} */
 	else if (evt.type == SDL_MOUSEMOTION) {
-		glm::vec2 motion = glm::vec2(
-			evt.motion.xrel / float(window_size.y),
-			-evt.motion.yrel / float(window_size.y)
+		mouse_motion = glm::vec2(
+			evt.motion.x / float(window_size.x)-0.5,
+			evt.motion.y / float(window_size.y)-0.5
 		);
+		// std::cout << motion.x << " " << motion.y << std::endl;
 		// comet.camera->transform->rotation = glm::normalize(
 		// 	comet.camera->transform->rotation
 		// 	* glm::angleAxis(-motion.x * comet.camera->fovy, glm::vec3(0.0f, 1.0f, 0.0f))
 		// 	* glm::angleAxis(motion.y * comet.camera->fovy, glm::vec3(1.0f, 0.0f, 0.0f))
 		// );
-		glm::quat rotation_x = glm::angleAxis(-motion.x * comet.camera->fovy, dirz);
-		glm::quat rotation_y = glm::angleAxis(motion.y * comet.camera->fovy, dirx);
-
-		comet_velocity =  rotation_x * rotation_y * comet_velocity;
-		comet.transform->rotation = rotation_x * rotation_y * comet.transform->rotation;
-		dirx = rotation_x * dirx;
-		dirz = rotation_y * dirz;
+		
 
 		return true;
 	}
@@ -319,6 +314,14 @@ void PlayMode::update(float elapsed) {
 		comet.transform->rotation = rotation*comet.transform->rotation;
 		dirx = rotation * dirx;
 		dirz = rotation * dirz;
+
+		glm::quat rotation_x = glm::angleAxis(-mouse_motion.x * comet.camera->fovy * elapsed, dirz);
+		glm::quat rotation_y = glm::angleAxis(-mouse_motion.y * comet.camera->fovy * elapsed, dirx);
+
+		comet_velocity =  rotation_x * rotation_y * comet_velocity;
+		comet.transform->rotation = rotation_x * rotation_y * comet.transform->rotation;
+		dirx = rotation_x * dirx;
+		dirz = rotation_y * dirz;
 		
 	}
 
