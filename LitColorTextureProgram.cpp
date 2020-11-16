@@ -76,6 +76,7 @@ LitColorTextureProgram::LitColorTextureProgram() {
 		"uniform vec3 LIGHT_ENERGY;\n"
 		"uniform float LIGHT_CUTOFF;\n"
 		"uniform bool is_emissive;\n"
+		"uniform bool is_hit;\n"
 		"in vec3 position;\n"
 		"in vec3 normal;\n"
 		"in vec4 color;\n"
@@ -90,6 +91,7 @@ LitColorTextureProgram::LitColorTextureProgram() {
 		"		l = normalize(l);\n"
 		"		float nl = max(0.0, dot(n, l)) / max(1.0, dis2);\n"
 		"		e = nl * LIGHT_ENERGY;\n"
+		"		if (is_hit) e *= 0.1f;\n"
 		"	} else if (LIGHT_TYPE == 1) { //hemi light \n"
 		"		e = (dot(n,-LIGHT_DIRECTION) * 0.5 + 0.5) * LIGHT_ENERGY;\n"
 		"	} else if (LIGHT_TYPE == 2) { //spot light \n"
@@ -104,9 +106,10 @@ LitColorTextureProgram::LitColorTextureProgram() {
 		"		e = max(0.0, dot(n,-LIGHT_DIRECTION)) * LIGHT_ENERGY;\n"
 		"	}\n"
 		"	e += vec3(0.25f);\n"
+		"	if (is_hit) e -= vec3(0.15f);\n"
 		"	vec4 albedo = texture(TEX, texCoord) * color;\n"
 		"	fragColor = vec4(e*albedo.rgb, albedo.a);\n"
-		"   if (is_emissive) { fragColor += vec4(2.0f, 1.5f, 0.3f, 0.0f); }"
+		"   if (is_emissive && !is_hit) { fragColor += vec4(2.0f, 1.5f, 0.3f, 0.0f); }"
 		"}\n"
 	);
 	//As you can see above, adjacent strings in C/C++ are concatenated.

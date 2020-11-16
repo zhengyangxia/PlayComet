@@ -13,6 +13,8 @@
 
 #include <random>
 
+static std::map<std::string, bool> is_hit;
+
 GLuint comet_meshes_for_lit_color_texture_program = 0;
 Load< MeshBuffer > comet_meshes(LoadTagDefault, []() -> MeshBuffer const * {
 	MeshBuffer const *ret = new MeshBuffer(data_path("comet.pnct"));
@@ -23,6 +25,7 @@ Load< MeshBuffer > comet_meshes(LoadTagDefault, []() -> MeshBuffer const * {
 Load< Scene > comet_scene(LoadTagDefault, []() -> Scene const * {
 	return new Scene(data_path("comet.scene"), [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name){
 		Mesh const &mesh = comet_meshes->lookup(mesh_name);
+
 		scene.drawables.emplace_back(transform);
 		Scene::Drawable &drawable = scene.drawables.back();
 
@@ -32,10 +35,13 @@ Load< Scene > comet_scene(LoadTagDefault, []() -> Scene const * {
 		// TODO(xiaoqiao, zizhuol): change blender so the mesh for sun has a better name
 		bool is_emissive = mesh_name == "Sphere.001";
 		GLuint program_id = lit_color_texture_program_pipeline.program;
+		is_hit[drawable.transform->name] = false;
 		drawable.pipeline.set_uniforms = [=]() {
 			glUseProgram(program_id);
 			GLuint is_emissive_uniform_loc = glGetUniformLocation(program_id, "is_emissive");
 			glUniform1i(is_emissive_uniform_loc, is_emissive);
+			GLuint is_hit_uniform_loc = glGetUniformLocation(program_id, "is_hit");
+			glUniform1i(is_hit_uniform_loc, is_hit[drawable.transform->name]);
 		};
 
 		drawable.pipeline.vao = comet_meshes_for_lit_color_texture_program;
@@ -64,6 +70,10 @@ void scale_asteroids(PlayMode::Asteroids* asteroids, float scale)
 	asteroids->radius *= scale;
 }
 
+Load< Sound::Sample > music_sample(LoadTagDefault, []() -> Sound::Sample const * {
+	return new Sound::Sample(data_path("interstellar.wav"));
+});
+
 PlayMode::PlayMode() : scene(*comet_scene) {
 	std::string planetPrefix = "Planet";
 	std::string asteroidPrefix = "Asteroid";
@@ -73,39 +83,44 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 		{
 			comet.transform = &transform;
 			comet_parent = comet.transform->parent;
+			
 		}else if (transform.name.find(planetPrefix) == 0)
 		{
+			transform.scale *= 10;
 			planets.transforms.push_back(&transform);
 			planets.planet_num ++;
 		}else if (std::strlen(transform.name.c_str()) >= 3 && std::strncmp(transform.name.c_str(), "Sun", 3) == 0)
-		{
+		{	
+			transform.scale *= 10;
 			sun = &transform;
 		}else if (transform.name.find(asteroidPrefix) == 0){
 			initialize_asteroids(transform, &asteroids);
 		}
 	}
 
-	scale_asteroids(&asteroids, .5f);
-	
+	scale_asteroids(&asteroids, 0.5f);
+	// comet.transform->scale *= 0.1f;
+	// comet.transform->position = sun->position + glm::vec3(0, 0, 10000.0f);
 	planets.hit_bitmap.resize(planets.planet_num, false);
 	//create a player camera attached to a child of the player transform:
 	scene.transforms.emplace_back();
 	scene.cameras.emplace_back(&scene.transforms.back());
 
 	comet.camera = &scene.cameras.back();
-	comet.camera->fovy = glm::radians(60.0f);
+	comet.camera->fovy = glm::radians(45.0f);
 	comet.camera->near = 0.01f;
 	comet.camera->transform->parent = comet.transform;
 	
-	comet.camera->transform->position = glm::vec3(0.0f, -50.0f, 10.0f);
+	comet.camera->transform->position = glm::vec3(0.0f, -25.0f, 5.0f);
 	comet.camera->transform->rotation = initial_camera_rotation;
+	// comet.camera->transform->scale = glm::vec3(10.0f);
 
 	scene.transforms.emplace_back();
 	scene.cameras.emplace_back(&scene.transforms.back());
 	universal_camera = &scene.cameras.back();
 	universal_camera->fovy = glm::radians(60.0f);
 	universal_camera->near = 0.01f;
-	universal_camera->transform->position = sun->position + glm::vec3(0, 0, 500.0f);
+	universal_camera->transform->position = sun->position + glm::vec3(0, 0, 2500.0f);
 
 	//rotate camera facing direction (-z) to player facing direction (+y):
 	// comet.camera->transform->rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -125,13 +140,14 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 
 	particle_comet_tail = new ParticleGenerator();
 
+	bgm = Sound::loop_3D(*music_sample, 2.5f, comet.camera->transform->position, 10.0f);
 }
 
 PlayMode::~PlayMode() {
 }
 
 bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
-	if (state == GameState::Launched)
+	if (state == GameState::Launched || state == GameState::Landed)
 	{
 		// not accept any input
 		return true;
@@ -159,28 +175,20 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		{
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_a) {
-			left.downs += 1;
+			// left.downs += 1;
 			left.pressed = true;
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_d) {
-			right.downs += 1;
+			// right.downs += 1;
 			right.pressed = true;
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_w) {
-			up.downs += 1;
+			// up.downs += 1;
 			up.pressed = true;
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_s) {
-			down.downs += 1;
+			// down.downs += 1;
 			down.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_q) {
-			aclock.downs += 1;
-			aclock.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_e) {
-			clock.downs += 1;
-			clock.pressed = true;
 			return true;
 		}
 		
@@ -196,12 +204,6 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_s) {
 			down.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_q) {
-			aclock.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_e) {
-			clock.pressed = false;
 			return true;
 		}
 	} 
@@ -242,9 +244,10 @@ void PlayMode::reset_speed(){
 	glm::vec3 speed_vector = glm::normalize(comet.transform->position - center);
 	glm::quat rotation = glm::rotation(glm::normalize(comet_velocity), glm::normalize(speed_vector));
 	comet.transform->rotation = rotation * comet.transform->rotation;
+	comet.transform->scale = glm::vec3(1.0f);
 	dirx = rotation * dirx;
 	dirz = rotation * dirz;
-	constexpr float LaunchSpeed = 100.f;
+	constexpr float LaunchSpeed = 1.f;
 	comet_velocity = speed_vector*LaunchSpeed;
 	return;
 }
@@ -256,8 +259,11 @@ void PlayMode::update(float elapsed) {
 	for (auto &p : planets.transforms)
 	{
 		revolve.revolve(p, elapsed);
+		// if (state == GameState::Grounded)
+		// 	std::cout << "planet " << p->position.x << " " << p->position.y << " " << p->position.z << std::endl;
 	}
-	
+	// if (state == GameState::Grounded)
+	// 	std::cout << "comet " << comet.transform->position.x << " " << comet.transform->position.y << " " << comet.transform->position.z << std::endl;
 	if (speed_is_reset)
 	{
 		speed_is_reset = false;
@@ -277,33 +283,46 @@ void PlayMode::update(float elapsed) {
 		return;
 	}
 
+	if (state == GameState::Landed)
+	{
+		launch_duration += elapsed;
+		if (launch_duration < launch_limit*10.f)
+		{
+			return;
+		}
+		launch_duration = 0.f;
+		state = GameState::Grounded;
+		return;
+	}
+
+
+
 	detect_collision_and_update_state();
 	if (state == GameState::EndLose || state == GameState::EndWin) {
 		return;
 	}
 
 	//player walking:
-	if (state != GameState::Grounded) {
+	if (state != GameState::Grounded && state != GameState::Landed) {
 		//combine inputs into a move:
-		// constexpr float PlayerSpeed = 1.f;
+		constexpr float PlayerSpeed = 1.f;
 		glm::vec3 move = glm::vec3(0.0f);
 		// if (left.pressed && !right.pressed) move.x =-1.0f;
 		// if (!left.pressed && right.pressed) move.x = 1.0f;
 		if (down.pressed && !up.pressed) move.y =-1.0f;
 		if (!down.pressed && up.pressed) move.y = 1.0f;
-		if (clock.pressed && !aclock.pressed) move.z = 1.0f;
-		if (!clock.pressed && aclock.pressed) move.z = -1.0f;
+		if (right.pressed && !left.pressed) move.z = 1.0f;
+		if (!right.pressed && left.pressed) move.z = -1.0f;
 		// std::cout << "dot product " << glm::dot(comet_velocity, dirx) << std::endl;
 		glm::vec3 new_comet_velocity = comet_velocity;
 		// add gravity to new_comet_velocity
 		new_comet_velocity += gravityUtil.get_acceleration(comet.transform->position) * elapsed;
 		glm::quat rotation = glm::rotation(glm::normalize(comet_velocity), glm::normalize(new_comet_velocity));
-		glm::vec3 deltav = glm::normalize(new_comet_velocity)*move.y;
-		if (glm::length2(new_comet_velocity) > 5.0f || move.y >= 0.0f)
+		glm::vec3 deltav = glm::normalize(new_comet_velocity)*move.y*PlayerSpeed;
+		if (glm::length(new_comet_velocity) > 5.0f || move.y >= 0.0f)
 			comet_velocity = (deltav + new_comet_velocity) * 0.99f;
 		else
 			comet_velocity = new_comet_velocity * 0.99f;
-
 		dirx = rotation * dirx;
 		dirz = rotation * dirz;
 
@@ -325,13 +344,7 @@ void PlayMode::update(float elapsed) {
 		
 	}
 
-	//reset button press counters:
-	left.downs = 0;
-	right.downs = 0;
-	up.downs = 0;
-	down.downs = 0;
-	clock.downs = 0;
-	aclock.downs = 0;
+	bgm->set_position(comet.camera->transform->position, 1.0f / 60.0f);
 }
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
@@ -343,7 +356,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	glUseProgram(lit_color_texture_program->program);
 	glUniform1i(lit_color_texture_program->LIGHT_TYPE_int, 0);
 	auto light_loc = glm::vec3(413.0f, 0.0f, 0.0f);
-	auto light_energy = glm::vec3(1e5f);
+	auto light_energy = glm::vec3(1e7f);
 	glUniform3fv(lit_color_texture_program->LIGHT_LOCATION_vec3, 1, glm::value_ptr(light_loc));
 	glUniform3fv(lit_color_texture_program->LIGHT_ENERGY_vec3, 1, glm::value_ptr(light_energy));
 	glUseProgram(0);
@@ -361,7 +374,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS); //this is the default depth comparison function, but FYI you can change it.
 
-	if (state == GameState::Flying || state == GameState::EndLose || state == GameState::EndWin) {
+	if (state == GameState::Flying || state == GameState::EndLose || state == GameState::EndWin || state == GameState::Landed) {
 		scene.draw(*comet.camera);
 		particle_comet_tail->Draw();
 	} else {
@@ -431,6 +444,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
 void PlayMode::detect_collision_and_update_state() {
 	if (state == GameState::EndLose) { return; }
+	
 	glm::vec3 comet_pos = comet.transform->position;
 	glm::vec3 sun_pos = sun->position;
 
@@ -450,17 +464,32 @@ void PlayMode::detect_collision_and_update_state() {
 		glm::vec3 planet_pos = planets.transforms[i]->position;
 		float comet_planet_dist = glm::distance(comet_pos, planet_pos);
 		if (comet_planet_dist <= COMET_RADIUS + planets.radius[i]) {
+			up.pressed = false;
+			down.pressed = false;
+			left.pressed = false;
+			right.pressed = false;
 			if (planets.hit_bitmap[i] == false){
 				score++;
 				planets.hit_bitmap[i] = true;
-			}
-			state = GameState::Grounded;
-			// comet_velocity = glm::vec3(0.0f);
 
+				std::string planet_name = planets.transforms[i]->name;
+				is_hit[planet_name] = true;
+				
+			}
+			state = GameState::Landed;
+			// comet_velocity = glm::vec3(0.0f);
+			
 			comet.transform->parent = planets.transforms.at(i);
-			glm::vec3 comet_world_position = comet.transform->position;
 			glm::vec3 planet_world_position = planets.transforms.at(i)->position;
+			glm::vec3 comet_world_position = comet.transform->position;
+			glm::quat planet_world_rotation = planets.transforms.at(i)->rotation;
+			glm::quat comet_world_rotation = comet.transform->rotation;
+			
+			
 			comet.transform->position = comet_world_position - planet_world_position;
+			comet.transform->rotation = comet_world_rotation - planet_world_rotation;
+			comet.transform->scale = glm::vec3(0.1f);
+			
 		}
 	}
 	if (score == planets.planet_num){

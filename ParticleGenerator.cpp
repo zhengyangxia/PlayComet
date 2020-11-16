@@ -141,7 +141,7 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
     {
         int particleIndex = find_unused_particle();
         particles[particleIndex].life = LifeSpan; // This particle will live LifeSpan seconds.
-        glm::vec3 offset = ((rand() % 8) / 20.0f) * right_speed;
+        glm::vec3 offset = ((rand() % 4) / 20.0f) * right_speed;
         offset = rand() % 2 == 1 ? offset:-offset;
         offset += ((rand()%10) / 20.f) * up_vector;
         offset = rand() % 2 == 1 ? offset:-offset;
@@ -157,7 +157,8 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
         vec = trans * vec;
 
         particles[particleIndex].speed = 5.f * vec;  
-        particles[particleIndex].size = (rand()%3000)/20000.0f + 0.075f;
+        // particles[particleIndex].size = (rand()%2500)/20000.0f + 0.075f;
+        particles[particleIndex].size = 0.0f;
         // Very bad way to generate a random color
 		particles[particleIndex].color = glm::vec4(254, 220, 200, 1.0);
     }

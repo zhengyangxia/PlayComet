@@ -13,6 +13,7 @@
 #include "PostProcessor.hpp"
 #include "TexFramebuffer.hpp"
 #include "SkyBox.hpp"
+#include "Sound.hpp"
 
 // xiaoqiao: dirty workaround for namespace stuff.. should fix it later if i have time
 using namespace game_graphics;
@@ -34,7 +35,7 @@ struct PlayMode : Mode {
 	struct Button {
 		uint8_t downs = 0;
 		uint8_t pressed = 0;
-	} left, right, down, up, clock, aclock;
+	} left, right, down, up;
 
 	//local copy of the game scene (so code can change it during gameplay):
 	Scene scene;
@@ -43,6 +44,7 @@ struct PlayMode : Mode {
 		Flying,
 		Grounded,
 		Launched,
+		Landed,
 		EndLose,
 		EndWin
 	};
@@ -65,9 +67,9 @@ struct PlayMode : Mode {
 
 	Scene::Camera *universal_camera = nullptr;
 
-	static constexpr float COMET_RADIUS = 1.0f;
+	static constexpr float COMET_RADIUS = 1.f;
 	static constexpr float PLANET_RADIUS = 20.0f;
-	static constexpr float SUN_RADIUS = 30.0f;
+	static constexpr float SUN_RADIUS = 300.0f;
 
 	Scene::Transform *sun = nullptr;
 
@@ -81,11 +83,13 @@ struct PlayMode : Mode {
 	Revolve revolve;
 	GravityUtil gravityUtil;
 
+	std::shared_ptr< Sound::PlayingSample > bgm;
+
 	size_t score = 0;
 	struct Planets{
 		std::vector<Scene::Transform *> transforms;
 		std::vector<bool> hit_bitmap;
-		std::vector<int> radius{20, 15, 10};
+		std::vector<int> radius{200, 150, 100};
 		size_t planet_num = 0;
 	} planets;
 

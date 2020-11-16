@@ -2,9 +2,9 @@
 #include <iostream>
 
 Revolve::Revolve(){
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Planet1", {200.f, 300.f, glm::vec3(0.f, 1.f, 1.f)}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Planet2", {150.f, 200.f, glm::vec3(0.f, 1.f, 0.f)}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Planet3", {100.f, 100.f, glm::vec3(0.f, 0.f, 1.f)}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Planet1", {200.f, 3000.f, glm::vec3(0.f, 1.f, 1.f)}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Planet2", {150.f, 2000.f, glm::vec3(0.f, 1.f, 0.f)}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Planet3", {100.f, 1000.f, glm::vec3(0.f, 0.f, 1.f)}));
 };
 
 void Revolve::set_center(glm::vec3 global_center){
