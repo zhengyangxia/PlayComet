@@ -96,6 +96,12 @@ void BaseProcessor::draw_quad(std::vector<TexFramebufferPtr> inputs, TexFramebuf
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
+	for (size_t i = 0; i < inputs.size(); i++) {
+		glActiveTexture((GLenum) (GL_TEXTURE0 + i));
+		glBindTexture(GL_TEXTURE_2D, 0);
+		GL_ERRORS();
+	}
+	glBindVertexArray(0);
 	glUseProgram(0);
 	GL_ERRORS();
 }
