@@ -67,7 +67,7 @@ void BaseProcessor::draw_quad(std::vector<TexFramebufferPtr> inputs, TexFramebuf
 
 	// set input texture
 	for (size_t i = 0; i < inputs.size(); i++) {
-		glActiveTexture(GL_TEXTURE0 + i);
+		glActiveTexture((GLenum) (GL_TEXTURE0 + i));
 		glBindTexture(GL_TEXTURE_2D, inputs.at(i)->get_texture_id());
 		GL_ERRORS();
 	}

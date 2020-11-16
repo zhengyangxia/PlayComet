@@ -135,26 +135,28 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
 
     glm::vec3 right_speed = glm::vec3(view_matrix[0][0], view_matrix[1][0], view_matrix[2][0]);
     glm::vec3 up_vector = glm::vec3(view_matrix[0][1], view_matrix[1][1], view_matrix[2][1]);
-    
+    glm::vec3 cross_vec = glm::cross(up_vector, right_speed);
+
     for (int i = 0; i < newparticles; i++)
     {
         int particleIndex = find_unused_particle();
         particles[particleIndex].life = LifeSpan; // This particle will live LifeSpan seconds.
-
         glm::vec3 offset = ((rand() % 8) / 20.0f) * right_speed;
         offset = rand() % 2 == 1 ? offset:-offset;
         offset += ((rand()%10) / 20.f) * up_vector;
         offset = rand() % 2 == 1 ? offset:-offset;
+        offset -= cross_vec;
 
         particles[particleIndex].pos = next_pos + offset;
 
         float degree = rand() % 75 + 52.5f;
         glm::mat4 trans = glm::mat4(1.0f);
-        trans = glm::rotate(trans, glm::radians(degree), up_vector);
+        trans = glm::rotate(trans, glm::radians(degree), cross_vec);
+        // trans = glm::rotate(trans, glm::radians(degree), up_vector);
         glm::vec4 vec(right_speed.x, right_speed.y, right_speed.z, 1.0f);
         vec = trans * vec;
 
-        particles[particleIndex].speed = vec;
+        particles[particleIndex].speed = 5.f * vec;  
         particles[particleIndex].size = (rand()%2500)/20000.0f + 0.075f;
         // Very bad way to generate a random color
 		particles[particleIndex].color = glm::vec4(254, 155, 120, 0.8);
@@ -173,7 +175,7 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
             p.color.y -= elapsed;
             p.color.z -= elapsed * 30;
 
-            p.color.w = glm::pow((p.life / LifeSpan), 4) * 0.8 * 255;
+            p.color.w = (float)(glm::pow((p.life / LifeSpan), 4) * 0.8 * 255.f);
             if (p.life > 0.f)
             {
                 // Fill the GPU buffer
@@ -187,10 +189,10 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
 
                 p.cameradistance = glm::length( p.pos - camera_pos );
 
-                g_particule_color_data[4*ParticlesCount+0] = p.color.x;
-                g_particule_color_data[4*ParticlesCount+1] = p.color.y;
-                g_particule_color_data[4*ParticlesCount+2] = p.color.z;
-                g_particule_color_data[4*ParticlesCount+3] = p.color.w;
+                g_particule_color_data[4*ParticlesCount+0] = (GLubyte)p.color.x;
+                g_particule_color_data[4*ParticlesCount+1] = (GLubyte)p.color.y;
+                g_particule_color_data[4*ParticlesCount+2] = (GLubyte)p.color.z;
+                g_particule_color_data[4*ParticlesCount+3] = (GLubyte)p.color.w;
     
             }else{
 				p.cameradistance = -1.0f;
