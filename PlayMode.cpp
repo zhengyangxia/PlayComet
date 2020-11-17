@@ -47,7 +47,6 @@ Load< Scene > comet_scene(LoadTagDefault, []() -> Scene const * {
 				GLuint icosphere_texture_id = 0;
 				glGenTextures(1, &icosphere_texture_id);
 				glBindTexture(GL_TEXTURE_2D, icosphere_texture_id);
-				std::cout << data.size() << ' ' << sizeof(data[0]) << std::endl;
 				glTexImage2D(GL_TEXTURE_2D,
 				             0, GL_RGBA, png_size.x, png_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.data()
 				);
@@ -101,9 +100,9 @@ void scale_asteroids(PlayMode::Asteroids* asteroids, float scale)
 	asteroids->radius *= scale;
 }
 
-// Load< Sound::Sample > music_sample(LoadTagDefault, []() -> Sound::Sample const * {
-// 	return new Sound::Sample(data_path("interstellar.wav"));
-// });
+Load< Sound::Sample > music_sample(LoadTagDefault, []() -> Sound::Sample const * {
+	return new Sound::Sample(data_path("Mana Two - Part 1.wav"));
+});
 
 PlayMode::PlayMode() : scene(*comet_scene) {
 	std::string planetPrefix = "Planet";
@@ -192,7 +191,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 
 	particle_comet_tail = new ParticleGenerator();
 
-	// bgm = Sound::loop_3D(*music_sample, 2.5f, comet.camera->transform->position, 10.0f);
+	bgm = Sound::loop_3D(*music_sample, 2.5f, comet.camera->transform->position, 10.0f);
 }
 
 PlayMode::~PlayMode() {
@@ -311,8 +310,6 @@ void PlayMode::update(float elapsed) {
 	for (auto &p : planets.transforms)
 	{
 		revolve.revolve(p, elapsed);
-		// if (state == GameState::Grounded)
-		// 	std::cout << "planet " << p->position.x << " " << p->position.y << " " << p->position.z << std::endl;
 	}
 	for (auto &p : asteroids.transforms)
 	{
@@ -372,13 +369,10 @@ void PlayMode::update(float elapsed) {
 		//combine inputs into a move:
 		constexpr float PlayerSpeed = 1.f;
 		glm::vec3 move = glm::vec3(0.0f);
-		// if (left.pressed && !right.pressed) move.x =-1.0f;
-		// if (!left.pressed && right.pressed) move.x = 1.0f;
 		if (down.pressed && !up.pressed) move.y =-1.0f;
 		if (!down.pressed && up.pressed) move.y = 1.0f;
 		if (right.pressed && !left.pressed) move.z = 1.0f;
 		if (!right.pressed && left.pressed) move.z = -1.0f;
-		// std::cout << "dot product " << glm::dot(comet_velocity, dirx) << std::endl;
 		glm::vec3 new_comet_velocity = comet_velocity;
 		// add gravity to new_comet_velocity
 		new_comet_velocity += gravityUtil.get_acceleration(comet.transform->position) * elapsed;
@@ -409,7 +403,7 @@ void PlayMode::update(float elapsed) {
 		
 	}
 
-	// bgm->set_position(comet.camera->transform->position, 1.0f / 60.0f);
+	bgm->set_position(comet.camera->transform->position, 1.0f / 60.0f);
 }
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
