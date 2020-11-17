@@ -115,9 +115,9 @@ void ParticleGenerator::sort_particles(){
 void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 camera_pos, glm::mat4 view_matrix, glm::mat4 projection_matrix){
     ParticlesCount = 0;
     
-    int newparticles = (int)(elapsed*2000.0);
-    if (newparticles > (int)(0.016f*2000.0))
-        newparticles = (int)(0.016f*2000.0);
+    int newparticles = (int)(elapsed*1000.0);
+    if (newparticles > (int)(0.016f*1000.0))
+        newparticles = (int)(0.016f*1000.0);
 
     this->shader->Use();
 
@@ -141,10 +141,10 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
     {
         int particleIndex = find_unused_particle();
         particles[particleIndex].life = LifeSpan; // This particle will live LifeSpan seconds.
-        glm::vec3 offset = ((rand() % 4) / 20.0f) * right_speed;
-        offset = rand() % 2 == 1 ? offset:-offset;
-        offset += ((rand()%10) / 20.f) * up_vector;
-        offset = rand() % 2 == 1 ? offset:-offset;
+        glm::vec3 offset = ((rand() % 40 - 20) / 200.0f) * right_speed;
+        // offset = rand() % 2 == 1 ? offset:-offset;
+        offset += ((rand()%100 - 50) / 200.f) * up_vector;
+        // offset = rand() % 2 == 1 ? offset:-offset;
         offset -= cross_vec;
 
         particles[particleIndex].pos = next_pos + offset;
@@ -158,9 +158,9 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
 
         particles[particleIndex].speed = 5.f * vec;  
         // particles[particleIndex].size = (rand()%2500)/20000.0f + 0.075f;
-        particles[particleIndex].size = 0.0f;
+        particles[particleIndex].size = 0.05f;
         // Very bad way to generate a random color
-		particles[particleIndex].color = glm::vec4(254, 220, 200, 1.0);
+		particles[particleIndex].color = glm::vec4(254, 240, 230, 1.0);
     }
     
     for (size_t i = 0; i < MaxParticles; i++)

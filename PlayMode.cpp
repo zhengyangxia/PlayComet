@@ -127,7 +127,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 		}
 	}
 
-	scale_asteroids(&asteroids, 0.5f);
+	scale_asteroids(&asteroids, 1.f);
 	// comet.transform->scale *= 0.1f;
 	comet.transform->position = sun->position + glm::vec3(0, -5000.f, 0);
 	
@@ -153,11 +153,32 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 
 	//rotate camera facing direction (-z) to player facing direction (+y):
 	// comet.camera->transform->rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	revolve.set_center(sun->position);
+	// revolve.set_center(sun->position);
 	//loop through planets
-	for (auto p : planets.transforms)
+
+	for (size_t i = 0; i < asteroids.asteroids_num/2; i++)
 	{
+		asteroids.transforms[i]->parent = sun;
+		revolve.revolve(asteroids.transforms[i], (float)(std::rand()%100));
+	}
+	
+	int average_asteroids = (asteroids.asteroids_num - asteroids.asteroids_num / 2) / planets.planet_num;
+	int index = asteroids.asteroids_num/2;
+
+	for (auto& p : planets.transforms)
+	{
+		p->parent = sun;
 		revolve.revolve(p, (float)(std::rand()%100));
+		for (size_t i = index; i < asteroids.asteroids_num; i++)
+		{
+			if (i >= index + average_asteroids)
+			{
+				break;
+			}
+			asteroids.transforms[i]->parent = p;
+			revolve.revolve(asteroids.transforms[i], (float)(std::rand()%100));
+		}
+		index += average_asteroids;
 	}
 
 	// adding planet1 and sun to gravityUtil
