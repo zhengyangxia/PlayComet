@@ -349,8 +349,8 @@ void PlayMode::update(float elapsed) {
 	}
 
 
-
-	detect_collision_and_update_state();
+	if (state == GameState::Flying)
+		detect_collision_and_update_state();
 	if (state == GameState::EndLose || state == GameState::EndWin) {
 		return;
 	}
