@@ -171,7 +171,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 		revolve.revolve(p, (float)(std::rand()%100));
 		for (size_t i = index; i < asteroids.asteroids_num; i++)
 		{
-			if (i >= index + average_asteroids)
+			if (static_cast<int>(i) >= index + average_asteroids)
 			{
 				break;
 			}
