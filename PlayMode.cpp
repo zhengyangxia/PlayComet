@@ -36,7 +36,8 @@ Load< Scene > comet_scene(LoadTagDefault, []() -> Scene const * {
 			{"Icosphere", "planet/rocks_ground.png"},
 			{"Planet1", "planet/jupiter.png"},
 			{"Planet2", "planet/earth.png"},
-			{"Planet3", "planet/mars.png"}
+			{"Planet3", "planet/mars.png"},
+			{"Asteroid", "planet/asteroid.png"}
 		};
 
 		for (const auto &p : planet_texture_png) {
@@ -47,7 +48,7 @@ Load< Scene > comet_scene(LoadTagDefault, []() -> Scene const * {
 				GLuint icosphere_texture_id = 0;
 				glGenTextures(1, &icosphere_texture_id);
 				glBindTexture(GL_TEXTURE_2D, icosphere_texture_id);
-				std::cout << data.size() << ' ' << sizeof(data[0]) << std::endl;
+				// std::cout << data.size() << ' ' << sizeof(data[0]) << std::endl;
 				glTexImage2D(GL_TEXTURE_2D,
 				             0, GL_RGBA, png_size.x, png_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.data()
 				);
