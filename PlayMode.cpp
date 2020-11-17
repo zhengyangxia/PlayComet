@@ -70,9 +70,9 @@ void scale_asteroids(PlayMode::Asteroids* asteroids, float scale)
 	asteroids->radius *= scale;
 }
 
-Load< Sound::Sample > music_sample(LoadTagDefault, []() -> Sound::Sample const * {
-	return new Sound::Sample(data_path("interstellar.wav"));
-});
+// Load< Sound::Sample > music_sample(LoadTagDefault, []() -> Sound::Sample const * {
+// 	return new Sound::Sample(data_path("interstellar.wav"));
+// });
 
 PlayMode::PlayMode() : scene(*comet_scene) {
 	std::string planetPrefix = "Planet";
@@ -140,7 +140,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 
 	particle_comet_tail = new ParticleGenerator();
 
-	bgm = Sound::loop_3D(*music_sample, 2.5f, comet.camera->transform->position, 10.0f);
+	// bgm = Sound::loop_3D(*music_sample, 2.5f, comet.camera->transform->position, 10.0f);
 }
 
 PlayMode::~PlayMode() {
@@ -286,7 +286,7 @@ void PlayMode::update(float elapsed) {
 	if (state == GameState::Landed)
 	{
 		launch_duration += elapsed;
-		if (launch_duration < launch_limit*10.f)
+		if (launch_duration < launch_limit)
 		{
 			return;
 		}
@@ -344,7 +344,7 @@ void PlayMode::update(float elapsed) {
 		
 	}
 
-	bgm->set_position(comet.camera->transform->position, 1.0f / 60.0f);
+	// bgm->set_position(comet.camera->transform->position, 1.0f / 60.0f);
 }
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
