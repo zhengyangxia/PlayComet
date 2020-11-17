@@ -118,7 +118,6 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 			
 		}else if (planetNames.find(transform.name)!= planetNames.end())
 		{
-			std::cout<<"Planet Name "<<transform.name<<std::endl;
 			planets.transforms.push_back(&transform);
 			planets.planet_num ++;
 		}else if (std::strlen(transform.name.c_str()) >= 3 && std::strncmp(transform.name.c_str(), "Sun", 3) == 0)
