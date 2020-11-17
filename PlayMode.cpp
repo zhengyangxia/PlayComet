@@ -107,6 +107,7 @@ Load< Sound::Sample > music_sample(LoadTagDefault, []() -> Sound::Sample const *
 
 PlayMode::PlayMode() : scene(*comet_scene) {
 	std::string planetPrefix = "Planet";
+	std::set<std::string> planetNames {"Earth", "Jupiter", "Mars"};
 	std::string asteroidPrefix = "Asteroid";
 	for (auto &transform : scene.transforms)
 	{
@@ -115,8 +116,9 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 			comet.transform = &transform;
 			comet_parent = comet.transform->parent;
 			
-		}else if (transform.name.find(planetPrefix) == 0)
+		}else if (planetNames.find(transform.name)!= planetNames.end())
 		{
+			std::cout<<"Planet Name "<<transform.name<<std::endl;
 			planets.transforms.push_back(&transform);
 			planets.planet_num ++;
 		}else if (std::strlen(transform.name.c_str()) >= 3 && std::strncmp(transform.name.c_str(), "Sun", 3) == 0)
