@@ -14,7 +14,7 @@
 
 #include <random>
 
-static std::map<std::string, bool> is_hit;
+static std::map<std::string, float> after_hit;
 
 GLuint comet_meshes_for_lit_color_texture_program = 0;
 Load< MeshBuffer > comet_meshes(LoadTagDefault, []() -> MeshBuffer const * {
@@ -66,13 +66,13 @@ Load< Scene > comet_scene(LoadTagDefault, []() -> Scene const * {
 		// TODO(xiaoqiao, zizhuol): change blender so the mesh for sun has a better name
 		bool is_emissive = mesh_name == "Sphere.001";
 		GLuint program_id = lit_color_texture_program_pipeline.program;
-		is_hit[drawable.transform->name] = false;
+		after_hit[drawable.transform->name] = 0.0f;
 		drawable.pipeline.set_uniforms = [=]() {
 			glUseProgram(program_id);
 			GLuint is_emissive_uniform_loc = glGetUniformLocation(program_id, "is_emissive");
 			glUniform1i(is_emissive_uniform_loc, is_emissive);
-			GLuint is_hit_uniform_loc = glGetUniformLocation(program_id, "is_hit");
-			glUniform1i(is_hit_uniform_loc, is_hit[drawable.transform->name]);
+			GLuint after_hit_uniform_loc = glGetUniformLocation(program_id, "after_hit");
+			glUniform1f(after_hit_uniform_loc, after_hit[drawable.transform->name]);
 		};
 
 		drawable.pipeline.vao = comet_meshes_for_lit_color_texture_program;
@@ -118,7 +118,6 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 			
 		}else if (planetNames.find(transform.name)!= planetNames.end())
 		{
-			std::cout<<"Planet Name "<<transform.name<<std::endl;
 			planets.transforms.push_back(&transform);
 			planets.planet_num ++;
 		}else if (std::strlen(transform.name.c_str()) >= 3 && std::strncmp(transform.name.c_str(), "Sun", 3) == 0)
@@ -339,14 +338,15 @@ void PlayMode::update(float elapsed) {
 
 	if (state == GameState::Landed)
 	{
-		launch_duration += elapsed;
-		if (launch_duration < launch_limit)
+		land_duration += elapsed;
+		after_hit[planets.transforms.at(courting)->name] = land_duration/2.f;
+		if (land_duration < land_limit)
 		{
 			return;
 		}
-		launch_duration = 0.f;
+		land_duration = 0.f;
 		state = GameState::Grounded;
-		
+		courting = planets.planet_num;
 		return;
 	}
 
@@ -595,7 +595,6 @@ void PlayMode::detect_collision_and_update_state() {
 			right.pressed = false;
 			if (planets.hit_bitmap[i] == false){
 				score += (size_t)(court_time*10.f);
-				courting = planets.planet_num;
 				court_time = 0.f;
 				planets.hit_bitmap[i] = true;
 			}
