@@ -320,9 +320,9 @@ void PlayMode::update(float elapsed) {
 		glm::quat rotation = glm::rotation(glm::normalize(comet_velocity), glm::normalize(new_comet_velocity));
 		glm::vec3 deltav = glm::normalize(new_comet_velocity)*move.y*PlayerSpeed;
 		if (glm::length(new_comet_velocity) > 5.0f || move.y >= 0.0f)
-			comet_velocity = (deltav + new_comet_velocity) * 0.99f;
+			comet_velocity = (deltav + new_comet_velocity) * 0.995f;
 		else
-			comet_velocity = new_comet_velocity * 0.99f;
+			comet_velocity = new_comet_velocity * 0.995f;
 		dirx = rotation * dirx;
 		dirz = rotation * dirz;
 
@@ -482,13 +482,13 @@ void PlayMode::detect_collision_and_update_state() {
 			comet.transform->parent = planets.transforms.at(i);
 			glm::vec3 planet_world_position = planets.transforms.at(i)->position;
 			glm::vec3 comet_world_position = comet.transform->position;
-			glm::quat planet_world_rotation = planets.transforms.at(i)->rotation;
-			glm::quat comet_world_rotation = comet.transform->rotation;
+			// glm::quat planet_world_rotation = planets.transforms.at(i)->rotation;
+			// glm::quat comet_world_rotation = comet.transform->rotation;
 			
 			
-			comet.transform->position = comet_world_position - planet_world_position;
-			comet.transform->rotation = comet_world_rotation - planet_world_rotation;
-			comet.transform->scale = glm::vec3(0.1f);
+			comet.transform->position = (comet_world_position - planet_world_position)/10.0f;
+			// comet.transform->rotation = comet_world_rotation - planet_world_rotation;
+
 			
 		}
 	}
