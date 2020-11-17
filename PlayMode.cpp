@@ -120,12 +120,12 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 
 	scale_asteroids(&asteroids, 0.5f);
 	// comet.transform->scale *= 0.1f;
-	comet.transform->position = sun->position + glm::vec3(0, 0, 5000.0f);
+	comet.transform->position = sun->position + glm::vec3(0, -5000.f, 0);
+	
 	planets.hit_bitmap.resize(planets.planet_num, false);
 	//create a player camera attached to a child of the player transform:
 	scene.transforms.emplace_back();
 	scene.cameras.emplace_back(&scene.transforms.back());
-
 	comet.camera = &scene.cameras.back();
 	comet.camera->fovy = glm::radians(45.0f);
 	comet.camera->near = 0.01f;
@@ -282,8 +282,6 @@ void PlayMode::update(float elapsed) {
 		// if (state == GameState::Grounded)
 		// 	std::cout << "planet " << p->position.x << " " << p->position.y << " " << p->position.z << std::endl;
 	}
-	// if (state == GameState::Grounded)
-	// 	std::cout << "comet " << comet.transform->position.x << " " << comet.transform->position.y << " " << comet.transform->position.z << std::endl;
 	if (speed_is_reset)
 	{
 		speed_is_reset = false;
@@ -322,13 +320,15 @@ void PlayMode::update(float elapsed) {
 	if (state == GameState::EndLose || state == GameState::EndWin) {
 		return;
 	}
-
-	if (landing_dis < 100.f){
-		court_time += elapsed;
-		court_time = std::min(10.f, court_time);
-	} else {
-		court_time = 0.f;
+	if (courting < planets.planet_num && planets.hit_bitmap[courting] == false){
+		if (landing_dis < 100.f){
+			court_time += elapsed;
+			court_time = std::min(10.f, court_time);
+		} else {
+			court_time = 0.f;
+		}
 	}
+	
 
 	//player walking:
 	if (state != GameState::Grounded && state != GameState::Landed) {
@@ -453,22 +453,34 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 		                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 		if (landing_dis < 3000.f && state == GameState::Flying){
-			std::string court_str = "Courting Time: "+std::to_string((int)court_time)+"/10s";
-			lines.draw_text(court_str.c_str(),
+			std::string dis_str = "Distance: "+std::to_string((int)landing_dis);
+			if (courting < planets.planet_num && planets.hit_bitmap[courting] == false){
+				dis_str += "/100km";
+				std::string court_str = "Courted: "+std::to_string((int)court_time)+"/10s";
+				lines.draw_text(court_str.c_str(),
+							glm::vec3(-1.6f + 0.1f * H, 0.25f + 0.1f * H, 0.0),
+							glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+							glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+				lines.draw_text(court_str.c_str(),
+							glm::vec3(-1.6f + 0.1f * H + ofs, 0.25f + 0.1f * H + ofs, 0.0),
+							glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+							glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+				std::string target_str = "Target: "+planets.transforms.at(courting)->name;
+				lines.draw_text(target_str.c_str(),
+							glm::vec3(-1.6f + 0.1f * H, 0.4f + 0.1f * H, 0.0),
+							glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+							glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+				lines.draw_text(target_str.c_str(),
+							glm::vec3(-1.6f + 0.1f * H + ofs, 0.4f + 0.1f * H + ofs, 0.0),
+							glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+							glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+			}
+			lines.draw_text(dis_str.c_str(),
 		                glm::vec3(-1.6f + 0.1f * H, 0.55f + 0.1f * H, 0.0),
 		                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 		                glm::u8vec4(0x00, 0x00, 0x00, 0x00));
-			lines.draw_text(court_str.c_str(),
+			lines.draw_text(dis_str.c_str(),
 		                glm::vec3(-1.6f + 0.1f * H + ofs, 0.55f + 0.1f * H + ofs, 0.0),
-		                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-		                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
-			std::string dis_str = "Distance: "+std::to_string((int)landing_dis)+"/100m";
-			lines.draw_text(dis_str.c_str(),
-		                glm::vec3(-1.6f + 0.1f * H, 0.4f + 0.1f * H, 0.0),
-		                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-		                glm::u8vec4(0x00, 0x00, 0x00, 0x00));
-			lines.draw_text(dis_str.c_str(),
-		                glm::vec3(-1.6f + 0.1f * H + ofs, 0.4f + 0.1f * H + ofs, 0.0),
 		                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 		                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 		}
@@ -512,14 +524,18 @@ void PlayMode::detect_collision_and_update_state() {
 	for (size_t i = 0; i< planets.planet_num; i++){
 		glm::vec3 planet_pos = planets.transforms[i]->position;
 		float comet_planet_dist = glm::distance(comet_pos, planet_pos);
-		landing_dis = std::min(landing_dis, comet_planet_dist-planets.radius[i]-COMET_RADIUS);
-		if (comet_planet_dist <=  + planets.radius[i]) {
+		if (comet_planet_dist-planets.radius[i]-COMET_RADIUS < landing_dis){
+			landing_dis = comet_planet_dist-planets.radius[i]-COMET_RADIUS;
+			courting = i;
+		}
+		if (comet_planet_dist <= COMET_RADIUS + planets.radius[i]) {
 			up.pressed = false;
 			down.pressed = false;
 			left.pressed = false;
 			right.pressed = false;
 			if (planets.hit_bitmap[i] == false){
 				score += (size_t)(court_time*10.f);
+				courting = planets.planet_num;
 				court_time = 0.f;
 				planets.hit_bitmap[i] = true;
 			}
