@@ -138,13 +138,13 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
     {
         int particleIndex = find_unused_particle();
         particles[particleIndex].life = LifeSpan; // This particle will live LifeSpan seconds.
-        glm::vec3 offset = ((rand() % 40 - 20) / 200.0f) * right_speed;
+        glm::vec3 offset = ((rand() % 120 - 60) / 200.0f) * right_speed;
         // offset = rand() % 2 == 1 ? offset:-offset;
-        offset += ((rand()%100 - 50) / 200.f) * up_vector;
+        offset += ((rand()%120 - 80) / 200.f) * up_vector;
         // offset = rand() % 2 == 1 ? offset:-offset;
         offset -= cross_vec;
 
-        particles[particleIndex].pos = next_pos + offset;
+        particles[particleIndex].pos = next_pos + 2.f * offset;
 
         float degree = rand() % 60 + 60.f;
         glm::mat4 trans = glm::mat4(1.0f);
