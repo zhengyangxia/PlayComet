@@ -86,12 +86,10 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 			
 		}else if (transform.name.find(planetPrefix) == 0)
 		{
-			transform.scale *= 10;
 			planets.transforms.push_back(&transform);
 			planets.planet_num ++;
 		}else if (std::strlen(transform.name.c_str()) >= 3 && std::strncmp(transform.name.c_str(), "Sun", 3) == 0)
 		{	
-			transform.scale *= 10;
 			sun = &transform;
 		}else if (transform.name.find(asteroidPrefix) == 0){
 			initialize_asteroids(transform, &asteroids);
