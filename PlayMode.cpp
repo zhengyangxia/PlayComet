@@ -121,6 +121,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 			planets.planet_num ++;
 		}else if (std::strlen(transform.name.c_str()) >= 3 && std::strncmp(transform.name.c_str(), "Sun", 3) == 0)
 		{	
+			
 			sun = &transform;
 		}else if (transform.name.find(asteroidPrefix) == 0){
 			initialize_asteroids(transform, &asteroids);
@@ -129,6 +130,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 
 	scale_asteroids(&asteroids, 1.f);
 	// comet.transform->scale *= 0.1f;
+	sun->position = glm::vec3(0.f);
 	comet.transform->position = sun->position + glm::vec3(0, -5000.f, 0);
 	
 	planets.hit_bitmap.resize(planets.planet_num, false);
@@ -162,8 +164,8 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 		revolve.revolve(asteroids.transforms[i], (float)(std::rand()%100));
 	}
 	
-	int average_asteroids = (asteroids.asteroids_num - asteroids.asteroids_num / 2) / planets.planet_num;
-	int index = asteroids.asteroids_num/2;
+	int average_asteroids = (int)((asteroids.asteroids_num - asteroids.asteroids_num / 2) / planets.planet_num);
+	int index = (int)asteroids.asteroids_num/2;
 
 	for (auto& p : planets.transforms)
 	{
@@ -476,7 +478,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		
 		if (landing_dis < 3000.f && state == GameState::Flying){
 			std::string dis_str = "Distance: "+std::to_string((int)landing_dis);
-			if (courting < planets.planet_num && planets.hit_bitmap[courting] == false){
+			if (landing_dis < 1000.f && courting < planets.planet_num && planets.hit_bitmap[courting] == false){
 				dis_str += "/100km";
 				std::string court_str = "Courted: "+std::to_string((int)court_time)+"/10s";
 				lines.draw_text(court_str.c_str(),
