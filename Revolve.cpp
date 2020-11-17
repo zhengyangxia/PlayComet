@@ -5,7 +5,7 @@ glm::vec3 get_random_vec(){
     return glm::normalize(glm::vec3(rand()%100, rand()%100, rand()%100));
 }
 
-float get_random_dist(float max, float min){
+float get_random_float(float max, float min){
     return (float)(rand()%(int)(max-min)+min);
 }
 
@@ -14,32 +14,32 @@ Revolve::Revolve(){
     attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Planet2", {150.f, 2000.f, glm::vec3(0.f, 1.f, 0.f)}));
     attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Planet3", {150.f, 2000.f, glm::vec3(0.f, 0.f, 1.f)}));
 
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid", {15.f, get_random_dist(2500.f, 600.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.001", {10.f, get_random_dist(2500.f, 600.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.002", {10.f, get_random_dist(2500.f, 600.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.003", {10.f, get_random_dist(2500.f, 600.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.004", {10.f, get_random_dist(2500.f, 600.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.005", {10.f, get_random_dist(2500.f, 600.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.006", {10.f, get_random_dist(2500.f, 600.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.007", {10.f, get_random_dist(2500.f, 600.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.008", {10.f, get_random_dist(2500.f, 600.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.009", {10.f, get_random_dist(2500.f, 600.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid", {get_random_float(50.f, 20.f), get_random_float(2500.f, 600.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.001", {get_random_float(50.f, 20.f), get_random_float(2500.f, 600.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.002", {get_random_float(50.f, 20.f), get_random_float(2500.f, 600.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.003", {get_random_float(50.f, 20.f), get_random_float(2500.f, 600.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.004", {get_random_float(50.f, 20.f), get_random_float(2500.f, 600.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.005", {get_random_float(50.f, 20.f), get_random_float(2500.f, 600.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.006", {get_random_float(50.f, 20.f), get_random_float(2500.f, 600.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.007", {get_random_float(50.f, 20.f), get_random_float(2500.f, 600.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.008", {get_random_float(50.f, 20.f), get_random_float(2500.f, 600.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.009", {get_random_float(50.f, 20.f), get_random_float(2500.f, 600.f), get_random_vec()}));
 
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.010", {5.f, get_random_dist(800.f, 500.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.011", {5.f, get_random_dist(800.f, 500.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.012", {5.f, get_random_dist(800.f, 500.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.013", {10.f, get_random_dist(2500.f, 600.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.014", {10.f, get_random_dist(2500.f, 600.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.015", {5.f, get_random_dist(800.f, 500.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.016", {5.f, get_random_dist(800.f, 500.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.017", {5.f, get_random_dist(800.f, 500.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.018", {5.f, get_random_dist(800.f, 500.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.019", {5.f, get_random_dist(800.f, 500.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.020", {5.f, get_random_dist(800.f, 500.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.021", {5.f, get_random_dist(800.f, 500.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.022", {5.f, get_random_dist(800.f, 500.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.023", {5.f, get_random_dist(800.f, 500.f), get_random_vec()}));
-    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.024", {5.f, get_random_dist(800.f, 500.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.010", {get_random_float(50.f, 20.f), get_random_float(800.f, 500.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.011", {get_random_float(50.f, 20.f), get_random_float(800.f, 500.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.012", {get_random_float(50.f, 20.f), get_random_float(800.f, 500.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.013", {get_random_float(50.f, 20.f), get_random_float(2500.f, 600.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.014", {get_random_float(50.f, 20.f), get_random_float(2500.f, 600.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.015", {get_random_float(50.f, 20.f), get_random_float(800.f, 500.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.016", {get_random_float(50.f, 20.f), get_random_float(800.f, 500.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.017", {get_random_float(50.f, 20.f), get_random_float(800.f, 500.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.018", {get_random_float(50.f, 20.f), get_random_float(800.f, 500.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.019", {get_random_float(50.f, 20.f), get_random_float(800.f, 500.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.020", {get_random_float(50.f, 20.f), get_random_float(800.f, 500.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.021", {get_random_float(50.f, 20.f), get_random_float(800.f, 500.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.022", {get_random_float(50.f, 20.f), get_random_float(800.f, 500.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.023", {get_random_float(50.f, 20.f), get_random_float(800.f, 500.f), get_random_vec()}));
+    attr_map.insert(std::pair<std::string, PlanetRevolveAttributes>("Asteroid.024", {get_random_float(50.f, 20.f), get_random_float(800.f, 500.f), get_random_vec()}));
 
 };
 
