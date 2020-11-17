@@ -48,10 +48,6 @@ Load< Scene > comet_scene(LoadTagDefault, []() -> Scene const * {
 				GLuint icosphere_texture_id = 0;
 				glGenTextures(1, &icosphere_texture_id);
 				glBindTexture(GL_TEXTURE_2D, icosphere_texture_id);
-<<<<<<< HEAD
-				// std::cout << data.size() << ' ' << sizeof(data[0]) << std::endl;
-=======
->>>>>>> 7a0db7ceddd77bbe5b4ece9ba98e5a07772ae848
 				glTexImage2D(GL_TEXTURE_2D,
 				             0, GL_RGBA, png_size.x, png_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.data()
 				);
