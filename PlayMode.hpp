@@ -88,6 +88,7 @@ struct PlayMode : Mode {
 
 	size_t score = 0;
 	float court_time = 0.f;
+	size_t courting = planets.planet_num;
 	struct Planets{
 		std::vector<Scene::Transform *> transforms;
 		std::vector<bool> hit_bitmap;
