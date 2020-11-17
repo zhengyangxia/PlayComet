@@ -452,15 +452,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 		}
 
-		std::string score_str = "Score: "+std::to_string(score);
-		lines.draw_text(score_str.c_str(),
-		                glm::vec3(-1.6f + 0.1f * H, 0.7f + 0.1f * H, 0.0),
-		                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-		                glm::u8vec4(0x00, 0x00, 0x00, 0x00));
-		lines.draw_text(score_str.c_str(),
-		                glm::vec3(-1.6f + 0.1f * H + ofs, 0.7f + 0.1f * H + ofs, 0.0),
-		                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-		                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+		
 		if (landing_dis < 3000.f && state == GameState::Flying){
 			std::string dis_str = "Distance: "+std::to_string((int)landing_dis);
 			if (courting < planets.planet_num && planets.hit_bitmap[courting] == false){
@@ -496,8 +488,21 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		
 
 		// Draw win/lose text
-		if (state == GameState::EndWin || state == GameState::EndLose) {
-			std::string prompt = state == GameState::EndWin ? "You win." : "You lose.";
+		if (state == GameState::EndWin) {
+			std::string prompt = "You have courted all the planets!" ;
+			constexpr float H = 0.20f;
+			lines.draw_text(prompt.c_str(),
+			                glm::vec3(-1.2f + 0.1f * H, -0.0f + 0.1f * H, 0.0),
+			                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+			                glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+			float ofs = 2.0f / drawable_size.y;
+			lines.draw_text(prompt.c_str(),
+			                glm::vec3(-1.2f + 0.1f * H + ofs, -0.0f + 0.1f * H + ofs, 0.0),
+			                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+			                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+		} 
+		if (state == GameState::EndLose) {
+			std::string prompt = "R I P";
 			constexpr float H = 0.20f;
 			lines.draw_text(prompt.c_str(),
 			                glm::vec3(-0.2f + 0.1f * H, -0.0f + 0.1f * H, 0.0),
@@ -508,7 +513,28 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			                glm::vec3(-0.2f + 0.1f * H + ofs, -0.0f + 0.1f * H + ofs, 0.0),
 			                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+		} 
+		std::string score_str = "Score: "+std::to_string(score);
+		if (state == GameState::EndLose || state == GameState::EndWin) {
+			lines.draw_text(score_str.c_str(),
+							glm::vec3(-0.2f + 0.1f * H, -0.3f + 0.1f * H, 0.0),
+							glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+							glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+			lines.draw_text(score_str.c_str(),
+							glm::vec3(-0.2f + 0.1f * H + ofs, -0.3f + 0.1f * H + ofs, 0.0),
+							glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+							glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+		} else {
+			lines.draw_text(score_str.c_str(),
+							glm::vec3(-1.6f + 0.1f * H, 0.7f + 0.1f * H, 0.0),
+							glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+							glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+			lines.draw_text(score_str.c_str(),
+							glm::vec3(-1.6f + 0.1f * H + ofs, 0.7f + 0.1f * H + ofs, 0.0),
+							glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+							glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 		}
+
 	}
 }
 
