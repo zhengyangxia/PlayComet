@@ -7,8 +7,6 @@
 
 ParticleGenerator::ParticleGenerator()
 {
-    std::cout << "init" << "\n";
-
     this->shader.reset(new Shader());
     this->texture.reset(new Texture2D());
     this->texture->Generate(1, 1);
@@ -77,7 +75,6 @@ void ParticleGenerator::init(){
     for (unsigned int i = 0; i < MaxParticles; ++i)
         this->particles.push_back(Particle());
 
-    std::cout << this->particles.size() << "\n";
     assert(this->particles.size()==MaxParticles);
 
     for(int i=0; i<MaxParticles; i++){
@@ -156,7 +153,7 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
         glm::vec4 vec(right_speed.x, right_speed.y, right_speed.z, 1.0f);
         vec = trans * vec;
 
-        particles[particleIndex].speed = 5.f * vec;  
+        particles[particleIndex].speed = 2.f * vec;  
         // particles[particleIndex].size = (rand()%2500)/20000.0f + 0.075f;
         particles[particleIndex].size = 0.05f;
         // Very bad way to generate a random color

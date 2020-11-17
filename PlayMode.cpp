@@ -164,6 +164,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 		revolve.revolve(asteroids.transforms[i], (float)(std::rand()%100));
 	}
 	
+	int total_num = (int)(asteroids.asteroids_num - asteroids.asteroids_num / 2);
 	int average_asteroids = (int)((asteroids.asteroids_num - asteroids.asteroids_num / 2) / planets.planet_num);
 	int index = (int)asteroids.asteroids_num/2;
 
@@ -171,16 +172,14 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 	{
 		p->parent = sun;
 		revolve.revolve(p, (float)(std::rand()%100));
-		for (size_t i = index; i < asteroids.asteroids_num; i++)
+		int next_num = 2 * average_asteroids < total_num? average_asteroids : total_num;
+		for (size_t i = index; i < index + next_num; i++)
 		{
-			if (static_cast<int>(i) >= index + average_asteroids)
-			{
-				break;
-			}
 			asteroids.transforms[i]->parent = p;
 			revolve.revolve(asteroids.transforms[i], (float)(std::rand()%100));
 		}
 		index += average_asteroids;
+		total_num -= average_asteroids;
 	}
 
 	// adding planet1 and sun to gravityUtil
@@ -572,7 +571,7 @@ void PlayMode::detect_collision_and_update_state() {
 		state = GameState::EndLose;
 	}
 	for(auto &t : asteroids.transforms){
-		if (glm::distance(comet_pos, t->position) <= COMET_RADIUS + asteroids.radius)
+		if (glm::distance(comet_pos, t->position+t->parent->position) <= COMET_RADIUS + asteroids.radius)
 		{
 			state = GameState::EndLose;
 			break;
