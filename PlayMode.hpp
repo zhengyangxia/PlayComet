@@ -54,6 +54,7 @@ struct PlayMode : Mode {
 	bool speed_is_reset = false;
 	float launch_duration = 0.f;
 	float launch_limit = 2.f;
+	float landing_dis = FLT_MAX;
 
 	//player info:
 	struct Comet {
@@ -86,6 +87,7 @@ struct PlayMode : Mode {
 	std::shared_ptr< Sound::PlayingSample > bgm;
 
 	size_t score = 0;
+	float court_time = 0.f;
 	struct Planets{
 		std::vector<Scene::Transform *> transforms;
 		std::vector<bool> hit_bitmap;
