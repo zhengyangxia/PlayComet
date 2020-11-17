@@ -312,6 +312,11 @@ void PlayMode::update(float elapsed) {
 		// if (state == GameState::Grounded)
 		// 	std::cout << "planet " << p->position.x << " " << p->position.y << " " << p->position.z << std::endl;
 	}
+	for (auto &p : asteroids.transforms)
+	{
+		revolve.revolve(p, elapsed);
+	}
+	
 	if (speed_is_reset)
 	{
 		speed_is_reset = false;
