@@ -499,6 +499,7 @@ void PlayMode::detect_collision_and_update_state() {
 		}
 	}
 	landing_dis = FLT_MAX;
+	bool finish = true;
 	for (size_t i = 0; i< planets.planet_num; i++){
 		glm::vec3 planet_pos = planets.transforms[i]->position;
 		float comet_planet_dist = glm::distance(comet_pos, planet_pos);
@@ -523,13 +524,12 @@ void PlayMode::detect_collision_and_update_state() {
 			glm::vec3 planet_world_position = planets.transforms.at(i)->position;
 			glm::vec3 comet_world_position = comet.transform->position;
 
-			comet.transform->position = (comet_world_position - planet_world_position)/10.0f;
-
-			
-			
+			comet.transform->position = comet_world_position - planet_world_position;
 		}
+		if (planets.hit_bitmap[i] == false) finish = false;
 	}
-	if (score == planets.planet_num){
+	
+	if (finish){
 		state = GameState::EndWin;
 	}
 
