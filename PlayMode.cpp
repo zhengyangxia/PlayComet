@@ -7,6 +7,7 @@
 #include "Load.hpp"
 #include "gl_errors.hpp"
 #include "data_path.hpp"
+#include "load_save_png.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -30,6 +31,27 @@ Load< Scene > comet_scene(LoadTagDefault, []() -> Scene const * {
 		Scene::Drawable &drawable = scene.drawables.back();
 
 		drawable.pipeline = lit_color_texture_program_pipeline;
+
+		if (mesh_name == "Icosphere") {
+			glm::uvec2 png_size;
+			std::vector<glm::u8vec4> data;
+			load_png(data_path("planet/rocks_ground.png"), &png_size, &data, LowerLeftOrigin);
+			GLuint icosphere_texture_id = 0;
+			glGenTextures(1, &icosphere_texture_id);
+			glBindTexture(GL_TEXTURE_2D, icosphere_texture_id);
+			std::cout << data.size() << ' ' << sizeof(data[0]) << std::endl;
+			glTexImage2D(GL_TEXTURE_2D,
+			             0, GL_RGBA, png_size.x, png_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.data()
+			);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			GL_ERRORS();
+			drawable.pipeline.textures[0].texture = icosphere_texture_id;
+			drawable.pipeline.textures[0].target = GL_TEXTURE_2D;
+			glBindTexture(GL_TEXTURE_2D, 0);
+		}
 
 		// Sphere.001 is the mesh for the sun.
 		// TODO(xiaoqiao, zizhuol): change blender so the mesh for sun has a better name
