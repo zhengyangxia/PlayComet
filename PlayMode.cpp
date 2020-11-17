@@ -174,7 +174,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 		p->parent = sun;
 		revolve.revolve(p, (float)(std::rand()%100));
 		int next_num = 2 * average_asteroids < total_num? average_asteroids : total_num;
-		for (size_t i = index; i < index + next_num; i++)
+		for (int i = index; i < index + next_num; i++)
 		{
 			asteroids.transforms[i]->parent = p;
 			revolve.revolve(asteroids.transforms[i], (float)(std::rand()%100));
