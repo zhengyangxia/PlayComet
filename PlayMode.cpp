@@ -115,14 +115,14 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 		{
 			comet.transform = &transform;
 			comet_parent = comet.transform->parent;
-			
+
 		}else if (planetNames.find(transform.name)!= planetNames.end())
 		{
 			planets.transforms.push_back(&transform);
 			planets.planet_num ++;
 		}else if (std::strlen(transform.name.c_str()) >= 3 && std::strncmp(transform.name.c_str(), "Sun", 3) == 0)
-		{	
-			
+		{
+
 			sun = &transform;
 		}else if (transform.name.find(asteroidPrefix) == 0){
 			initialize_asteroids(transform, &asteroids);
@@ -133,16 +133,16 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 	// comet.transform->scale *= 0.1f;
 	sun->position = glm::vec3(0.f);
 	comet.transform->position = sun->position + glm::vec3(0, -5000.f, 0);
-	
+
 	planets.hit_bitmap.resize(planets.planet_num, false);
 	//create a player camera attached to a child of the player transform:
 	scene.transforms.emplace_back();
 	scene.cameras.emplace_back(&scene.transforms.back());
 	comet.camera = &scene.cameras.back();
 	comet.camera->fovy = glm::radians(45.0f);
-	comet.camera->near = 0.01f;
+	comet.camera->near = 0.1f;
 	comet.camera->transform->parent = comet.transform;
-	
+
 	comet.camera->transform->position = glm::vec3(0.0f, -25.0f, 5.0f);
 	comet.camera->transform->rotation = initial_camera_rotation;
 	// comet.camera->transform->scale = glm::vec3(10.0f);
@@ -151,7 +151,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 	scene.cameras.emplace_back(&scene.transforms.back());
 	universal_camera = &scene.cameras.back();
 	universal_camera->fovy = glm::radians(60.0f);
-	universal_camera->near = 0.01f;
+	universal_camera->near = 0.1f;
 	universal_camera->transform->position = sun->position + glm::vec3(0, 0, 2500.0f);
 
 	//rotate camera facing direction (-z) to player facing direction (+y):
@@ -164,7 +164,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 		asteroids.transforms[i]->parent = sun;
 		revolve.revolve(asteroids.transforms[i], (float)(std::rand()%100));
 	}
-	
+
 	int total_num = (int)(asteroids.asteroids_num - asteroids.asteroids_num / 2);
 	int average_asteroids = (int)((asteroids.asteroids_num - asteroids.asteroids_num / 2) / planets.planet_num);
 	int index = (int)asteroids.asteroids_num/2;
@@ -212,7 +212,7 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			state = GameState::Launched;
 			return true;
 		}
-		
+
 		if (evt.key.keysym.sym == SDLK_SPACE)
 		{
 			// if (SDL_GetRelativeMouseMode() == SDL_FALSE)
@@ -243,7 +243,7 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			down.pressed = true;
 			return true;
 		}
-		
+
 	} else if (evt.type == SDL_KEYUP) {
 		if (evt.key.keysym.sym == SDLK_a) {
 			left.pressed = false;
@@ -258,7 +258,7 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			down.pressed = false;
 			return true;
 		}
-	} 
+	}
 	/*
 	else if (evt.type == SDL_MOUSEBUTTONDOWN) {
 		if (SDL_GetRelativeMouseMode() == SDL_FALSE) {
@@ -277,11 +277,11 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		// 	* glm::angleAxis(-motion.x * comet.camera->fovy, glm::vec3(0.0f, 1.0f, 0.0f))
 		// 	* glm::angleAxis(motion.y * comet.camera->fovy, glm::vec3(1.0f, 0.0f, 0.0f))
 		// );
-		
+
 
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -316,7 +316,7 @@ void PlayMode::update(float elapsed) {
 	{
 		revolve.revolve(p, elapsed);
 	}
-	
+
 	if (speed_is_reset)
 	{
 		speed_is_reset = false;
@@ -364,7 +364,7 @@ void PlayMode::update(float elapsed) {
 			court_time = 0.f;
 		}
 	}
-	
+
 
 	//player walking:
 	if (state != GameState::Grounded && state != GameState::Landed) {
@@ -389,7 +389,7 @@ void PlayMode::update(float elapsed) {
 
 		comet.transform->rotation = rotation * comet.transform->rotation;
 		comet.transform->position += comet_velocity * elapsed;
-		
+
 		rotation = glm::angleAxis(glm::radians(move.z*elapsed*45), glm::normalize(comet_velocity));
 		comet.transform->rotation = rotation*comet.transform->rotation;
 		dirx = rotation * dirx;
@@ -402,7 +402,7 @@ void PlayMode::update(float elapsed) {
 		comet.transform->rotation = rotation_x * rotation_y * comet.transform->rotation;
 		dirx = rotation_x * dirx;
 		dirz = rotation_y * dirz;
-		
+
 	}
 
 	bgm->set_position(comet.camera->transform->position, 1.0f / 60.0f);
@@ -476,7 +476,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 		}
 
-		
+
 		if (landing_dis < 3000.f && state == GameState::Flying){
 			std::string dis_str = "Distance: "+std::to_string((int)landing_dis);
 			if (landing_dis < 1000.f && courting < planets.planet_num && planets.hit_bitmap[courting] == false){
@@ -509,7 +509,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 		                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 		}
-		
+
 
 		// Draw win/lose text
 		if (state == GameState::EndWin) {
@@ -524,7 +524,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			                glm::vec3(-1.2f + 0.1f * H + ofs, -0.0f + 0.1f * H + ofs, 0.0),
 			                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
-		} 
+		}
 		if (state == GameState::EndLose) {
 			std::string prompt = "R I P";
 			constexpr float H = 0.20f;
@@ -537,7 +537,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			                glm::vec3(-0.2f + 0.1f * H + ofs, -0.0f + 0.1f * H + ofs, 0.0),
 			                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
-		} 
+		}
 		std::string score_str = "Score: "+std::to_string(score);
 		if (state == GameState::EndLose || state == GameState::EndWin) {
 			lines.draw_text(score_str.c_str(),
@@ -564,7 +564,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
 void PlayMode::detect_collision_and_update_state() {
 	if (state == GameState::EndLose) { return; }
-	
+
 	glm::vec3 comet_pos = comet.transform->position;
 	glm::vec3 sun_pos = sun->position;
 
@@ -608,7 +608,7 @@ void PlayMode::detect_collision_and_update_state() {
 		}
 		if (planets.hit_bitmap[i] == false) finish = false;
 	}
-	
+
 	if (finish){
 		state = GameState::EndWin;
 	}
