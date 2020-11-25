@@ -92,21 +92,34 @@ struct PlayMode : Mode {
 	size_t score = 0;
 	float court_time = 0.f;
 	size_t courting = 0;
+
+	std::vector<Scene::Transform*> asteroids;
+
+	struct Asteroid
+	{
+		Asteroid(Scene::Transform* t, float p, float d, glm::vec3 vec):transform(t), dist(d), period(p), revolve_vec(vec){};
+		Scene::Transform* transform;
+		float radius = 15.f;
+		float dist = 0.f;
+		float period = 0.f;
+		glm::vec3 revolve_vec;
+	};
+
+	struct PlanetSystem
+	{
+		PlanetSystem(Scene::Transform* t):transform(t){};
+		Scene::Transform *transform;
+		std::vector<Asteroid> asteroids;
+	};
+
 	struct Planets{
-		std::vector<Scene::Transform *> transforms;
+		std::vector<PlanetSystem> planet_systems;
 		std::vector<bool> hit_bitmap;
 		std::vector<int> radius{200, 150, 100};
 		size_t planet_num = 0;
 	} planets;
 
 	ParticleGenerator *particle_comet_tail;
-
-	struct Asteroids
-	{
-		std::vector<Scene::Transform*> transforms;
-		float radius = 15.f;
-		size_t asteroids_num = 0;
-	}asteroids;
 
 private:
 	void detect_collision_and_update_state();

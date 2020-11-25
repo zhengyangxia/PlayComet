@@ -83,22 +83,40 @@ Load< Scene > comet_scene(LoadTagDefault, []() -> Scene const * {
 	});
 });
 
-void initialize_asteroids(Scene::Transform& t, PlayMode::Asteroids* asteroids)
-{
-	asteroids->asteroids_num += 1;
-	asteroids->transforms.push_back(&t);
+float get_random_float(float max, float min){
+    return (float)(rand()%(int)(max-min)+min);
 }
 
-void scale_asteroids(PlayMode::Asteroids* asteroids, float scale)
+glm::vec3 get_random_vec(){
+    return glm::normalize(glm::vec3(rand()%100, rand()%100, rand()%100));
+}
+
+void initialize_asteroids(std::vector<Scene::Transform*>& asteroids, std::vector<PlayMode::PlanetSystem>& planet_systems)
+{
+	int j = 0;
+	for (int i = 0; i < asteroids.size(); i++)
+	{
+		j = j % planet_systems.size();
+		auto& planet_system = planet_systems[j];
+		planet_system.asteroids.push_back(PlayMode::Asteroid(asteroids[i], get_random_float(50.f, 20.f), get_random_float(1000.f, 500.f), get_random_vec()));
+		asteroids[i]->parent = planet_system.transform;
+		j += 1;
+	}
+}
+
+void scale_asteroids(std::vector<PlayMode::PlanetSystem>& planet_systems, float scale)
 {
 	assert(scale >= 0.f);
-	for (auto& t: asteroids->transforms)
+	for (auto& ps: planet_systems)
 	{
-		t->scale.x *= scale;
-		t->scale.y *= scale;
-		t->scale.z *= scale;
+		for (auto& as: ps.asteroids)
+		{
+			as.transform->scale.x *= scale;
+			as.transform->scale.y *= scale;
+			as.transform->scale.z *= scale;
+			as.radius *= scale;
+		}
 	}
-	asteroids->radius *= scale;
 }
 
 Load< Sound::Sample > music_sample(LoadTagDefault, []() -> Sound::Sample const * {
@@ -115,21 +133,30 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 		{
 			comet.transform = &transform;
 			comet_parent = comet.transform->parent;
-
 		}else if (planetNames.find(transform.name)!= planetNames.end())
 		{
-			planets.transforms.push_back(&transform);
+			planets.planet_systems.push_back(&transform);
 			planets.planet_num ++;
 		}else if (std::strlen(transform.name.c_str()) >= 3 && std::strncmp(transform.name.c_str(), "Sun", 3) == 0)
 		{
-
 			sun = &transform;
 		}else if (transform.name.find(asteroidPrefix) == 0){
-			initialize_asteroids(transform, &asteroids);
+			asteroids.push_back(&transform);
 		}
 	}
 
-	scale_asteroids(&asteroids, 1.f);
+	// match asteroids to planets and initialize the related info
+	initialize_asteroids(asteroids, planets.planet_systems);
+
+	// match planet to sun
+	for (auto&ps: planets.planet_systems)
+	{
+		ps.transform->parent = sun;
+	}
+	
+	// scale the radius of the planets
+	scale_asteroids(planets.planet_systems, 1.f);
+
 	// comet.transform->scale *= 0.1f;
 	sun->position = glm::vec3(0.f);
 	comet.transform->position = sun->position + glm::vec3(0, -5000.f, 0);
@@ -154,39 +181,22 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 	universal_camera->near = 0.1f;
 	universal_camera->transform->position = sun->position + glm::vec3(0, 0, 2500.0f);
 
-	//rotate camera facing direction (-z) to player facing direction (+y):
-	// comet.camera->transform->rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	// revolve.set_center(sun->position);
-	//loop through planets
-
-	for (size_t i = 0; i < asteroids.asteroids_num/2; i++)
+	// initialize the revolution
+	for (auto& ps: planets.planet_systems)
 	{
-		asteroids.transforms[i]->parent = sun;
-		revolve.revolve(asteroids.transforms[i], (float)(std::rand()%100));
-	}
-
-	int total_num = (int)(asteroids.asteroids_num - asteroids.asteroids_num / 2);
-	int average_asteroids = (int)((asteroids.asteroids_num - asteroids.asteroids_num / 2) / planets.planet_num);
-	int index = (int)asteroids.asteroids_num/2;
-
-	for (auto& p : planets.transforms)
-	{
-		p->parent = sun;
-		revolve.revolve(p, (float)(std::rand()%100));
-		int next_num = 2 * average_asteroids < total_num? average_asteroids : total_num;
-		for (int i = index; i < index + next_num; i++)
+		revolve.revolve(ps.transform, (float)(std::rand()%100));
+		for (auto& as: ps.asteroids)
 		{
-			asteroids.transforms[i]->parent = p;
-			revolve.revolve(asteroids.transforms[i], (float)(std::rand()%100));
+			revolve.register_planet(as.transform, as.period, as.dist, get_random_vec());
+			revolve.revolve(as.transform, (float)(std::rand()%100));
 		}
-		index += average_asteroids;
-		total_num -= average_asteroids;
 	}
-
+	
 	// adding planet1 and sun to gravityUtil
 	gravityUtil.register_planet(sun, 200.0f);
-	for (auto &p : planets.transforms)
+	for (auto &ps : planets.planet_systems)
 	{
+		auto&p = ps.transform;
 		gravityUtil.register_planet(p, 100.f);
 	}
 
@@ -308,11 +318,12 @@ void PlayMode::update(float elapsed) {
 	glm::vec3 next_pos = comet.transform->position;
 	particle_comet_tail->Update(elapsed, next_pos, comet.camera->transform->position, glm::mat4(comet.camera->transform->make_world_to_local()), comet.camera->make_projection());
 	//loop planets
-	for (auto &p : planets.transforms)
+	for (auto &ps : planets.planet_systems)
 	{
+		auto &p = ps.transform;
 		revolve.revolve(p, elapsed);
 	}
-	for (auto &p : asteroids.transforms)
+	for (auto &p : asteroids)
 	{
 		revolve.revolve(p, elapsed);
 	}
@@ -339,7 +350,7 @@ void PlayMode::update(float elapsed) {
 	if (state == GameState::Landed)
 	{
 		land_duration += elapsed;
-		after_hit[planets.transforms.at(courting)->name] = land_duration/2.f;
+		after_hit[planets.planet_systems.at(courting).transform->name] = land_duration/2.f;
 		if (land_duration < land_limit)
 		{
 			return;
@@ -490,7 +501,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 							glm::vec3(-1.6f + 0.1f * H + ofs, 0.25f + 0.1f * H + ofs, 0.0),
 							glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 							glm::u8vec4(0xff, 0xff, 0xff, 0x00));
-				std::string target_str = "Target: "+planets.transforms.at(courting)->name;
+				std::string target_str = "Target: "+planets.planet_systems.at(courting).transform->name;
 				lines.draw_text(target_str.c_str(),
 							glm::vec3(-1.6f + 0.1f * H, 0.4f + 0.1f * H, 0.0),
 							glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
@@ -572,17 +583,24 @@ void PlayMode::detect_collision_and_update_state() {
 	if (comet_sun_dist <= COMET_RADIUS + SUN_RADIUS) {
 		state = GameState::EndLose;
 	}
-	for(auto &t : asteroids.transforms){
-		if (glm::distance(comet_pos, t->position+t->parent->position) <= COMET_RADIUS + asteroids.radius)
+	for(auto &ps: planets.planet_systems){
+		for(auto &t: ps.asteroids){
+			if (glm::distance(comet_pos, t.transform->position+t.transform->parent->position) <= COMET_RADIUS + t.radius)
+			{
+				state = GameState::EndLose;
+				break;
+			}
+		}
+		if (state == GameState::EndLose)
 		{
-			state = GameState::EndLose;
 			break;
 		}
 	}
+	
 	landing_dis = FLT_MAX;
 	bool finish = true;
 	for (size_t i = 0; i< planets.planet_num; i++){
-		glm::vec3 planet_pos = planets.transforms[i]->position;
+		glm::vec3 planet_pos = planets.planet_systems[i].transform->position;
 		float comet_planet_dist = glm::distance(comet_pos, planet_pos);
 		if (comet_planet_dist-planets.radius[i]-COMET_RADIUS < landing_dis){
 			landing_dis = comet_planet_dist-planets.radius[i]-COMET_RADIUS;
@@ -600,8 +618,8 @@ void PlayMode::detect_collision_and_update_state() {
 			}
 			state = GameState::Landed;
 			universal_camera->transform->position = comet.transform->position + glm::vec3(0, 0, 2500.0f);
-			comet.transform->parent = planets.transforms.at(i);
-			glm::vec3 planet_world_position = planets.transforms.at(i)->position;
+			comet.transform->parent = planets.planet_systems.at(i).transform;
+			glm::vec3 planet_world_position = planets.planet_systems.at(i).transform->position;
 			glm::vec3 comet_world_position = comet.transform->position;
 
 			comet.transform->position = comet_world_position - planet_world_position;
