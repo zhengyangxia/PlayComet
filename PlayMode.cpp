@@ -93,8 +93,8 @@ glm::vec3 get_random_vec(){
 
 void initialize_asteroids(std::vector<Scene::Transform*>& asteroids, std::vector<PlayMode::PlanetSystem>& planet_systems)
 {
-	int j = 0;
-	for (int i = 0; i < asteroids.size(); i++)
+	unsigned int j = 0;
+	for (unsigned int i = 0; i < asteroids.size(); i++)
 	{
 		j = j % planet_systems.size();
 		auto& planet_system = planet_systems[j];
