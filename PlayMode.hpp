@@ -56,7 +56,7 @@ struct PlayMode : Mode {
 	float launch_duration = 0.f;
 	float launch_limit = 2.f;
 	float land_duration = 0.f;
-	float land_limit = 2.f;
+	float land_limit = 5.f;
 	float landing_dis = FLT_MAX;
 
 	//player info:
@@ -78,6 +78,8 @@ struct PlayMode : Mode {
 	Scene::Transform *sun = nullptr;
 
 	glm::quat initial_camera_rotation = glm::angleAxis(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	glm::vec3 camera_world_pos;
+	glm::vec3 camera_world_rot;
 
 	glm::vec3 comet_velocity = glm::vec3(0.0f, 0.5f, 0.0f);
 	glm::vec3 dirx = glm::vec3(1.0f, 0.0f, 0.0f);
