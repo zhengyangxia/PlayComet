@@ -26,7 +26,6 @@ Load< MeshBuffer > comet_meshes(LoadTagDefault, []() -> MeshBuffer const * {
 Load< Scene > comet_scene(LoadTagDefault, []() -> Scene const * {
 	return new Scene(data_path("comet.scene"), [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name){
 		Mesh const &mesh = comet_meshes->lookup(mesh_name);
-
 		scene.drawables.emplace_back(transform);
 		Scene::Drawable &drawable = scene.drawables.back();
 
@@ -119,14 +118,36 @@ void scale_asteroids(std::vector<PlayMode::PlanetSystem>& planet_systems, float 
 	}
 }
 
+void initialize_trajectory(std::vector<PlayMode::PlanetSystem>& planet_systems, std::unordered_map<std::string, std::vector<PlayMode::TrajectoryTarget>>& trajectory_targets)
+{
+	for (PlayMode::PlanetSystem ps : planet_systems)
+	{
+		auto cur_trajectory_target = trajectory_targets.find(ps.transform->name);
+		if(cur_trajectory_target == trajectory_targets.end()){
+			continue;
+		}
+		auto cur_trajectory_target_vec = cur_trajectory_target->second;
+		for(auto& t: cur_trajectory_target_vec){
+			t.transform->parent = ps.transform;
+		}
+	}
+}
+
 Load< Sound::Sample > music_sample(LoadTagDefault, []() -> Sound::Sample const * {
 	return new Sound::Sample(data_path("Mana Two - Part 1.wav"));
 });
 
 PlayMode::PlayMode() : scene(*comet_scene) {
 	std::string planetPrefix = "Planet";
+	std::string trajectoryPrefix = "Tra";
 	std::set<std::string> planetNames {"Earth", "Jupiter", "Mars"};
 	std::string asteroidPrefix = "Asteroid";
+
+	for (std::string planet_name : planetNames)
+	{
+		trajectory_targets.insert(std::pair<std::string, std::vector<TrajectoryTarget>> (planet_name, std::vector<TrajectoryTarget>()));
+	}
+
 	for (auto &transform : scene.transforms)
 	{
 		if (std::strlen(transform.name.c_str()) >= 6 && std::strncmp(transform.name.c_str(), "Player", 6) == 0)
@@ -142,8 +163,24 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 			sun = &transform;
 		}else if (transform.name.find(asteroidPrefix) == 0){
 			asteroids.push_back(&transform);
+		}else if (transform.name.find(trajectoryPrefix) == 0)
+		{
+			if (transform.name.find("Earth") == trajectoryPrefix.length() + 1)
+			{
+				trajectory_targets["Earth"].push_back(TrajectoryTarget(&transform, 1));
+			}else if (transform.name.find("Jupiter") == trajectoryPrefix.length() + 1)
+			{
+				trajectory_targets["Jupiter"].push_back(TrajectoryTarget(&transform, 1));
+			}else if (transform.name.find("Mars") == trajectoryPrefix.length() + 1)
+			{
+				trajectory_targets["Mars"].push_back(TrajectoryTarget(&transform, 1));
+			}
+			
 		}
+		
 	}
+
+	initialize_trajectory(planets.planet_systems, trajectory_targets);
 
 	// match asteroids to planets and initialize the related info
 	initialize_asteroids(asteroids, planets.planet_systems);
@@ -182,14 +219,27 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 	universal_camera->transform->position = sun->position + glm::vec3(0, 0, 2500.0f);
 
 	// initialize the revolution
-	for (auto& ps: planets.planet_systems)
+	for (size_t pos = 0; pos < planets.planet_systems.size(); pos++)
 	{
+		auto &ps = planets.planet_systems[pos];
+		// glm::vec3 revolve_vec = get_random_vec();
+		// auto trajectory = trajectory_targets.find(ps.transform->name);
+		// if (trajectory != trajectory_targets.end())
+		// {
+		// 	float radius = planets.radius[pos];
+		// 	for (auto& tt: trajectory->second)
+		// 	{
+		// 		revolve.register_planet(tt.transform, 100, radius + 50.f, revolve_vec);			
+		// 	}
+		// }
+
 		revolve.revolve(ps.transform, (float)(std::rand()%100));
 		for (auto& as: ps.asteroids)
 		{
 			revolve.register_planet(as.transform, as.period, as.dist, get_random_vec());
 			revolve.revolve(as.transform, (float)(std::rand()%100));
 		}
+		
 	}
 	
 	// adding planet1 and sun to gravityUtil
