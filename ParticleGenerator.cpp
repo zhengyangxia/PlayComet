@@ -157,7 +157,7 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
         // particles[particleIndex].size = (rand()%2500)/20000.0f + 0.075f;
         particles[particleIndex].size = 0.05f;
         // Very bad way to generate a random color
-		particles[particleIndex].color = glm::vec4(254, 240, 230, 1.0);
+		particles[particleIndex].color = glm::vec4(247, 247, 224, 1.0);
     }
     
     for (size_t i = 0; i < MaxParticles; i++)
@@ -169,11 +169,11 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
             p.pos += p.speed * elapsed;
             p.size += elapsed * 1.5f / LifeSpan;
 
-            p.color.x -= elapsed;
-            p.color.y -= elapsed;
-            p.color.z -= elapsed * 30;
+            // p.color.x -= elapsed * 0;
+            p.color.y -= elapsed * 80;
+            p.color.z -= elapsed * 150;
 
-            p.color.w = (float)(glm::pow((p.life / LifeSpan), 4) * 1.0 * 255.f);
+            p.color.w = (float)(glm::pow((p.life / LifeSpan), 1) * 1.0 * 255.f);
             if (p.life > 0.f)
             {
                 // Fill the GPU buffer
@@ -219,6 +219,7 @@ void ParticleGenerator::Draw(){
     GL_ERRORS();
 
 	glEnable(GL_BLEND);
+    glDepthMask(GL_FALSE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     this->shader->Use();
     GL_ERRORS();
@@ -289,6 +290,7 @@ void ParticleGenerator::Draw(){
     GL_ERRORS();
     // don't forget to reset to default blending mode
     glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBindVertexArray(0);
     GL_ERRORS();

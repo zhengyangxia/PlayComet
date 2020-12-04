@@ -21,7 +21,7 @@ struct Particle
 };
 
 const int MaxParticles = 400000;
-const float LifeSpan = 1.f;
+const float LifeSpan = 0.5f;
 
 class ParticleGenerator
 {
