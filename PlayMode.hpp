@@ -113,6 +113,7 @@ struct PlayMode : Mode {
 	{
 		TrajectoryTarget(Scene::Transform* t, int s):transform(t), state(s){};
 		Scene::Transform* transform;
+		float radius = 5.f; // todo distance
 		int state = 1; // 1 = present, 0 = has been hit
 	};
 

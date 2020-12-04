@@ -348,7 +348,7 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 
 void PlayMode::reset_speed(){
 	assert(comet.transform->parent);
-
+	// TODO set position = local_to_world & set parent = null ?
 	glm::vec3 center = comet.transform->parent->position;
 
 	comet.transform->position += comet.transform->parent->position;
@@ -640,7 +640,7 @@ void PlayMode::detect_collision_and_update_state() {
 	}
 	for(auto &ps: planets.planet_systems){
 		for(auto &t: ps.asteroids){
-			if (glm::distance(comet_pos, t.transform->position+t.transform->parent->position) <= COMET_RADIUS + t.radius)
+			if (glm::distance(comet_pos, t.transform->make_local_to_world()[3]) <= COMET_RADIUS + t.radius)
 			{
 				state = GameState::EndLose;
 				break;
@@ -650,6 +650,25 @@ void PlayMode::detect_collision_and_update_state() {
 		{
 			break;
 		}
+
+		auto trajectory = trajectory_targets.find(ps.transform->name);
+		if (trajectory == trajectory_targets.end())
+		{
+			continue;
+		}
+
+		for (auto ts: trajectory->second)
+		{
+			if(ts.state == 0){
+				continue;
+			}
+			if (glm::distance(comet_pos, ts.transform->make_local_to_world()[3]) <= COMET_RADIUS + ts.radius)
+			{
+				ts.state = 0;
+				ts.transform->scale *= 0.f;
+			}
+		}
+		
 	}
 	
 	landing_dis = FLT_MAX;
