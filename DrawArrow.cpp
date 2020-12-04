@@ -82,8 +82,8 @@ void DrawArrow::draw(std::vector<glm::vec2> arrow_pos){
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	glUniformMatrix4fv(color_texture_program->OBJECT_TO_CLIP_mat4, 1, GL_FALSE, glm::value_ptr(identity_matrix));
 
-
-	glDrawArrays(GL_TRIANGLES, 0, arrow_vertices.size()/10);
+	int tri_nums = static_cast<int>(arrow_vertices.size()/10);
+	glDrawArrays(GL_TRIANGLES, 0, tri_nums);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glDisableVertexAttribArray(0);
 	glBindVertexArray(0);
