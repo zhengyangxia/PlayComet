@@ -203,6 +203,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 	particle_comet_tail = new ParticleGenerator();
 
 	bgm = Sound::loop_3D(*music_sample, 2.5f, comet.camera->transform->position, 10.0f);
+
 }
 
 PlayMode::~PlayMode() {
@@ -452,6 +453,9 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	} else {
 		scene.draw(*universal_camera);
 	}
+	
+
+	
 
 	GL_ERRORS();
 	RenderCaptor::set_render_destination(nullptr);
@@ -463,6 +467,9 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	glViewport(0, 0, drawable_size.x, drawable_size.y);
 	add_processor.draw(render_ofb, threshold_ofb, add_ofb);
 	tone_mapping_processor.draw(add_ofb, nullptr);
+
+	draw_arrow.draw(arrow_pos);
+	arrow_pos.clear();
 
 	{ //use DrawLines to overlay some text:
 		glDisable(GL_DEPTH_TEST);
@@ -521,8 +528,6 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 		}
 
-
-		// Draw win/lose text
 		if (state == GameState::EndWin) {
 			std::string prompt = "You have courted all the planets!" ;
 			constexpr float H = 0.20f;
@@ -624,7 +629,45 @@ void PlayMode::detect_collision_and_update_state() {
 
 			comet.transform->position = comet_world_position - planet_world_position;
 		}
-		if (planets.hit_bitmap[i] == false) finish = false;
+		if (planets.hit_bitmap[i] == false){
+			nearest_3.push(std::make_pair(comet_planet_dist, planets.planet_systems[i].transform));
+			if (nearest_3.size()>3){
+				nearest_3.pop();
+			}
+			finish = false;
+		}
+	}
+	
+	//Calculate arrow position
+	while (!nearest_3.empty()){
+		auto p = nearest_3.top();
+		auto t = p.second;
+		// 左右: x, 上下: y
+		// glm::vec4 planet_position_in_camera_space =
+		// 	glm::mat4(comet.camera->transform->make_world_to_local()) *
+		// 	glm::vec4(t->position, 1.0f);
+
+		glm::vec4 planet_position_in_clip_space =
+			comet.camera->make_projection() *
+			glm::mat4(comet.camera->transform->make_world_to_local()) *
+				glm::vec4(t->position, 1.0f);
+		planet_position_in_clip_space /= planet_position_in_clip_space.w;
+
+		if (planet_position_in_clip_space.x > -1 && planet_position_in_clip_space.x < 1 &&
+		planet_position_in_clip_space.y > -1 && planet_position_in_clip_space.y < 1 &&
+		planet_position_in_clip_space.z > -1 && planet_position_in_clip_space.z < 1){
+			//in camera show hud
+		}else{
+			//show arrow
+			float x = planet_position_in_clip_space.x;
+			float y = planet_position_in_clip_space.y;
+			x = std::min(0.95f,x);
+			x = std::max(-0.95f,x);
+			y = std::min(0.95f,y);
+			y = std::max(-0.95f,y);
+			arrow_pos.push_back(glm::vec2(x,y));
+		}
+		nearest_3.pop();
 	}
 
 	if (finish){

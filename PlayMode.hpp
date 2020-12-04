@@ -2,12 +2,16 @@
 
 #include "Scene.hpp"
 #include "ParticleGenerator.hpp"
+#include "DrawArrow.hpp"
 
 #include <glm/glm.hpp>
 
 #include <vector>
 #include <deque>
 #include <set>
+#include <queue>
+#include <utility>
+#include <algorithm>
 
 #include "Revolve.hpp"
 #include "GravityUtil.hpp"
@@ -119,7 +123,12 @@ struct PlayMode : Mode {
 		size_t planet_num = 0;
 	} planets;
 
+	std::priority_queue<std::pair< float, Scene::Transform* >> nearest_3;
+	std::vector<glm::vec2> arrow_pos;
+
 	ParticleGenerator *particle_comet_tail;
+
+	DrawArrow draw_arrow;
 
 private:
 	void detect_collision_and_update_state();
