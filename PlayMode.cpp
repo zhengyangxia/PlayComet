@@ -23,6 +23,7 @@ Load< MeshBuffer > comet_meshes(LoadTagDefault, []() -> MeshBuffer const * {
 	return ret;
 });
 
+
 Load< Scene > comet_scene(LoadTagDefault, []() -> Scene const * {
 	return new Scene(data_path("comet.scene"), [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name){
 		Mesh const &mesh = comet_meshes->lookup(mesh_name);
@@ -162,26 +163,33 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 		{
 			sun = &transform;
 		}else if (transform.name.find(asteroidPrefix) == 0){
+			
 			asteroids.push_back(&transform);
+			
 		}else if (transform.name.find(trajectoryPrefix) == 0)
-		{
-			if (transform.name.find("Earth") == trajectoryPrefix.length() + 1)
-			{
-				trajectory_targets["Earth"].push_back(TrajectoryTarget(&transform, 1));
-			}else if (transform.name.find("Jupiter") == trajectoryPrefix.length() + 1)
-			{
-				trajectory_targets["Jupiter"].push_back(TrajectoryTarget(&transform, 1));
-			}else if (transform.name.find("Mars") == trajectoryPrefix.length() + 1)
-			{
-				trajectory_targets["Mars"].push_back(TrajectoryTarget(&transform, 1));
+		{	
+			if (std::strcmp(transform.name.c_str(), "Tra_Earth_Target.012") == 0){
+				item = &transform;
+			} else {
+				if (transform.name.find("Earth") == trajectoryPrefix.length() + 1)
+				{
+					trajectory_targets["Earth"].push_back(TrajectoryTarget(&transform, 1));
+				}else if (transform.name.find("Jupiter") == trajectoryPrefix.length() + 1)
+				{
+					trajectory_targets["Jupiter"].push_back(TrajectoryTarget(&transform, 1));
+				}else if (transform.name.find("Mars") == trajectoryPrefix.length() + 1)
+				{
+					trajectory_targets["Mars"].push_back(TrajectoryTarget(&transform, 1));
+				}
 			}
+			
 			
 		}
 		
 	}
 
 	initialize_trajectory(planets.planet_systems, trajectory_targets);
-
+	item->scale *= 0.f;
 	// match asteroids to planets and initialize the related info
 	initialize_asteroids(asteroids, planets.planet_systems);
 
@@ -232,7 +240,6 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 		// 		revolve.register_planet(tt.transform, 100, radius + 50.f, revolve_vec);			
 		// 	}
 		// }
-
 		revolve.revolve(ps.transform, (float)(std::rand()%100));
 		for (auto& as: ps.asteroids)
 		{
@@ -283,6 +290,13 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			// 	comet.camera->transform->rotation = initial_camera_rotation;
 			// 	SDL_SetRelativeMouseMode(SDL_FALSE);
 			// }
+			item->scale = glm::vec3(1.f);
+			// std::cout << comet.transform->position.x << " " << comet.transform->position.y << " " << comet.transform->position.z << std::endl;
+			item->position = planets.planet_systems[0].asteroids[0].transform->make_local_to_world()[3];
+			// std::cout << item->position.x << " " << item->position.y << " " << item->position.z << std::endl;
+			item->parent = comet_parent;
+			item_flying = 5.0f;
+			
 			return true;
 		} else if (SDL_GetRelativeMouseMode() == SDL_TRUE)
 		{
@@ -382,11 +396,25 @@ void PlayMode::update(float elapsed) {
 
 	if (speed_is_reset)
 	{
-		
-		
 		speed_is_reset = false;
 		reset_speed();
 		return;
+	}
+
+	if (item_flying > 0){
+		glm::vec3 delta = item->position-comet.transform->make_local_to_world()[3]-dirz;
+		item->position -= delta*2.5f*elapsed;
+		// item->position = glm::vec3(0.0f, 0.0f, 1.0f);
+		// std::cout << glm::length2(delta) << std::endl;
+		
+		item_flying -= elapsed;
+		if (item_flying <= 0.f || glm::length2(delta) < 0.01f){
+			std::cout << item->position.x << " " << item->position.y << " " << item->position.z << std::endl;
+			item->position = glm::vec3(0.0f, 0.0f, 1.0f);
+			item->parent = comet.transform;
+			std::cout << item->make_local_to_world()[3].x << " " << item->make_local_to_world()[3].y << " " << item->make_local_to_world()[3].z << std::endl;
+			item_flying = 0.f;
+		}
 	}
 
 	if (state == GameState::Flying)

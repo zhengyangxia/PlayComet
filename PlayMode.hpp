@@ -101,6 +101,9 @@ struct PlayMode : Mode {
 
 	std::vector<Scene::Transform*> asteroids;
 
+	Scene::Transform* item;
+	float item_flying;
+
 	struct Asteroid
 	{
 		Asteroid(Scene::Transform* t, float p, float d, glm::vec3 vec):transform(t), dist(d), period(p), revolve_vec(vec){};
@@ -110,6 +113,8 @@ struct PlayMode : Mode {
 		float period = 0.f;
 		glm::vec3 revolve_vec;
 	};
+
+	
 
 	struct TrajectoryTarget
 	{
