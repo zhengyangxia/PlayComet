@@ -196,7 +196,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 
 	// comet.transform->scale *= 0.1f;
 	sun->position = glm::vec3(0.f);
-	comet.transform->position = sun->position + glm::vec3(0, -5000.f, 0);
+	comet.transform->position = sun->position + glm::vec3(0, -1000.f, 0);
 
 	planets.hit_bitmap.resize(planets.planet_num, false);
 	//create a player camera attached to a child of the player transform:
@@ -252,8 +252,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 
 	particle_comet_tail = new ParticleGenerator();
 
-	bgm = Sound::loop_3D(*music_sample, 2.5f, comet.camera->transform->position, 10.0f);
-
+	// bgm = Sound::loop_3D(*music_sample, 2.5f, comet.camera->transform->position, 10.0f);
 }
 
 PlayMode::~PlayMode() {
@@ -271,6 +270,7 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 		{
 			speed_is_reset = true;
 			state = GameState::Launched;
+			camera_world_pos = comet.camera->transform->position;
 			return true;
 		}
 
@@ -362,6 +362,7 @@ void PlayMode::reset_speed(){
 	dirz = rotation * dirz;
 	constexpr float LaunchSpeed = 10.f;
 	comet_velocity = speed_vector*LaunchSpeed;
+	
 	return;
 }
 
@@ -381,30 +382,53 @@ void PlayMode::update(float elapsed) {
 
 	if (speed_is_reset)
 	{
+		
+		
 		speed_is_reset = false;
 		reset_speed();
 		return;
 	}
 
+	if (state == GameState::Flying)
+		detect_collision_and_update_state();
+
 	if (state == GameState::Launched)
 	{
 		launch_duration += elapsed;
+		comet.camera->transform->position = (camera_world_pos - comet.transform->make_local_to_world()[3])*(1.f-launch_duration/launch_limit) + comet.transform->make_local_to_world()[3];
 		if (launch_duration < launch_limit)
 		{
 			return;
+		} else {
+			comet.camera->transform->parent = comet.transform;
+			comet.camera->transform->position = glm::vec3(0.f, -25.f, 5.f);
+			comet.camera->transform->rotation = initial_camera_rotation;
+			
 		}
 		launch_duration = 0.f;
 		state = GameState::Flying;
+		
 		return;
 	}
 
 	if (state == GameState::Landed)
 	{
 		land_duration += elapsed;
-		after_hit[planets.planet_systems.at(courting).transform->name] = land_duration/2.f;
+		after_hit[planets.planet_systems.at(courting).transform->name] = land_duration/land_limit;
+		comet.camera->transform->position += elapsed * glm::normalize(comet.camera->transform->position) * 1000.f;
 		if (land_duration < land_limit)
 		{
 			return;
+		} else {
+			// std::cout << comet.camera->transform->position.x << " " << comet.camera->transform->position.y << " " << comet.camera->transform->position.z << std::endl;
+			// std::cout << comet.transform->position.x << " " << comet.transform->position.y << " " << comet.transform->position.z << std::endl;
+			// std::cout << comet.transform->make_local_to_world()[3].x << " " << comet.transform->make_local_to_world()[3].y << " " << comet.transform->make_local_to_world()[3].z << std::endl;
+			camera_world_pos = comet.camera->transform->make_local_to_world()[3];
+			comet.camera->transform->parent = comet_parent;
+			comet.camera->transform->position = camera_world_pos;
+			comet.camera->transform->rotation = comet.transform->rotation * initial_camera_rotation;
+			// std::cout << comet.camera->transform->make_local_to_world()[3].x << " " << comet.camera->transform->make_local_to_world()[3].y << " " << comet.camera->transform->make_local_to_world()[3].z << std::endl;
+			// std::cout << comet.camera->transform->position.x << " " << comet.camera->transform->position.y << " " << comet.camera->transform->position.z << std::endl;
 		}
 		land_duration = 0.f;
 		state = GameState::Grounded;
@@ -413,8 +437,7 @@ void PlayMode::update(float elapsed) {
 	}
 
 
-	if (state == GameState::Flying)
-		detect_collision_and_update_state();
+	
 	if (state == GameState::EndLose || state == GameState::EndWin) {
 		return;
 	}
@@ -467,7 +490,7 @@ void PlayMode::update(float elapsed) {
 
 	}
 
-	bgm->set_position(comet.camera->transform->position, 1.0f / 60.0f);
+	// bgm->set_position(comet.camera->transform->position, 1.0f / 60.0f);
 }
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
@@ -497,15 +520,13 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS); //this is the default depth comparison function, but FYI you can change it.
 
-	if (state == GameState::Flying || state == GameState::EndLose || state == GameState::EndWin || state == GameState::Landed) {
-		scene.draw(*comet.camera);
-		particle_comet_tail->Draw();
-	} else {
-		scene.draw(*universal_camera);
-	}
-	
-
-	
+	scene.draw(*comet.camera);
+	particle_comet_tail->Draw();
+	// if (state == GameState::Flying || state == GameState::EndLose || state == GameState::EndWin || state == GameState::Landed) {
+		
+	// } else {
+	// 	scene.draw(*universal_camera);
+	// }
 
 	GL_ERRORS();
 	RenderCaptor::set_render_destination(nullptr);
@@ -691,12 +712,18 @@ void PlayMode::detect_collision_and_update_state() {
 				planets.hit_bitmap[i] = true;
 			}
 			state = GameState::Landed;
-			universal_camera->transform->position = comet.transform->position + glm::vec3(0, 0, 2500.0f);
+			// camera_world_pos = comet.camera->transform->make_local_to_world()[3];
+			// comet.camera->transform->parent = nullptr;
+			// comet.camera->transform->position = camera_world_pos;
+			// camera_world_rot = comet_velocity;
+			// universal_camera->transform->position = comet.transform->position + glm::vec3(0, 0, 2500.0f);
+			
 			comet.transform->parent = planets.planet_systems.at(i).transform;
 			glm::vec3 planet_world_position = planets.planet_systems.at(i).transform->position;
 			glm::vec3 comet_world_position = comet.transform->position;
 
 			comet.transform->position = comet_world_position - planet_world_position;
+			// std::cout << comet.camera->transform->make_local_to_world()[3].x << " " << comet.camera->transform->make_local_to_world()[3].y << " " << comet.camera->transform->make_local_to_world()[3].z << std::endl;
 		}
 		if (planets.hit_bitmap[i] == false){
 			nearest_3.push(std::make_pair(comet_planet_dist, planets.planet_systems[i].transform));
