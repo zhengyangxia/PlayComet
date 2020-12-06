@@ -26,7 +26,6 @@ Load< MeshBuffer > comet_meshes(LoadTagDefault, []() -> MeshBuffer const * {
 Load< Scene > comet_scene(LoadTagDefault, []() -> Scene const * {
 	return new Scene(data_path("comet.scene"), [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name){
 		Mesh const &mesh = comet_meshes->lookup(mesh_name);
-
 		scene.drawables.emplace_back(transform);
 		Scene::Drawable &drawable = scene.drawables.back();
 
@@ -119,14 +118,36 @@ void scale_asteroids(std::vector<PlayMode::PlanetSystem>& planet_systems, float 
 	}
 }
 
+void initialize_trajectory(std::vector<PlayMode::PlanetSystem>& planet_systems, std::unordered_map<std::string, std::vector<PlayMode::TrajectoryTarget>>& trajectory_targets)
+{
+	for (PlayMode::PlanetSystem ps : planet_systems)
+	{
+		auto cur_trajectory_target = trajectory_targets.find(ps.transform->name);
+		if(cur_trajectory_target == trajectory_targets.end()){
+			continue;
+		}
+		auto cur_trajectory_target_vec = cur_trajectory_target->second;
+		for(auto& t: cur_trajectory_target_vec){
+			t.transform->parent = ps.transform;
+		}
+	}
+}
+
 Load< Sound::Sample > music_sample(LoadTagDefault, []() -> Sound::Sample const * {
 	return new Sound::Sample(data_path("Mana Two - Part 1.wav"));
 });
 
 PlayMode::PlayMode() : scene(*comet_scene) {
 	std::string planetPrefix = "Planet";
+	std::string trajectoryPrefix = "Tra";
 	std::set<std::string> planetNames {"Earth", "Jupiter", "Mars"};
 	std::string asteroidPrefix = "Asteroid";
+
+	for (std::string planet_name : planetNames)
+	{
+		trajectory_targets.insert(std::pair<std::string, std::vector<TrajectoryTarget>> (planet_name, std::vector<TrajectoryTarget>()));
+	}
+
 	for (auto &transform : scene.transforms)
 	{
 		if (std::strlen(transform.name.c_str()) >= 6 && std::strncmp(transform.name.c_str(), "Player", 6) == 0)
@@ -142,8 +163,24 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 			sun = &transform;
 		}else if (transform.name.find(asteroidPrefix) == 0){
 			asteroids.push_back(&transform);
+		}else if (transform.name.find(trajectoryPrefix) == 0)
+		{
+			if (transform.name.find("Earth") == trajectoryPrefix.length() + 1)
+			{
+				trajectory_targets["Earth"].push_back(TrajectoryTarget(&transform, 1));
+			}else if (transform.name.find("Jupiter") == trajectoryPrefix.length() + 1)
+			{
+				trajectory_targets["Jupiter"].push_back(TrajectoryTarget(&transform, 1));
+			}else if (transform.name.find("Mars") == trajectoryPrefix.length() + 1)
+			{
+				trajectory_targets["Mars"].push_back(TrajectoryTarget(&transform, 1));
+			}
+			
 		}
+		
 	}
+
+	initialize_trajectory(planets.planet_systems, trajectory_targets);
 
 	// match asteroids to planets and initialize the related info
 	initialize_asteroids(asteroids, planets.planet_systems);
@@ -182,14 +219,27 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 	universal_camera->transform->position = sun->position + glm::vec3(0, 0, 2500.0f);
 
 	// initialize the revolution
-	for (auto& ps: planets.planet_systems)
+	for (size_t pos = 0; pos < planets.planet_systems.size(); pos++)
 	{
+		auto &ps = planets.planet_systems[pos];
+		// glm::vec3 revolve_vec = get_random_vec();
+		// auto trajectory = trajectory_targets.find(ps.transform->name);
+		// if (trajectory != trajectory_targets.end())
+		// {
+		// 	float radius = planets.radius[pos];
+		// 	for (auto& tt: trajectory->second)
+		// 	{
+		// 		revolve.register_planet(tt.transform, 100, radius + 50.f, revolve_vec);			
+		// 	}
+		// }
+
 		revolve.revolve(ps.transform, (float)(std::rand()%100));
 		for (auto& as: ps.asteroids)
 		{
 			revolve.register_planet(as.transform, as.period, as.dist, get_random_vec());
 			revolve.revolve(as.transform, (float)(std::rand()%100));
 		}
+		
 	}
 	
 	// adding planet1 and sun to gravityUtil
@@ -298,7 +348,7 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 
 void PlayMode::reset_speed(){
 	assert(comet.transform->parent);
-
+	// TODO set position = local_to_world & set parent = null ?
 	glm::vec3 center = comet.transform->parent->position;
 
 	comet.transform->position += comet.transform->parent->position;
@@ -489,6 +539,9 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	add_processor.draw(render_ofb, threshold_ofb, add_ofb);
 	tone_mapping_processor.draw(add_ofb, nullptr);
 
+	draw_arrow.draw(arrow_pos);
+	arrow_pos.clear();
+
 	{ //use DrawLines to overlay some text:
 		glDisable(GL_DEPTH_TEST);
 		float aspect = float(drawable_size.x) / float(drawable_size.y);
@@ -546,8 +599,6 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 		}
 
-
-		// Draw win/lose text
 		if (state == GameState::EndWin) {
 			std::string prompt = "You have courted all the planets!" ;
 			constexpr float H = 0.20f;
@@ -610,7 +661,7 @@ void PlayMode::detect_collision_and_update_state() {
 	}
 	for(auto &ps: planets.planet_systems){
 		for(auto &t: ps.asteroids){
-			if (glm::distance(comet_pos, t.transform->position+t.transform->parent->position) <= COMET_RADIUS + t.radius)
+			if (glm::distance(comet_pos, t.transform->make_local_to_world()[3]) <= COMET_RADIUS + t.radius)
 			{
 				state = GameState::EndLose;
 				break;
@@ -620,6 +671,25 @@ void PlayMode::detect_collision_and_update_state() {
 		{
 			break;
 		}
+
+		auto trajectory = trajectory_targets.find(ps.transform->name);
+		if (trajectory == trajectory_targets.end())
+		{
+			continue;
+		}
+
+		for (auto ts: trajectory->second)
+		{
+			if(ts.state == 0){
+				continue;
+			}
+			if (glm::distance(comet_pos, ts.transform->make_local_to_world()[3]) <= COMET_RADIUS + ts.radius)
+			{
+				ts.state = 0;
+				ts.transform->scale *= 0.f;
+			}
+		}
+		
 	}
 	
 	landing_dis = FLT_MAX;
@@ -655,7 +725,45 @@ void PlayMode::detect_collision_and_update_state() {
 			comet.transform->position = comet_world_position - planet_world_position;
 			// std::cout << comet.camera->transform->make_local_to_world()[3].x << " " << comet.camera->transform->make_local_to_world()[3].y << " " << comet.camera->transform->make_local_to_world()[3].z << std::endl;
 		}
-		if (planets.hit_bitmap[i] == false) finish = false;
+		if (planets.hit_bitmap[i] == false){
+			nearest_3.push(std::make_pair(comet_planet_dist, planets.planet_systems[i].transform));
+			if (nearest_3.size()>3){
+				nearest_3.pop();
+			}
+			finish = false;
+		}
+	}
+	
+	//Calculate arrow position
+	while (!nearest_3.empty()){
+		auto p = nearest_3.top();
+		auto t = p.second;
+		// 左右: x, 上下: y
+		// glm::vec4 planet_position_in_camera_space =
+		// 	glm::mat4(comet.camera->transform->make_world_to_local()) *
+		// 	glm::vec4(t->position, 1.0f);
+
+		glm::vec4 planet_position_in_clip_space =
+			comet.camera->make_projection() *
+			glm::mat4(comet.camera->transform->make_world_to_local()) *
+				glm::vec4(t->position, 1.0f);
+		planet_position_in_clip_space /= planet_position_in_clip_space.w;
+
+		if (planet_position_in_clip_space.x > -1 && planet_position_in_clip_space.x < 1 &&
+		planet_position_in_clip_space.y > -1 && planet_position_in_clip_space.y < 1 &&
+		planet_position_in_clip_space.z > -1 && planet_position_in_clip_space.z < 1){
+			//in camera show hud
+		}else{
+			//show arrow
+			float x = planet_position_in_clip_space.x;
+			float y = planet_position_in_clip_space.y;
+			x = std::min(0.95f,x);
+			x = std::max(-0.95f,x);
+			y = std::min(0.95f,y);
+			y = std::max(-0.95f,y);
+			arrow_pos.push_back(glm::vec2(x,y));
+		}
+		nearest_3.pop();
 	}
 
 	if (finish){

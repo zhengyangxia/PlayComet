@@ -2,12 +2,16 @@
 
 #include "Scene.hpp"
 #include "ParticleGenerator.hpp"
+#include "DrawArrow.hpp"
 
 #include <glm/glm.hpp>
 
 #include <vector>
 #include <deque>
 #include <set>
+#include <queue>
+#include <utility>
+#include <algorithm>
 
 #include "Revolve.hpp"
 #include "GravityUtil.hpp"
@@ -107,12 +111,24 @@ struct PlayMode : Mode {
 		glm::vec3 revolve_vec;
 	};
 
+	struct TrajectoryTarget
+	{
+		TrajectoryTarget(Scene::Transform* t, int s):transform(t), state(s){};
+		Scene::Transform* transform;
+		float radius = 5.f; // todo distance
+		int state = 1; // 1 = present, 0 = has been hit
+	};
+
 	struct PlanetSystem
 	{
 		PlanetSystem(Scene::Transform* t):transform(t){};
 		Scene::Transform *transform;
 		std::vector<Asteroid> asteroids;
+		int trajectory_state = 0; // 1 -> hit all trajectory targets
+		// std::vector<Scene::TrajectoryTarget> trajectory_targets; 
 	};
+
+    std::unordered_map<std::string, std::vector<TrajectoryTarget>> trajectory_targets;
 
 	struct Planets{
 		std::vector<PlanetSystem> planet_systems;
@@ -121,7 +137,12 @@ struct PlayMode : Mode {
 		size_t planet_num = 0;
 	} planets;
 
+	std::priority_queue<std::pair< float, Scene::Transform* >> nearest_3;
+	std::vector<glm::vec2> arrow_pos;
+
 	ParticleGenerator *particle_comet_tail;
+
+	DrawArrow draw_arrow;
 
 private:
 	void detect_collision_and_update_state();
