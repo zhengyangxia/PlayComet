@@ -101,17 +101,20 @@ struct PlayMode : Mode {
 
 	std::vector<Scene::Transform*> asteroids;
 
-	Scene::Transform* item;
-	float item_flying;
+	std::vector<Scene::Transform*> flowers;
+	float flower_time;
+	
 
 	struct Asteroid
 	{
 		Asteroid(Scene::Transform* t, float p, float d, glm::vec3 vec):transform(t), dist(d), period(p), revolve_vec(vec){};
+		Asteroid(Scene::Transform* t, float p, float d, glm::vec3 vec, Scene::Transform* f):transform(t), dist(d), period(p), revolve_vec(vec), flower(f){};
 		Scene::Transform* transform;
 		float radius = 15.f;
 		float dist = 0.f;
 		float period = 0.f;
 		glm::vec3 revolve_vec;
+		Scene::Transform* flower = nullptr;
 	};
 
 	

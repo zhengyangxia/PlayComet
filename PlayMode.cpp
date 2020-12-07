@@ -91,14 +91,20 @@ glm::vec3 get_random_vec(){
     return glm::normalize(glm::vec3(rand()%100, rand()%100, rand()%100));
 }
 
-void initialize_asteroids(std::vector<Scene::Transform*>& asteroids, std::vector<PlayMode::PlanetSystem>& planet_systems)
+void initialize_asteroids(std::vector<Scene::Transform*>& asteroids, std::vector<PlayMode::PlanetSystem>& planet_systems, std::vector<Scene::Transform*>& flowers)
 {
 	unsigned int j = 0;
 	for (unsigned int i = 0; i < asteroids.size(); i++)
 	{
+		
 		j = j % planet_systems.size();
 		auto& planet_system = planet_systems[j];
-		planet_system.asteroids.push_back(PlayMode::Asteroid(asteroids[i], get_random_float(50.f, 20.f), get_random_float(1000.f, 500.f), get_random_vec()));
+		
+		if (i == 0){
+			planet_system.asteroids.push_back(PlayMode::Asteroid(asteroids[i], get_random_float(50.f, 20.f), get_random_float(1000.f, 500.f), get_random_vec(), flowers[3]));
+		} else {
+			planet_system.asteroids.push_back(PlayMode::Asteroid(asteroids[i], get_random_float(50.f, 20.f), get_random_float(1000.f, 500.f), get_random_vec()));
+		}
 		asteroids[i]->parent = planet_system.transform;
 		j += 1;
 	}
@@ -151,6 +157,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 
 	for (auto &transform : scene.transforms)
 	{
+		
 		if (std::strlen(transform.name.c_str()) >= 6 && std::strncmp(transform.name.c_str(), "Player", 6) == 0)
 		{
 			comet.transform = &transform;
@@ -168,31 +175,28 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 			
 		}else if (transform.name.find(trajectoryPrefix) == 0)
 		{	
-			if (std::strcmp(transform.name.c_str(), "Tra_Earth_Target.012") == 0){
-				item = &transform;
-			} else {
-				if (transform.name.find("Earth") == trajectoryPrefix.length() + 1)
-				{
-					trajectory_targets["Earth"].push_back(TrajectoryTarget(&transform, 1));
-				}else if (transform.name.find("Jupiter") == trajectoryPrefix.length() + 1)
-				{
-					trajectory_targets["Jupiter"].push_back(TrajectoryTarget(&transform, 1));
-				}else if (transform.name.find("Mars") == trajectoryPrefix.length() + 1)
-				{
-					trajectory_targets["Mars"].push_back(TrajectoryTarget(&transform, 1));
-				}
+			if (transform.name.find("Earth") == trajectoryPrefix.length() + 1)
+			{
+				trajectory_targets["Earth"].push_back(TrajectoryTarget(&transform, 1));
+			}else if (transform.name.find("Jupiter") == trajectoryPrefix.length() + 1)
+			{
+				trajectory_targets["Jupiter"].push_back(TrajectoryTarget(&transform, 1));
+			}else if (transform.name.find("Mars") == trajectoryPrefix.length() + 1)
+			{
+				trajectory_targets["Mars"].push_back(TrajectoryTarget(&transform, 1));
 			}
-			
-			
+		} else if (std::strncmp(transform.name.c_str(), "Cylinder", 8) == 0){
+			std::cout << "found cylinder" << std::endl;
+			flowers.push_back(&transform);
 		}
 		
 	}
 
 	initialize_trajectory(planets.planet_systems, trajectory_targets);
-	item->scale *= 0.f;
+	
 	// match asteroids to planets and initialize the related info
-	initialize_asteroids(asteroids, planets.planet_systems);
-
+	initialize_asteroids(asteroids, planets.planet_systems, flowers);
+	planets.planet_systems[0].asteroids[0].flower->scale *= 0.f;
 	// match planet to sun
 	for (auto&ps: planets.planet_systems)
 	{
@@ -290,12 +294,12 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			// 	comet.camera->transform->rotation = initial_camera_rotation;
 			// 	SDL_SetRelativeMouseMode(SDL_FALSE);
 			// }
-			item->scale = glm::vec3(1.f);
+			planets.planet_systems[0].asteroids[0].flower->scale = glm::vec3(10.f);
 			// std::cout << comet.transform->position.x << " " << comet.transform->position.y << " " << comet.transform->position.z << std::endl;
-			item->position = planets.planet_systems[0].asteroids[0].transform->make_local_to_world()[3];
+			planets.planet_systems[0].asteroids[0].flower->position = planets.planet_systems[0].asteroids[0].transform->make_local_to_world()[3];
 			// std::cout << item->position.x << " " << item->position.y << " " << item->position.z << std::endl;
-			item->parent = comet_parent;
-			item_flying = 5.0f;
+			planets.planet_systems[0].asteroids[0].flower->parent = comet_parent;
+			flower_time = 5.0f;
 			
 			return true;
 		} else if (SDL_GetRelativeMouseMode() == SDL_TRUE)
@@ -401,19 +405,19 @@ void PlayMode::update(float elapsed) {
 		return;
 	}
 
-	if (item_flying > 0){
-		glm::vec3 delta = item->position-comet.transform->make_local_to_world()[3]-dirz;
-		item->position -= delta*2.5f*elapsed;
+	if (flower_time > 0){
+		glm::vec3 delta = planets.planet_systems[0].asteroids[0].flower->position-comet.transform->make_local_to_world()[3]-dirz;
+		planets.planet_systems[0].asteroids[0].flower->position -= delta*2.5f*elapsed;
 		// item->position = glm::vec3(0.0f, 0.0f, 1.0f);
 		// std::cout << glm::length2(delta) << std::endl;
 		
-		item_flying -= elapsed;
-		if (item_flying <= 0.f || glm::length2(delta) < 0.01f){
-			std::cout << item->position.x << " " << item->position.y << " " << item->position.z << std::endl;
-			item->position = glm::vec3(0.0f, 0.0f, 1.0f);
-			item->parent = comet.transform;
-			std::cout << item->make_local_to_world()[3].x << " " << item->make_local_to_world()[3].y << " " << item->make_local_to_world()[3].z << std::endl;
-			item_flying = 0.f;
+		flower_time -= elapsed;
+		if (flower_time <= 0.f || glm::length2(delta) < 0.001f){
+			// std::cout << item->position.x << " " << item->position.y << " " << item->position.z << std::endl;
+			planets.planet_systems[0].asteroids[0].flower->position = glm::vec3(0.0f, 0.0f, 1.0f);
+			planets.planet_systems[0].asteroids[0].flower->parent = comet.transform;
+			// std::cout << item->make_local_to_world()[3].x << " " << item->make_local_to_world()[3].y << " " << item->make_local_to_world()[3].z << std::endl;
+			flower_time = 0.f;
 		}
 	}
 
