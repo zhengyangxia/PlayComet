@@ -20,6 +20,8 @@
 #include "SkyBox.hpp"
 #include "Sound.hpp"
 
+#include "Task.h"
+
 // xiaoqiao: dirty workaround for namespace stuff.. should fix it later if i have time
 using namespace game_graphics;
 using namespace game_graphics::post_processor;
@@ -75,8 +77,8 @@ struct PlayMode : Mode {
 
 	Scene::Camera *universal_camera = nullptr;
 
-	static constexpr float COMET_RADIUS = 1.f;
-	static constexpr float PLANET_RADIUS = 20.0f;
+//	static constexpr float COMET_RADIUS = 1.f;
+//	static constexpr float PLANET_RADIUS = 20.0f;
 	static constexpr float SUN_RADIUS = 300.0f;
 
 	Scene::Transform *sun = nullptr;
@@ -96,55 +98,9 @@ struct PlayMode : Mode {
 	std::shared_ptr< Sound::PlayingSample > bgm;
 
 	size_t score = 0;
-	float court_time = 0.f;
-	size_t courting = 0;
+//	float court_time = 0.f;
+//	size_t courting = 0;
 
-	std::vector<Scene::Transform*> asteroids;
-
-	struct Asteroid
-	{
-		Asteroid(Scene::Transform* t, float p, float d, glm::vec3 vec):transform(t), dist(d), period(p), revolve_vec(vec){};
-		Scene::Transform* transform;
-		float radius = 15.f;
-		float dist = 0.f;
-		float period = 0.f;
-		glm::vec3 revolve_vec;
-	};
-
-	struct TrajectoryTarget
-	{
-		TrajectoryTarget(Scene::Transform* t, int s):transform(t), state(s){};
-		Scene::Transform* transform;
-		float radius = 25.f; // todo distance
-		int state = 1; // 1 = present, 0 = has been hit
-	};
-
-	int task_index = -1; // 0 = traject, 1 == court, 
-	
-	float trajectory_out_duration = -1.f;
-	float trajectory_back_duration = -1.f;
-	float trajectory_out_limit = 5.f;
-
-	float camera_rotate_radians = 0.f;
-	glm::vec3 camera_rotate_axis;
-
-	struct PlanetSystem
-	{
-		PlanetSystem(Scene::Transform* t):transform(t){};
-		Scene::Transform *transform;
-		std::vector<Asteroid> asteroids;
-		int trajectory_next_index = -1; // -1=no targets; index >= 0 =next target; size of trajectory vector -> hit all trajectory targets
-		// std::vector<Scene::TrajectoryTarget> trajectory_targets; 
-	};
-
-    std::unordered_map<std::string, std::vector<TrajectoryTarget>> trajectory_targets;
-
-	struct Planets{
-		std::vector<PlanetSystem> planet_systems;
-		std::vector<bool> hit_bitmap;
-		std::vector<int> radius{200, 150, 100};
-		size_t planet_num = 0;
-	} planets;
 
 	std::priority_queue<std::pair< float, Scene::Transform* >> nearest_3;
 	std::vector<glm::vec2> arrow_pos;
@@ -153,10 +109,25 @@ struct PlayMode : Mode {
 
 	DrawArrow draw_arrow;
 
+	// final version
+    std::vector<Asteroid> asteroids;
+
+    Scene::Transform * ongoing_task_planet = nullptr;
+
+    std::unordered_map<std::string, std::vector<TrajectoryTarget>> trajectory_targets;
+
+    std::vector<Scene::Transform*> planet_transforms;
+    std::unordered_map<std::string, Scene::Transform*> planet_name_to_transform;
+    std::unordered_map<std::string, std::shared_ptr<BaseTask>> planet_name_to_task;
+
 private:
 	void detect_collision_and_update_state();
 	void shoot();
 	void reset_speed();
+
+	void detect_failure_collision();
+	void update_arrow();
+	size_t finished_task = 0;
 
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_WIDTH = 480;
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_HEIGHT = 270;
