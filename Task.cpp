@@ -19,10 +19,16 @@ ResultType TrajectTask::UpdateTask(float elapsed) {
         }
     }
 
-    if (trajectory_next_index >= targets->size() && CheckLanded()){
-        state = ResultType::SUCCESS;
-        for (auto& t: *targets) {
-            t.transform->scale = glm::vec3(5.f, 5.f, 5.f);
+    state = ResultType::NOT_COMPLETE;
+
+    if (CheckLanded()){
+        if (trajectory_next_index >= targets->size()){
+            state = ResultType::SUCCESS;
+            for (auto& t: *targets) {
+                t.transform->scale = glm::vec3(5.f, 5.f, 5.f);
+            }
+        }else{
+            state = ResultType::NOT_COMPLETE_LANDED;
         }
     }
 

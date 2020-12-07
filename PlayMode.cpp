@@ -157,10 +157,12 @@ PlayMode::PlayMode() : scene(*comet_scene) {
     auto cur_trajectory_target = trajectory_targets.find("Earth");
     assert(cur_trajectory_target != trajectory_targets.end());
 
-    planet_name_to_task["Earth"] = std::make_shared<TrajectTask>(comet.transform, planet_name_to_transform["Earth"], 150.f,
-                                               &cur_trajectory_target->second); // earth radius?
+    planet_name_to_task["Earth"] = std::make_shared<TrajectTask>(comet.transform, planet_name_to_transform["Earth"],
+                                                                 150.f,
+                                                                 &cur_trajectory_target->second); // earth radius?
 
-    planet_name_to_task["Jupiter"] = std::make_shared<CourtTask>(comet.transform, planet_name_to_transform["Jupiter"], 150.f);
+    planet_name_to_task["Jupiter"] = std::make_shared<CourtTask>(comet.transform, planet_name_to_transform["Jupiter"],
+                                                                 150.f);
     // todo shoot task -> asteroids
     planet_name_to_task["Mars"] = std::make_shared<ShootTask>(comet.transform, planet_name_to_transform["Mars"], 150.f);
 
@@ -264,7 +266,11 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
             // down.downs += 1;
             down.pressed = true;
             return true;
+        } else if (evt.key.keysym.sym == SDLK_e) {
+            key_e.pressed = true;
+            return true;
         }
+
 
     } else if (evt.type == SDL_KEYUP) {
         if (evt.key.keysym.sym == SDLK_a) {
@@ -278,6 +284,9 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
             return true;
         } else if (evt.key.keysym.sym == SDLK_s) {
             down.pressed = false;
+            return true;
+        } else if (evt.key.keysym.sym == SDLK_e) {
+            key_e.pressed = false;
             return true;
         }
     }
@@ -449,6 +458,15 @@ void PlayMode::update(float elapsed) {
         if (result == ResultType::NOT_COMPLETE) {
             return;
         }
+        if (result == ResultType::NOT_COMPLETE_LANDED){
+            state = GameState::Landed;
+            comet.transform->parent = ongoing_task_planet;
+            glm::vec3 planet_world_position = ongoing_task_planet->position;
+            glm::vec3 comet_world_position = comet.transform->position;
+
+            comet.transform->position = comet_world_position - planet_world_position;
+            return;
+        }
         // task succeeded
         score += task->GetScore();
 
@@ -468,7 +486,7 @@ void PlayMode::update(float elapsed) {
         ongoing_task_planet = nullptr;
         finished_task += 1;
 
-        if (finished_task == planet_transforms.size()){
+        if (finished_task == planet_transforms.size()) {
             state = GameState::EndWin;
         }
 
@@ -477,77 +495,35 @@ void PlayMode::update(float elapsed) {
 
     // 3. if key E pressed -> within a certain distance to one planet -> set ongoing task
     // TODO
-
+    if (key_e.pressed){
+        for (auto transform : planet_transforms) {
+            BaseTask *t = planet_name_to_task[transform->name].get();
+            assert(t);
+            if (t->GetState() != ResultType::SUCCESS) {
+                glm::vec3 planet_pos = transform->position;
+                float comet_planet_dist = glm::distance(comet.transform->position, planet_pos);
+                if (comet_planet_dist < 1000.f) {
+                    ongoing_task_planet = transform;
+                    break;
+                }
+            }
+        }
+        return;
+    }
 
     // 4. ？
     if (state == GameState::Flying)
         update_arrow();
-
-    /* no longer needed
-    if (trajectory_out_duration >= 0.f) {
-        // comet.camera->transform->parent = comet_parent;
-        trajectory_out_duration += elapsed;
-        if (trajectory_out_duration >= trajectory_out_limit) {
-            trajectory_out_duration = -1.f;
-            trajectory_back_duration = 0.f;
-            return;
-        }
-
-        if (trajectory_out_duration > trajectory_out_limit / 2) {
-            return;
-        }
-
-        // float degree = elapsed / (trajectory_out_limit / 2) * camera_rotate_radians;
-
-        // std::cout << degree << "\n";
-
-        // glm::mat4 trans = glm::mat4(1.0f);
-        // trans = glm::rotate(trans, glm::radians(degree), camera_rotate_axis);
-        // glm::vec4 vec(comet.camera->transform->rotation.x, comet.camera->transform->rotation.y, comet.camera->transform->rotation.z, 1.0f);
-
-        // vec = trans * vec;
-        // std::cout << "new_rotation" << vec.x << " " << vec.y << " " << vec.z << "\n";
-        comet.camera->transform->position += elapsed * glm::normalize(comet.camera->transform->position) * 500.f;
-        // comet.camera->transform->rotation = glm::vec3(vec.x, vec.y, vec.z);
-        return;
-    }
-
-    if (trajectory_back_duration >= 0.f) {
-        trajectory_back_duration += elapsed;
-        comet.camera->transform->position -= elapsed * glm::normalize(comet.camera->transform->position) * 500.f;
-        if (trajectory_back_duration >= trajectory_out_limit / 2) {
-            trajectory_back_duration = -1.f;
-            comet.camera->transform->position = glm::vec3(0.f, -25.f, 5.f);
-        }
-        return;
-    }
-     */
-
-
-//    if (state == GameState::Flying)
-//        detect_collision_and_update_state();
-
-
-    /* deprecated -> moved to task.cpp
-    if (courting < planets.planet_num && planets.hit_bitmap[courting] == false) {
-        if (landing_dis < 100.f) {
-            court_time += elapsed;
-            court_time = std::min(10.f, court_time);
-        } else {
-            court_time = 0.f;
-        }
-    }
-     */
 
 
     // bgm->set_position(comet.camera->transform->position, 1.0f / 60.0f);
 }
 
 void PlayMode::update_arrow() {
-    for (Scene::Transform * transform : planet_transforms) {
-        BaseTask * t = planet_name_to_task[transform->name].get();
+    for (Scene::Transform *transform : planet_transforms) {
+        BaseTask *t = planet_name_to_task[transform->name].get();
         assert(t);
-        if (t->GetState() != ResultType::SUCCESS){
+        if (t->GetState() != ResultType::SUCCESS) {
             glm::vec3 planet_pos = transform->position;
             float comet_planet_dist = glm::distance(comet.transform->position, planet_pos);
             nearest_3.push(std::make_pair(comet_planet_dist, transform));
@@ -786,179 +762,26 @@ void PlayMode::detect_failure_collision() {
         }
     }
 
-}
-
-void PlayMode::detect_collision_and_update_state() {
-    /* deprecated -> detect_failure_collision
-    if (state == GameState::EndLose) { return; }
-
-    glm::vec3 comet_pos = comet.transform->position;
-    glm::vec3 sun_pos = sun->position;
-
-    float comet_sun_dist = glm::distance(comet_pos, sun_pos);
-    if (comet_sun_dist <= COMET_RADIUS + SUN_RADIUS) {
-        state = GameState::EndLose;
-    }
-    */
-
-    /* deprecated
-    task_index = -1;
-    for (size_t i = 0; i < planets.planet_systems.size(); i++) {
-        assert(i < planets.planet_num);
-        assert(i < planets.radius.size());
-
-        auto &ps = planets.planet_systems[i];
-        for (auto &t: ps.asteroids) {
-            if (glm::distance(comet_pos, t.transform->make_local_to_world()[3]) <= COMET_RADIUS + t.radius) {
-                state = GameState::EndLose;
-                break;
-            }
+    // for planets
+    for (Scene::Transform *transform : planet_transforms) {
+        if (transform == ongoing_task_planet){
+            continue;
         }
-        if (state == GameState::EndLose) {
-            break;
-        }*/
 
-        /* deprecated -> task.cpp
-        if (ps.trajectory_next_index >= 0 &&
-            glm::distance(comet_pos, ps.transform->make_local_to_world()[3]) - COMET_RADIUS - planets.radius[i] <=
-            TRAJECTORY_DETECT_DIST) {
-            auto trajectory = trajectory_targets.find(ps.transform->name);
-            if (trajectory == trajectory_targets.end()) {
-                continue;
-            }
-
-            if (ps.trajectory_next_index == trajectory->second.size())
-                // if (ps.trajectory_next_index == 0)
-            {
-                // task finished
-                for (auto &ts: trajectory->second) {
-                    ts.transform->scale = glm::vec3(5.f, 5.f, 5.f);
-                }
-                ps.trajectory_next_index = -1;
-                trajectory_out_duration = 0.f;
-
-                // compute radians
-                assert(trajectory->second.size() >= 3);
-                glm::vec3 p1 = trajectory->second[0].transform->make_local_to_world()[3];
-                glm::vec3 p2 = trajectory->second[1].transform->make_local_to_world()[3];
-                glm::vec3 p3 = trajectory->second[2].transform->make_local_to_world()[3];
-                glm::vec3 a = glm::normalize(p2 - p1);
-                glm::vec3 b = glm::normalize(p3 - p1);
-
-                glm::vec3 final_vec = glm::normalize(glm::cross(a, b));
-                camera_rotate_axis = glm::normalize(glm::cross(a, b));
-
-                glm::quat initial_vec = glm::normalize(
-                        comet.transform->make_local_to_world()[3] - comet.camera->transform->make_local_to_world()[3]);
-
-                camera_rotate_radians = glm::dot(glm::quat(final_vec.x, final_vec.y, final_vec.z, 1.f), initial_vec);
-                std::cout << "rotate: " << camera_rotate_radians << "\n";
-
-                continue;
-            }
-
-            task_index = 0;
-            auto ts = trajectory->second[ps.trajectory_next_index];
-            ts.transform->scale = glm::vec3(5.f, 5.f, 5.f);
-            if (glm::distance(comet_pos, ts.transform->make_local_to_world()[3]) <= COMET_RADIUS + ts.radius) {
-                // ts.state = 0;
-                score += 10;
-                ts.transform->scale *= 0.f;
-                ps.trajectory_next_index += 1;
-            }
-        } */
-
-   /* }
-    */
-
-   /* todo -> court
-    landing_dis = FLT_MAX;
-    bool finish = true;
-    for (size_t i = 0; i < planet_transforms.size(); i++) {
-        glm::vec3 planet_pos = planet_transforms[i]->position;
-        float comet_planet_dist = glm::distance(comet_pos, planet_pos);
-        if (comet_planet_dist - planets.radius[i] - COMET_RADIUS < landing_dis) {
-            landing_dis = comet_planet_dist - planets.radius[i] - COMET_RADIUS;
-            courting = i;
-        }
-        if (comet_planet_dist <= COMET_RADIUS + planets.radius[i]) {
-            up.pressed = false;
-            down.pressed = false;
-            left.pressed = false;
-            right.pressed = false;
-            */
-            /*
-            if (planets.hit_bitmap[i] == false) {
-             * deprecated -> moved to task.cpp
-                score += (size_t) (court_time * 10.f);
-                court_time = 0.f;
-                planets.hit_bitmap[i] = true;
-            }
-             */
-//            state = GameState::Landed;
-            // camera_world_pos = comet.camera->transform->make_local_to_world()[3];
-            // comet.camera->transform->parent = nullptr;
-            // comet.camera->transform->position = camera_world_pos;
-            // camera_world_rot = comet_velocity;
-            // universal_camera->transform->position = comet.transform->position + glm::vec3(0, 0, 2500.0f);
-
-            /* deprecated -> update
-            comet.transform->parent = planets.planet_systems.at(i).transform;
-            glm::vec3 planet_world_position = planets.planet_systems.at(i).transform->position;
+        BaseTask * t = planet_name_to_task[transform->name].get();
+        assert(t);
+        glm::vec3 planet_pos = transform->position;
+        float comet_planet_dist = glm::distance(comet.transform->position, planet_pos);
+        if (comet_planet_dist <= COMET_RADIUS + t->planet_radius){
+            state = GameState::Landed;
+            comet.transform->parent = transform;
+            glm::vec3 planet_world_position = transform->position;
             glm::vec3 comet_world_position = comet.transform->position;
 
             comet.transform->position = comet_world_position - planet_world_position;
-            */
-             // std::cout << comet.camera->transform->make_local_to_world()[3].x << " " << comet.camera->transform->make_local_to_world()[3].y << " " << comet.camera->transform->make_local_to_world()[3].z << std::endl;
-//        }
-        /* -> update_arrow
-        if (planets.hit_bitmap[i] == false) {
-            nearest_3.push(std::make_pair(comet_planet_dist, planets.planet_systems[i].transform));
-            if (nearest_3.size() > 3) {
-                nearest_3.pop();
-            }
-            finish = false;
+            break;
         }
-         */
-//    }
-
-    /* deprecated -> update_arrow
-    //Calculate arrow position
-    while (!nearest_3.empty()) {
-        auto p = nearest_3.top();
-        auto t = p.second;
-        // 左右: x, 上下: y
-        // glm::vec4 planet_position_in_camera_space =
-        // 	glm::mat4(comet.camera->transform->make_world_to_local()) *
-        // 	glm::vec4(t->position, 1.0f);
-
-        glm::vec4 planet_position_in_clip_space =
-                comet.camera->make_projection() *
-                glm::mat4(comet.camera->transform->make_world_to_local()) *
-                glm::vec4(t->position, 1.0f);
-        planet_position_in_clip_space /= planet_position_in_clip_space.w;
-
-        if (planet_position_in_clip_space.x > -1 && planet_position_in_clip_space.x < 1 &&
-            planet_position_in_clip_space.y > -1 && planet_position_in_clip_space.y < 1 &&
-            planet_position_in_clip_space.z > -1 && planet_position_in_clip_space.z < 1) {
-            //in camera show hud
-        } else {
-            //show arrow
-            float x = planet_position_in_clip_space.x;
-            float y = planet_position_in_clip_space.y;
-            x = std::min(0.95f, x);
-            x = std::max(-0.95f, x);
-            y = std::min(0.95f, y);
-            y = std::max(-0.95f, y);
-            arrow_pos.push_back(glm::vec2(x, y));
-        }
-        nearest_3.pop();
     }
-     */
-
-//    if (finish) {
-//        state = GameState::EndWin;
-//    }
 
 }
 

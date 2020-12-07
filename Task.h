@@ -14,7 +14,7 @@
 static constexpr float COMET_RADIUS = 1.f;
 
 enum class ResultType {
-    NOT_COMPLETE, SUCCESS
+    NOT_COMPLETE, NOT_COMPLETE_LANDED, SUCCESS
 };
 
 struct Asteroid {
@@ -36,7 +36,9 @@ struct TrajectoryTarget {
 
 class BaseTask {
 public:
-    BaseTask(Scene::Transform *c, Scene::Transform *p, float pr) : comet{c}, planet{p}, planet_radius{pr},
+    float planet_radius{};
+
+    BaseTask(Scene::Transform *c, Scene::Transform *p, float pr) : planet_radius{pr}, comet{c}, planet{p},
                                                                    state{ResultType::NOT_COMPLETE} {};
     virtual ~BaseTask() = default;
     virtual ResultType UpdateTask(float elapsed) = 0; //< abstract function
@@ -48,7 +50,6 @@ public:
 protected:
     Scene::Transform *comet;
     Scene::Transform *planet;
-    float planet_radius{};
     ResultType state{};
     std::string notice{};
     size_t score{};
@@ -59,11 +60,7 @@ protected:
 
     bool CheckLanded() {
         float comet_planet_dist = glm::distance(comet->make_local_to_world()[3], planet->make_local_to_world()[3]);
-        if (comet_planet_dist <= COMET_RADIUS + planet_radius) {
-            state = ResultType::SUCCESS;
-            return true;
-        }
-        return false;
+        return comet_planet_dist <= COMET_RADIUS + planet_radius;
     };
 };
 
