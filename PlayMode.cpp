@@ -389,6 +389,9 @@ void PlayMode::update(float elapsed) {
 		return;
 	}
 
+	// TODO(xiaoqiao): which branch should I put this in?
+	shooter.updateAndGetBeamIntersection();
+
 	if (state == GameState::Flying)
 		detect_collision_and_update_state();
 
@@ -527,6 +530,8 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	// } else {
 	// 	scene.draw(*universal_camera);
 	// }
+
+	shooter.drawBeam();
 
 	GL_ERRORS();
 	RenderCaptor::set_render_destination(nullptr);
@@ -776,4 +781,173 @@ void PlayMode::on_resize(const glm::uvec2 &window_size, const glm::uvec2 &drawab
 	threshold_ofb->realloc(GAUSSIAN_BLUR_OUTPUT_WIDTH, GAUSSIAN_BLUR_OUTPUT_HEIGHT);
 	tmp_ofb->realloc(GAUSSIAN_BLUR_OUTPUT_WIDTH, GAUSSIAN_BLUR_OUTPUT_HEIGHT);
 	add_ofb->realloc(drawable_size.x, drawable_size.y);
+}
+
+PlayMode::Shooter::Shooter(PlayMode *enclosing_play_mode) {
+	this->enclosing_play_mode_ = enclosing_play_mode;
+	glGenVertexArrays(1, &vao_);
+	glGenBuffers(1, &vertex_position_vbo_);
+	glGenBuffers(1, &vertex_color_vbo_);
+	glBindVertexArray(vao_);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_position_vbo_);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *) 0);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_color_vbo_);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *) 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	program_ = gl_compile_program(
+		R"glsl(
+#version 330 core
+layout (location = 0) in vec4 aPos;
+layout (location = 1) in vec4 aColor;
+
+out vec4 Color;
+
+void main()
+{
+    gl_Position = aPos;
+    Color = aColor;
+}
+)glsl",
+R"glsl(
+#version 330 core
+in vec4 Color;
+out vec4 FragColor;
+void main()
+{
+  FragColor = Color;
+}
+)glsl"
+	);
+	GL_ERRORS();
+}
+PlayMode::Shooter::~Shooter() {
+	glDeleteVertexArrays(1, &vao_);
+	glDeleteBuffers(1, &vertex_color_vbo_);
+	glDeleteBuffers(1, &vertex_position_vbo_);
+	glDeleteProgram(program_);
+	GL_ERRORS();
+}
+
+void PlayMode::Shooter::drawBeam() {
+	GL_ERRORS();
+	glUseProgram(program_);
+	GL_ERRORS();
+
+	glBindVertexArray(vao_);
+	GL_ERRORS();
+
+	Scene::Camera *camera = enclosing_play_mode_->comet.camera;
+	/*
+	 * [0]: near left
+	 * [1]: near right
+	 * [2]: far left
+	 * [3]: far right
+	 */
+	glm::vec4 beam_position_in_clip[4];
+	glm::mat4 world_to_view = glm::mat4(camera->transform->make_world_to_local());
+	beam_position_in_clip[0] = world_to_view * beam_start_ + glm::vec4(-BEAM_WIDTH/2, 0.0f, 0.0f, 0.0f);
+	beam_position_in_clip[1] = world_to_view * beam_start_ + glm::vec4(BEAM_WIDTH/2, 0.0f, 0.0f, 0.0f);
+	beam_position_in_clip[2] = world_to_view * beam_end_ + glm::vec4(-BEAM_WIDTH/2, 0.0f, 0.0f, 0.0f);
+	beam_position_in_clip[3] = world_to_view * beam_end_ + glm::vec4(BEAM_WIDTH / 2, 0.0f, 0.0f, 0.0f);
+	for (int i = 0; i < 4; i++) {
+		beam_position_in_clip[i] = enclosing_play_mode_->comet.camera->make_projection() * beam_position_in_clip[i];
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_position_vbo_);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(beam_position_in_clip), beam_position_in_clip, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_color_vbo_);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(beam_colors_), beam_colors_, GL_DYNAMIC_DRAW);
+
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	GL_ERRORS();
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+	glUseProgram(0);
+	GL_ERRORS();
+}
+
+std::optional<PlayMode::ShootingTarget> PlayMode::Shooter::updateAndGetBeamIntersection() {
+	glm::vec3 ray_start = enclosing_play_mode_->comet.camera->transform->make_local_to_world()[3];
+	glm::vec4 ray_direction_homogeneous = glm::mat4(enclosing_play_mode_->comet.camera->transform->make_local_to_world())
+		* glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
+	auto ray_direction = glm::normalize(glm::vec3(ray_direction_homogeneous));
+	auto raySphere = [](glm::vec3 ray_start,
+	                    glm::vec3 ray_direction, //< normalized ray direction vector
+	                    glm::vec3 sphere_pos,
+	                    float sphere_radius) -> std::optional<float> {
+		// adapted from:
+		// https://github.com/SebLague/Solar-System/blob/0c60882be69b8e96d6660c28405b9d19caee76d5/Assets/Scripts/Celestial/Shaders/Includes/Math.cginc
+		glm::vec3 offset = ray_start - sphere_pos;
+		float a = 1; // Set to dot(rayDir, rayDir) if rayDir might not be normalized
+		float b = 2 * dot(offset, ray_direction);
+		float c = glm::dot(offset, offset) - sphere_radius * sphere_radius;
+		float d = b * b - 4 * a * c; // Discriminant from quadratic formula
+
+		// Number of intersections: 0 when d < 0; 1 when d = 0; 2 when d > 0
+		if (d > 0) {
+			float s = sqrt(d);
+			float dstToSphereNear = (-b - s) / (2 * a);
+//			float dstToSphereFar = (-b + s) / (2 * a);
+
+			// Ignore intersections that occur behind the ray
+			if (dstToSphereNear >= 0) {
+				return std::make_optional<float>(dstToSphereNear);
+			}
+		}
+		// Ray did not intersect sphere
+		return std::nullopt;
+	};
+
+	std::optional<ShootingTarget> current_target;
+
+	for (size_t planet_system_idx = 0;
+	     planet_system_idx < enclosing_play_mode_->planets.planet_systems.size();
+	     planet_system_idx++) {
+		// 1. detect collision with the planet
+		PlanetSystem &system = enclosing_play_mode_->planets.planet_systems.at(planet_system_idx);
+
+		glm::vec3 planet_pos = system.transform->make_local_to_world()[3];
+		float planet_radius = enclosing_play_mode_->planets.radius.at(planet_system_idx);
+		std::optional<float> planet_distance = raySphere(ray_start, ray_direction, planet_pos, planet_radius);
+		if (planet_distance.has_value() && planet_distance.value() < BEAM_MAX_LEN &&
+			(!current_target.has_value() || planet_distance.value() < current_target->distance)) {
+			current_target =
+				ShootingTarget{
+					ShootingTargetType::PLANET,
+					(int) planet_system_idx,
+					0,
+					*planet_distance};
+		}
+
+		for (size_t astroid_idx = 0; astroid_idx < system.asteroids.size(); astroid_idx++) {
+			auto &astroid = system.asteroids.at(astroid_idx);
+			glm::vec3 sphere_pos = astroid.transform->make_local_to_world()[3];
+			float sphere_radius = astroid.radius;
+			std::optional<float> astroid_distance = raySphere(ray_start, ray_direction, sphere_pos, sphere_radius);
+			if (astroid_distance.has_value() && planet_distance.value() < BEAM_MAX_LEN &&
+				(!current_target.has_value() || astroid_distance.value() < current_target->distance)) {
+				current_target =
+					ShootingTarget{
+						ShootingTargetType::ASTROID,
+						(int) planet_system_idx,
+						(int) astroid_idx,
+						*astroid_distance};
+			}
+		}
+	}
+
+	// set the beam position
+	beam_start_ = glm::vec4(enclosing_play_mode_->comet.transform->make_local_to_world()[3], 1.0f);
+
+	if (current_target.has_value()) {
+		beam_end_ = glm::vec4(ray_start + ray_direction * current_target->distance, 1.0f);
+	} else {
+		beam_end_ = glm::vec4(ray_start + ray_direction * BEAM_MAX_LEN, 1.0f);
+	}
+
+	return current_target;
 }

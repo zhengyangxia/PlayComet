@@ -21,14 +21,17 @@ float quad_vertices[] = {
 BaseProcessor::BaseProcessor(const std::string &fragment_shader_source) {
 	glGenVertexArrays(1, &quad_vao_);
 	glBindVertexArray(quad_vao_);
+	GL_ERRORS();
 
 	glGenBuffers(1, &quad_vbo_);
 	glBindBuffer(GL_ARRAY_BUFFER, quad_vbo_);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices), quad_vertices, GL_STATIC_DRAW);
+	GL_ERRORS();
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *) 0);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *) (2 * sizeof(float)));
+	GL_ERRORS();
 
 	program_ = gl_compile_program(
 		R"glsl(
@@ -46,6 +49,7 @@ void main()
 )glsl",
 		fragment_shader_source
 	);
+	GL_ERRORS();
 }
 
 BaseProcessor::~BaseProcessor() {

@@ -125,7 +125,7 @@ struct PlayMode : Mode {
 		Scene::Transform *transform;
 		std::vector<Asteroid> asteroids;
 		int trajectory_state = 0; // 1 -> hit all trajectory targets
-		// std::vector<Scene::TrajectoryTarget> trajectory_targets; 
+		// std::vector<Scene::TrajectoryTarget> trajectory_targets;
 	};
 
     std::unordered_map<std::string, std::vector<TrajectoryTarget>> trajectory_targets;
@@ -140,6 +140,56 @@ struct PlayMode : Mode {
 	std::priority_queue<std::pair< float, Scene::Transform* >> nearest_3;
 	std::vector<glm::vec2> arrow_pos;
 
+	enum class ShootingTargetType { SUN, PLANET, ASTROID };
+	struct ShootingTarget {
+		ShootingTargetType type;
+		// only valid when type == PLANET or ASTROID
+		int planet_system_index;
+		// only valid when type == ASTROID
+		int astroid_index;
+		float distance;
+	};
+	class Shooter {
+	public:
+		explicit Shooter(PlayMode *enclosing_play_mode);
+		~Shooter();
+		Shooter(const Shooter &) = delete;
+		Shooter& operator=(const Shooter&) = delete;
+		Shooter(Shooter &&) = delete;
+		Shooter& operator=(Shooter &&) = delete;
+
+		/* if set to true, the light beam (shooting mechanism) will be enabled */
+		void setActivation(bool value) { is_activated_ = value; }
+
+		/* update the beam and shot object if shooter is activated. do nothing otherwise */
+		std::optional<ShootingTarget> updateAndGetBeamIntersection();
+
+		/* draw the beam if activation is enabled, do nothing otherwise */
+		void drawBeam();
+	private:
+		bool is_activated_ = false;
+
+		PlayMode *enclosing_play_mode_;
+
+		// [0]: start position, [1] end position
+		glm::vec4 beam_start_ = glm::vec4(-1000.0f, 0.0f, 0.0f, 1.0f);
+		glm::vec4 beam_end_ = glm::vec4(1000.0f, 0.0f, 0.0f, 1.0f);
+
+		static constexpr float BEAM_MAX_LEN = 100.0f;
+		static constexpr float BEAM_WIDTH = 0.5f;
+		glm::vec4 beam_colors_[4] = {
+			glm::vec4(0.5f, 0.8f, 5.2f, 1.0f),
+			glm::vec4(0.5f, 0.8f, 5.2f, 1.0f),
+			glm::vec4(0.5f, 0.8f, 5.2f, 1.0f),
+			glm::vec4(0.5f, 0.8f, 5.2f, 1.0f),
+		};
+
+		GLuint vao_;
+		GLuint vertex_position_vbo_;
+		GLuint vertex_color_vbo_;
+		GLuint program_;
+	};
+
 	ParticleGenerator *particle_comet_tail;
 
 	DrawArrow draw_arrow;
@@ -152,6 +202,7 @@ private:
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_WIDTH = 480;
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_HEIGHT = 270;
 
+	Shooter shooter{this};
 	SkyBox skybox{};
 	Threshold threshold_processor{1.0f};
 	GaussianBlur gaussian_processor{1};
