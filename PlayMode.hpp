@@ -115,16 +115,25 @@ struct PlayMode : Mode {
 	{
 		TrajectoryTarget(Scene::Transform* t, int s):transform(t), state(s){};
 		Scene::Transform* transform;
-		float radius = 5.f; // todo distance
+		float radius = 25.f; // todo distance
 		int state = 1; // 1 = present, 0 = has been hit
 	};
+
+	int task_index = -1; // 0 = traject, 1 == court, 
+	
+	float trajectory_out_duration = -1.f;
+	float trajectory_back_duration = -1.f;
+	float trajectory_out_limit = 5.f;
+
+	float camera_rotate_radians = 0.f;
+	glm::vec3 camera_rotate_axis;
 
 	struct PlanetSystem
 	{
 		PlanetSystem(Scene::Transform* t):transform(t){};
 		Scene::Transform *transform;
 		std::vector<Asteroid> asteroids;
-		int trajectory_state = 0; // 1 -> hit all trajectory targets
+		int trajectory_next_index = -1; // -1=no targets; index >= 0 =next target; size of trajectory vector -> hit all trajectory targets
 		// std::vector<Scene::TrajectoryTarget> trajectory_targets; 
 	};
 
@@ -151,6 +160,8 @@ private:
 
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_WIDTH = 480;
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_HEIGHT = 270;
+
+	static constexpr float TRAJECTORY_DETECT_DIST = 500.f;
 
 	SkyBox skybox{};
 	Threshold threshold_processor{1.0f};

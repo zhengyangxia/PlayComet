@@ -120,15 +120,22 @@ void scale_asteroids(std::vector<PlayMode::PlanetSystem>& planet_systems, float 
 
 void initialize_trajectory(std::vector<PlayMode::PlanetSystem>& planet_systems, std::unordered_map<std::string, std::vector<PlayMode::TrajectoryTarget>>& trajectory_targets)
 {
-	for (PlayMode::PlanetSystem ps : planet_systems)
+	for (PlayMode::PlanetSystem& ps : planet_systems)
 	{
 		auto cur_trajectory_target = trajectory_targets.find(ps.transform->name);
 		if(cur_trajectory_target == trajectory_targets.end()){
 			continue;
 		}
 		auto cur_trajectory_target_vec = cur_trajectory_target->second;
+
 		for(auto& t: cur_trajectory_target_vec){
 			t.transform->parent = ps.transform;
+			t.transform->scale = glm::vec3(0.f, 0.f, 0.f);
+		}
+
+		if(cur_trajectory_target_vec.size() > 0){
+			ps.trajectory_next_index = 0;
+			cur_trajectory_target_vec[0].transform->scale = glm::vec3(5.f, 5.f, 5.f);
 		}
 	}
 }
@@ -367,6 +374,51 @@ void PlayMode::reset_speed(){
 }
 
 void PlayMode::update(float elapsed) {
+	if (trajectory_out_duration >= 0.f)
+	{
+		// comet.camera->transform->parent = comet_parent;
+		trajectory_out_duration += elapsed;
+		if (trajectory_out_duration >= trajectory_out_limit)
+		{
+			trajectory_out_duration = -1.f;
+			trajectory_back_duration = 0.f;
+			return;
+		}
+
+		if (trajectory_out_duration > trajectory_out_limit / 2)
+		{
+			return;
+		}
+
+		// float degree = elapsed / (trajectory_out_limit / 2) * camera_rotate_radians;
+		
+		// std::cout << degree << "\n";
+
+		// glm::mat4 trans = glm::mat4(1.0f);
+    	// trans = glm::rotate(trans, glm::radians(degree), camera_rotate_axis);
+    	// glm::vec4 vec(comet.camera->transform->rotation.x, comet.camera->transform->rotation.y, comet.camera->transform->rotation.z, 1.0f);
+
+	    // vec = trans * vec;
+		// std::cout << "new_rotation" << vec.x << " " << vec.y << " " << vec.z << "\n";
+		comet.camera->transform->position += elapsed * glm::normalize(comet.camera->transform->position) * 500.f;
+		// comet.camera->transform->rotation = glm::vec3(vec.x, vec.y, vec.z);
+		return;
+	}
+
+	if (trajectory_back_duration >= 0.f)
+	{
+		trajectory_back_duration += elapsed;
+		comet.camera->transform->position -= elapsed * glm::normalize(comet.camera->transform->position) * 500.f;
+		if (trajectory_back_duration >= trajectory_out_limit / 2)
+		{
+			trajectory_back_duration = -1.f;
+			comet.camera->transform->position = glm::vec3(0.f, -25.f, 5.f);
+		}
+		return;
+	}
+	
+	
+
 	glm::vec3 next_pos = comet.transform->position;
 	particle_comet_tail->Update(elapsed, next_pos, comet.camera->transform->position, glm::mat4(comet.camera->transform->make_world_to_local()), comet.camera->make_projection());
 	//loop planets
@@ -382,8 +434,6 @@ void PlayMode::update(float elapsed) {
 
 	if (speed_is_reset)
 	{
-		
-		
 		speed_is_reset = false;
 		reset_speed();
 		return;
@@ -403,7 +453,6 @@ void PlayMode::update(float elapsed) {
 			comet.camera->transform->parent = comet.transform;
 			comet.camera->transform->position = glm::vec3(0.f, -25.f, 5.f);
 			comet.camera->transform->rotation = initial_camera_rotation;
-			
 		}
 		launch_duration = 0.f;
 		state = GameState::Flying;
@@ -521,6 +570,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	glDepthFunc(GL_LESS); //this is the default depth comparison function, but FYI you can change it.
 
 	scene.draw(*comet.camera);
+	// todo 	
 	particle_comet_tail->Draw();
 	// if (state == GameState::Flying || state == GameState::EndLose || state == GameState::EndWin || state == GameState::Landed) {
 		
@@ -565,7 +615,6 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 		}
 
-
 		if (landing_dis < 3000.f && state == GameState::Flying){
 			std::string dis_str = "Distance: "+std::to_string((int)landing_dis);
 			if (landing_dis < 1000.f && courting < planets.planet_num && planets.hit_bitmap[courting] == false){
@@ -595,6 +644,19 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		                glm::u8vec4(0x00, 0x00, 0x00, 0x00));
 			lines.draw_text(dis_str.c_str(),
 		                glm::vec3(-1.6f + 0.1f * H + ofs, 0.55f + 0.1f * H + ofs, 0.0),
+		                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+		                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+		}
+
+		if (task_index == 0)
+		{
+			std::string prompt = "Follow the trajectory over the planet" ;
+			lines.draw_text(prompt.c_str(),
+		                glm::vec3(-1.6f + 0.1f * H, 0.1f + 0.1f * H, 0.0),
+		                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+		                glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+			lines.draw_text(prompt.c_str(),
+		                glm::vec3(-1.6f + 0.1f * H + ofs, 0.1f + 0.1f * H + ofs, 0.0),
 		                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 		                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 		}
@@ -659,7 +721,13 @@ void PlayMode::detect_collision_and_update_state() {
 	if (comet_sun_dist <= COMET_RADIUS + SUN_RADIUS) {
 		state = GameState::EndLose;
 	}
-	for(auto &ps: planets.planet_systems){
+
+	task_index = -1;
+	for(size_t i = 0; i < planets.planet_systems.size(); i++){
+		assert(i < planets.planet_num);
+		assert(i < planets.radius.size());
+
+		auto &ps = planets.planet_systems[i];
 		for(auto &t: ps.asteroids){
 			if (glm::distance(comet_pos, t.transform->make_local_to_world()[3]) <= COMET_RADIUS + t.radius)
 			{
@@ -672,21 +740,53 @@ void PlayMode::detect_collision_and_update_state() {
 			break;
 		}
 
-		auto trajectory = trajectory_targets.find(ps.transform->name);
-		if (trajectory == trajectory_targets.end())
+		if (ps.trajectory_next_index >= 0 && glm::distance(comet_pos, ps.transform->make_local_to_world()[3]) - COMET_RADIUS - planets.radius[i]<= TRAJECTORY_DETECT_DIST)
 		{
-			continue;
-		}
-
-		for (auto ts: trajectory->second)
-		{
-			if(ts.state == 0){
+			auto trajectory = trajectory_targets.find(ps.transform->name);
+			if (trajectory == trajectory_targets.end())
+			{
 				continue;
 			}
+
+			if (ps.trajectory_next_index == trajectory->second.size())
+			// if (ps.trajectory_next_index == 0)
+			{
+				// task finished
+				for(auto& ts: trajectory->second)
+				{
+					ts.transform->scale = glm::vec3(5.f, 5.f, 5.f);
+				}
+				ps.trajectory_next_index = -1;
+				trajectory_out_duration = 0.f;
+
+				// compute radians
+				assert(trajectory->second.size() >= 3);
+				glm::vec3 p1 = trajectory->second[0].transform->make_local_to_world()[3];
+				glm::vec3 p2 = trajectory->second[1].transform->make_local_to_world()[3];
+				glm::vec3 p3 = trajectory->second[2].transform->make_local_to_world()[3];
+				glm::vec3 a = glm::normalize(p2 - p1);
+				glm::vec3 b = glm::normalize(p3 - p1);
+				
+				glm::vec3 final_vec = glm::normalize(glm::cross(a, b));
+				camera_rotate_axis = glm::normalize(glm::cross(a, b));
+
+				glm::quat initial_vec = glm::normalize(comet.transform->make_local_to_world()[3] - comet.camera->transform->make_local_to_world()[3]);
+
+				camera_rotate_radians = glm::dot(glm::quat(final_vec.x, final_vec.y, final_vec.z, 1.f), initial_vec);
+				std::cout << "rotate: " << camera_rotate_radians << "\n";
+
+				continue;
+			}
+			
+			task_index = 0;
+			auto ts = trajectory->second[ps.trajectory_next_index];
+			ts.transform->scale = glm::vec3(5.f, 5.f, 5.f);
 			if (glm::distance(comet_pos, ts.transform->make_local_to_world()[3]) <= COMET_RADIUS + ts.radius)
 			{
-				ts.state = 0;
+				// ts.state = 0;
+				score += 10;
 				ts.transform->scale *= 0.f;
+				ps.trajectory_next_index += 1;
 			}
 		}
 		
@@ -695,7 +795,7 @@ void PlayMode::detect_collision_and_update_state() {
 	landing_dis = FLT_MAX;
 	bool finish = true;
 	for (size_t i = 0; i< planets.planet_num; i++){
-		glm::vec3 planet_pos = planets.planet_systems[i].transform->position;
+		glm::vec3 planet_pos = planets.planet_systems[i].transform.position;
 		float comet_planet_dist = glm::distance(comet_pos, planet_pos);
 		if (comet_planet_dist-planets.radius[i]-COMET_RADIUS < landing_dis){
 			landing_dis = comet_planet_dist-planets.radius[i]-COMET_RADIUS;
