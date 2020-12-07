@@ -321,6 +321,11 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			// down.downs += 1;
 			down.pressed = true;
 			return true;
+		} else if (evt.key.keysym.sym == SDLK_e) {
+			if (landing_dis < 1000.f && courting < planets.planet_num && planets.planet_systems[courting].task_state == false){
+				planets.planet_systems[courting].task_state = true;
+			}
+
 		}
 
 	} else if (evt.type == SDL_KEYUP) {
@@ -473,14 +478,15 @@ void PlayMode::update(float elapsed) {
 	if (state == GameState::EndLose || state == GameState::EndWin) {
 		return;
 	}
-	if (courting < planets.planet_num && planets.hit_bitmap[courting] == false){
-		if (landing_dis < 100.f){
-			court_time += elapsed;
-			court_time = std::min(10.f, court_time);
-		} else {
-			court_time = 0.f;
-		}
-	}
+	// if (courting < planets.planet_num && planets.hit_bitmap[courting] == false){
+		// if (landing_dis < 100.f){
+		// 	court_time += elapsed;
+		// 	court_time = std::min(10.f, court_time);
+		// } else {
+		// 	court_time = 0.f;
+		// }
+		
+	// }
 
 
 	//player walking:
@@ -585,42 +591,47 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		));
 		constexpr float H = 0.09f;
 		float ofs = 2.0f / drawable_size.y;
+		std::string lower_left_msg = "";
 		if (state == GameState::Grounded){
-			lines.draw_text("Press any key to launch",
+			lower_left_msg = "Press any key to launch";
+		}
+		if (landing_dis < 1000.f && courting < planets.planet_num && planets.planet_systems[courting].task_state == false){
+			lower_left_msg = "Press E to start task";
+		}
+		lines.draw_text(lower_left_msg,
 			                glm::vec3(-aspect + 0.1f * H, -1.0 + 0.1f * H, 0.0),
 			                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			                glm::u8vec4(0x00, 0x00, 0x00, 0x00));
 
-			lines.draw_text("Press any key to launch",
-			                glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + 0.1f * H + ofs, 0.0),
-			                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-			                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
-		}
+		lines.draw_text(lower_left_msg,
+						glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + 0.1f * H + ofs, 0.0),
+						glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+						glm::u8vec4(0xff, 0xff, 0xff, 0x00));
 
 
 		if (landing_dis < 3000.f && state == GameState::Flying){
 			std::string dis_str = "Distance: "+std::to_string((int)landing_dis);
-			if (landing_dis < 1000.f && courting < planets.planet_num && planets.hit_bitmap[courting] == false){
-				dis_str += "/100km";
-				std::string court_str = "Courted: "+std::to_string((int)court_time)+"/10s";
-				lines.draw_text(court_str.c_str(),
-							glm::vec3(-1.6f + 0.1f * H, 0.25f + 0.1f * H, 0.0),
-							glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-							glm::u8vec4(0x00, 0x00, 0x00, 0x00));
-				lines.draw_text(court_str.c_str(),
-							glm::vec3(-1.6f + 0.1f * H + ofs, 0.25f + 0.1f * H + ofs, 0.0),
-							glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-							glm::u8vec4(0xff, 0xff, 0xff, 0x00));
-				std::string target_str = "Target: "+planets.planet_systems.at(courting).transform->name;
-				lines.draw_text(target_str.c_str(),
-							glm::vec3(-1.6f + 0.1f * H, 0.4f + 0.1f * H, 0.0),
-							glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-							glm::u8vec4(0x00, 0x00, 0x00, 0x00));
-				lines.draw_text(target_str.c_str(),
-							glm::vec3(-1.6f + 0.1f * H + ofs, 0.4f + 0.1f * H + ofs, 0.0),
-							glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-							glm::u8vec4(0xff, 0xff, 0xff, 0x00));
-			}
+			// if (landing_dis < 1000.f && courting < planets.planet_num && planets.hit_bitmap[courting] == false){
+				// dis_str += "/100km";
+				// std::string court_str = "Courted: "+std::to_string((int)court_time)+"/10s";
+				// lines.draw_text(court_str.c_str(),
+				// 			glm::vec3(-1.6f + 0.1f * H, 0.25f + 0.1f * H, 0.0),
+				// 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+				// 			glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+				// lines.draw_text(court_str.c_str(),
+				// 			glm::vec3(-1.6f + 0.1f * H + ofs, 0.25f + 0.1f * H + ofs, 0.0),
+				// 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+				// 			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+				// std::string target_str = "Target: "+planets.planet_systems.at(courting).transform->name;
+				// lines.draw_text(target_str.c_str(),
+				// 			glm::vec3(-1.6f + 0.1f * H, 0.4f + 0.1f * H, 0.0),
+				// 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+				// 			glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+				// lines.draw_text(target_str.c_str(),
+				// 			glm::vec3(-1.6f + 0.1f * H + ofs, 0.4f + 0.1f * H + ofs, 0.0),
+				// 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+				// 			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+			// }
 			lines.draw_text(dis_str.c_str(),
 		                glm::vec3(-1.6f + 0.1f * H, 0.55f + 0.1f * H, 0.0),
 		                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
@@ -744,18 +755,13 @@ void PlayMode::detect_collision_and_update_state() {
 				planets.hit_bitmap[i] = true;
 			}
 			state = GameState::Landed;
-			// camera_world_pos = comet.camera->transform->make_local_to_world()[3];
-			// comet.camera->transform->parent = nullptr;
-			// comet.camera->transform->position = camera_world_pos;
-			// camera_world_rot = comet_velocity;
-			// universal_camera->transform->position = comet.transform->position + glm::vec3(0, 0, 2500.0f);
 			
 			comet.transform->parent = planets.planet_systems.at(i).transform;
 			glm::vec3 planet_world_position = planets.planet_systems.at(i).transform->position;
 			glm::vec3 comet_world_position = comet.transform->position;
 
 			comet.transform->position = comet_world_position - planet_world_position;
-			// std::cout << comet.camera->transform->make_local_to_world()[3].x << " " << comet.camera->transform->make_local_to_world()[3].y << " " << comet.camera->transform->make_local_to_world()[3].z << std::endl;
+			
 		}
 		if (planets.hit_bitmap[i] == false){
 			nearest_3.push(std::make_pair(comet_planet_dist, planets.planet_systems[i].transform));

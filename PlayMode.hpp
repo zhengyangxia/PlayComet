@@ -134,6 +134,7 @@ struct PlayMode : Mode {
 		std::vector<Asteroid> asteroids;
 		int trajectory_state = 0; // 1 -> hit all trajectory targets
 		// std::vector<Scene::TrajectoryTarget> trajectory_targets; 
+		bool task_state = false;
 	};
 
     std::unordered_map<std::string, std::vector<TrajectoryTarget>> trajectory_targets;
