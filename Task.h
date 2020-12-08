@@ -40,6 +40,15 @@ struct Asteroid {
     float dist = 0.f;
     float period = 0.f;
     glm::vec3 revolve_vec;
+	bool destroyed = false;
+
+	void destroy() {
+		if (destroyed) {
+			return;
+		}
+		destroyed = true;
+		transform->scale = glm::vec3(0.0f);
+	}
 };
 
 struct TrajectoryTarget {

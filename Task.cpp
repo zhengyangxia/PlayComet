@@ -126,7 +126,7 @@ ResultType ShootTask::UpdateTask(float elapsed) {
         int asteroid_idx = shooting_result->asteroid_index;
         auto it = std::find(asteroids_indices_current_task.begin(), asteroids_indices_current_task.end(), asteroid_idx);
         if (it != asteroids_indices_current_task.end()) {
-            asteroids->at(asteroid_idx).transform->scale = glm::vec3(0.0f);
+            asteroids->at(asteroid_idx).destroy();
         }
     }
 
@@ -394,6 +394,9 @@ std::optional<ShootingTarget> Shooter::updateAndGetBeamIntersection(float elapse
     /* intersection with planet is delayed */
     for (size_t asteroid_idx = 0; asteroid_idx < asteroids_->size(); asteroid_idx++) {
         auto &asteroid = asteroids_->at(asteroid_idx);
+        if (asteroid.destroyed) {
+            continue;
+        }
         glm::vec3 sphere_pos = asteroid.transform->make_local_to_world()[3];
         float sphere_radius = asteroid.radius;
         std::optional<float> asteroid_distance = raySphere(ray_start, ray_direction, sphere_pos, sphere_radius);
