@@ -106,8 +106,10 @@ ResultType ShootTask::UpdateTask(float elapsed) {
         has_item = true;
         flower->scale = glm::vec3(10.f);
         flower->position = asteroids[item_idx].transform->make_local_to_world()[3];
+        
         flower->parent = comet->transform;
         flower->position = glm::vec4(flower->position.x, flower->position.y, flower->position.z, 1.f) * glm::mat4(flower->make_world_to_local());
+        flower->rotation = glm::angleAxis(glm::radians(45.f), glm::vec3(1.f,0.f,0.f));
     }
 
     if (has_item && flower_time > 0.f){
