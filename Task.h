@@ -22,6 +22,7 @@ struct Comet {
     Scene::Camera *camera = nullptr;
     glm::vec3 dirx = glm::vec3(1.0f, 0.0f, 0.0f);
     glm::vec3 dirz = glm::vec3(0.0f, 0.0f, 1.0f);
+    std::vector<glm::vec2> arrow_pos;
 };
 
 enum class ResultType {

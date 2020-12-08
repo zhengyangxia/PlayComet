@@ -95,7 +95,6 @@ struct PlayMode : Mode {
 
 
 	std::priority_queue<std::pair< float, Scene::Transform* >> nearest_3;
-	std::vector<glm::vec2> arrow_pos;
 
 	enum class ShootingTargetType { SUN, PLANET, ASTROID };
 	struct ShootingTarget {
@@ -184,7 +183,7 @@ private:
 	void update_arrow();
 
 	size_t finished_task = 0;
-    std::string notice_str;
+    std::string notice_str{};
 
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_WIDTH = 480;
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_HEIGHT = 270;

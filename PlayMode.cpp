@@ -124,7 +124,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
     std::string trajectoryPrefix = "Tra";
     std::set<std::string> planetNames{"Earth", "Jupiter", "Mars"};
     std::string asteroidPrefix = "Asteroid";
-	std::vector<Scene::Transform*> flowers;
+    std::vector<Scene::Transform *> flowers;
     for (const std::string &planet_name : planetNames) {
         trajectory_targets.insert(
                 std::pair<std::string, std::vector<TrajectoryTarget>>(planet_name, std::vector<TrajectoryTarget>()));
@@ -151,7 +151,8 @@ PlayMode::PlayMode() : scene(*comet_scene) {
                 trajectory_targets["Mars"].push_back(TrajectoryTarget(&transform, 1));
             }
 
-        } else if (std::strncmp(transform.name.c_str(), "Cylinder", 8) == 0){
+        } else if (std::strncmp(transform.name.c_str(), "Flower", 8) == 0){
+			std::cout << "found flower" << std::endl;
 			flowers.push_back(&transform);
 		}
 
@@ -161,21 +162,22 @@ PlayMode::PlayMode() : scene(*comet_scene) {
     assert(cur_trajectory_target != trajectory_targets.end());
 
 
-	// match asteroids to planets and initialize the related info
+    // match asteroids to planets and initialize the related info
     initialize_asteroids(asteroids, planet_transforms);
-
-
     planet_name_to_task["Earth"] = std::make_shared<TrajectTask>(&comet, planet_name_to_transform["Earth"],
-                                                                 150.f,
+                                                                 175.f,
                                                                  &cur_trajectory_target->second); // earth radius?
 
-    planet_name_to_task["Jupiter"] = std::make_shared<CourtTask>(&comet,
-                                                                         planet_name_to_transform["Jupiter"],
-                                                                         150.f);
-    // todo shoot task -> asteroids
-    planet_name_to_task["Mars"] = std::make_shared<ShootTask>(&comet, planet_name_to_transform["Mars"], 150.f, asteroids, flowers[0]);
+    planet_name_to_task["Jupiter"] = std::make_shared<CourtTask>(
+            &comet,
+            planet_name_to_transform["Jupiter"],
+            200.f);
 
-    
+    // todo shoot task -> asteroids
+    planet_name_to_task["Mars"] = std::make_shared<ShootTask>(&comet, planet_name_to_transform["Mars"], 150.f,
+                                                              asteroids, flowers[0]);
+
+
     // match planet to sun
     for (auto &ps: planet_transforms) {
         ps->parent = sun;
@@ -296,21 +298,18 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
             key_e.pressed = false;
             return true;
         }
-    }
-        else if (evt.type == SDL_MOUSEBUTTONDOWN && evt.button.button == SDL_BUTTON_LEFT) {
-		mouse_left.pressed = true;
-		return true;
+    } else if (evt.type == SDL_MOUSEBUTTONDOWN && evt.button.button == SDL_BUTTON_LEFT) {
+        mouse_left.pressed = true;
+        return true;
 
 //		if (SDL_GetRelativeMouseMode() == SDL_FALSE) {
 //			SDL_SetRelativeMouseMode(SDL_TRUE);
 //			return true;
 //		}
-	}
-	else if (evt.type == SDL_MOUSEBUTTONUP && evt.button.button == SDL_BUTTON_LEFT) {
-		mouse_left.pressed = false;
-		return true;
-	}
-    else if (evt.type == SDL_MOUSEMOTION) {
+    } else if (evt.type == SDL_MOUSEBUTTONUP && evt.button.button == SDL_BUTTON_LEFT) {
+        mouse_left.pressed = false;
+        return true;
+    } else if (evt.type == SDL_MOUSEMOTION) {
         mouse_motion = glm::vec2(
                 evt.motion.x / float(window_size.x) - 0.5,
                 evt.motion.y / float(window_size.y) - 0.5
@@ -571,7 +570,7 @@ void PlayMode::update_arrow() {
             //show arrow
             float x = planet_position_in_clip_space.x;
             float y = planet_position_in_clip_space.y;
-			float z = planet_position_in_clip_space.z;
+            float z = planet_position_in_clip_space.z;
             x = std::min(0.95f, x);
             x = std::max(-0.95f, x);
             y = std::min(0.95f, y);
@@ -587,7 +586,7 @@ void PlayMode::update_arrow() {
 					}
 				}
 			}
-            arrow_pos.push_back(glm::vec2(x, y));
+            comet.arrow_pos.push_back(glm::vec2(x, y));
         }
         nearest_3.pop();
     }
@@ -632,19 +631,19 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
     shooter.drawBeam();
 
-	GL_ERRORS();
-	RenderCaptor::set_render_destination(nullptr);
-	glViewport(0, 0, GAUSSIAN_BLUR_OUTPUT_WIDTH, GAUSSIAN_BLUR_OUTPUT_HEIGHT);
-	threshold_processor.draw(render_ofb, threshold_ofb);
-	GL_ERRORS();
-	gaussian_processor.draw(threshold_ofb, tmp_ofb);
-	GL_ERRORS();
-	glViewport(0, 0, drawable_size.x, drawable_size.y);
-	add_processor.draw(render_ofb, threshold_ofb, add_ofb);
-	tone_mapping_processor.draw(add_ofb, nullptr);
+    GL_ERRORS();
+    RenderCaptor::set_render_destination(nullptr);
+    glViewport(0, 0, GAUSSIAN_BLUR_OUTPUT_WIDTH, GAUSSIAN_BLUR_OUTPUT_HEIGHT);
+    threshold_processor.draw(render_ofb, threshold_ofb);
+    GL_ERRORS();
+    gaussian_processor.draw(threshold_ofb, tmp_ofb);
+    GL_ERRORS();
+    glViewport(0, 0, drawable_size.x, drawable_size.y);
+    add_processor.draw(render_ofb, threshold_ofb, add_ofb);
+    tone_mapping_processor.draw(add_ofb, nullptr);
 
-    draw_arrow.draw(arrow_pos);
-    arrow_pos.clear();
+    draw_arrow.draw(comet.arrow_pos);
+    comet.arrow_pos.clear();
 
     { //use DrawLines to overlay some text:
         glDisable(GL_DEPTH_TEST);
@@ -667,9 +666,37 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
                             glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + 0.1f * H + ofs, 0.0),
                             glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
                             glm::u8vec4(0xff, 0xff, 0xff, 0x00));
-        } else if (notice_str.empty()) {
-//            std::string delimiter = "\n";
-//            std::string token = s.substr(0, s.find(delimiter));
+        }
+
+
+        if (notice_str.length() > 0) {
+            std::string delimiter = "\n";
+            size_t start_pos = 0;
+            size_t line_count = 0;
+            while (notice_str.find(delimiter, start_pos) != std::string::npos) {
+                std::string token = notice_str.substr(start_pos, notice_str.find(delimiter));
+                lines.draw_text(token,
+                                glm::vec3(-1.6f + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
+                                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+                                glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+                lines.draw_text(token,
+                                glm::vec3(-1.6f + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
+                                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+                                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+                start_pos += token.length() + delimiter.length();
+                line_count += 1;
+            }
+            if (notice_str.length() > start_pos) {
+                std::string token = notice_str.substr(start_pos, notice_str.length());
+                lines.draw_text(token,
+                                glm::vec3(-1.6f + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
+                                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+                                glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+                lines.draw_text(token,
+                                glm::vec3(-1.6f + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
+                                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+                                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+            }
         }
 
         if (landing_dis < 3000.f && state == GameState::Flying) {
@@ -825,22 +852,22 @@ void PlayMode::on_resize(const glm::uvec2 &window_size, const glm::uvec2 &drawab
 }
 
 PlayMode::Shooter::Shooter(PlayMode *enclosing_play_mode) {
-	this->enclosing_play_mode_ = enclosing_play_mode;
-	glGenVertexArrays(1, &vao_);
-	glGenBuffers(1, &vertex_position_vbo_);
-	glGenBuffers(1, &vertex_color_vbo_);
-	glBindVertexArray(vao_);
-	glBindBuffer(GL_ARRAY_BUFFER, vertex_position_vbo_);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *) 0);
-	glBindBuffer(GL_ARRAY_BUFFER, vertex_color_vbo_);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *) 0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+    this->enclosing_play_mode_ = enclosing_play_mode;
+    glGenVertexArrays(1, &vao_);
+    glGenBuffers(1, &vertex_position_vbo_);
+    glGenBuffers(1, &vertex_color_vbo_);
+    glBindVertexArray(vao_);
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_position_vbo_);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *) 0);
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_color_vbo_);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *) 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
-	program_ = gl_compile_program(
-		R"glsl(
+    program_ = gl_compile_program(
+            R"glsl(
 #version 330 core
 layout (location = 0) in vec4 aPos;
 layout (location = 1) in vec4 aColor;
@@ -853,7 +880,7 @@ void main()
     Color = aColor;
 }
 )glsl",
-R"glsl(
+            R"glsl(
 #version 330 core
 in vec4 Color;
 out vec4 FragColor;
@@ -862,104 +889,106 @@ void main()
   FragColor = Color;
 }
 )glsl"
-	);
-	GL_ERRORS();
+    );
+    GL_ERRORS();
 }
+
 PlayMode::Shooter::~Shooter() {
-	glDeleteVertexArrays(1, &vao_);
-	glDeleteBuffers(1, &vertex_color_vbo_);
-	glDeleteBuffers(1, &vertex_position_vbo_);
-	glDeleteProgram(program_);
-	GL_ERRORS();
+    glDeleteVertexArrays(1, &vao_);
+    glDeleteBuffers(1, &vertex_color_vbo_);
+    glDeleteBuffers(1, &vertex_position_vbo_);
+    glDeleteProgram(program_);
+    GL_ERRORS();
 }
 
 void PlayMode::Shooter::drawBeam() {
-	if (!is_enabled_ || !is_shooting_) {
-		return;
-	}
-	GL_ERRORS();
-	glUseProgram(program_);
-	GL_ERRORS();
+    if (!is_enabled_ || !is_shooting_) {
+        return;
+    }
+    GL_ERRORS();
+    glUseProgram(program_);
+    GL_ERRORS();
 
-	glBindVertexArray(vao_);
-	GL_ERRORS();
+    glBindVertexArray(vao_);
+    GL_ERRORS();
 
-	Scene::Camera *camera = enclosing_play_mode_->comet.camera;
-	/*
-	 * [0]: near left
-	 * [1]: near right
-	 * [2]: far left
-	 * [3]: far right
-	 */
-	glm::vec4 beam_position_in_clip[4];
-	glm::mat4 world_to_view = glm::mat4(camera->transform->make_world_to_local());
-	beam_position_in_clip[0] = world_to_view * beam_start_ + glm::vec4(-BEAM_WIDTH/2, 0.0f, 0.0f, 0.0f);
-	beam_position_in_clip[1] = world_to_view * beam_start_ + glm::vec4(BEAM_WIDTH/2, 0.0f, 0.0f, 0.0f);
-	beam_position_in_clip[2] = world_to_view * beam_end_ + glm::vec4(-BEAM_WIDTH/2, 0.0f, 0.0f, 0.0f);
-	beam_position_in_clip[3] = world_to_view * beam_end_ + glm::vec4(BEAM_WIDTH / 2, 0.0f, 0.0f, 0.0f);
-	for (int i = 0; i < 4; i++) {
-		beam_position_in_clip[i] = enclosing_play_mode_->comet.camera->make_projection() * beam_position_in_clip[i];
-	}
+    Scene::Camera *camera = enclosing_play_mode_->comet.camera;
+    /*
+     * [0]: near left
+     * [1]: near right
+     * [2]: far left
+     * [3]: far right
+     */
+    glm::vec4 beam_position_in_clip[4];
+    glm::mat4 world_to_view = glm::mat4(camera->transform->make_world_to_local());
+    beam_position_in_clip[0] = world_to_view * beam_start_ + glm::vec4(-BEAM_WIDTH / 2, 0.0f, 0.0f, 0.0f);
+    beam_position_in_clip[1] = world_to_view * beam_start_ + glm::vec4(BEAM_WIDTH / 2, 0.0f, 0.0f, 0.0f);
+    beam_position_in_clip[2] = world_to_view * beam_end_ + glm::vec4(-BEAM_WIDTH / 2, 0.0f, 0.0f, 0.0f);
+    beam_position_in_clip[3] = world_to_view * beam_end_ + glm::vec4(BEAM_WIDTH / 2, 0.0f, 0.0f, 0.0f);
+    for (int i = 0; i < 4; i++) {
+        beam_position_in_clip[i] = enclosing_play_mode_->comet.camera->make_projection() * beam_position_in_clip[i];
+    }
 
-	glBindBuffer(GL_ARRAY_BUFFER, vertex_position_vbo_);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(beam_position_in_clip), beam_position_in_clip, GL_DYNAMIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, vertex_color_vbo_);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(beam_colors_), beam_colors_, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_position_vbo_);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(beam_position_in_clip), beam_position_in_clip, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_color_vbo_);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(beam_colors_), beam_colors_, GL_DYNAMIC_DRAW);
 
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-	GL_ERRORS();
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-	glUseProgram(0);
-	GL_ERRORS();
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    GL_ERRORS();
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    glUseProgram(0);
+    GL_ERRORS();
 }
 
 std::optional<PlayMode::ShootingTarget> PlayMode::Shooter::updateAndGetBeamIntersection(float elapsed) {
-	if (!is_enabled_) { return std::nullopt; }
+    if (!is_enabled_) { return std::nullopt; }
 
-	if (remaining_capacity_ < CAPACITY_THRESHOLD || !enclosing_play_mode_->mouse_left.pressed) {
-		remaining_capacity_ = std::min<float>(CAPACITY_MAX, remaining_capacity_ + CAPACITY_RECOVER_SPEED * elapsed);
-		is_shooting_ = false;
-		return std::nullopt;
-	}
+    if (remaining_capacity_ < CAPACITY_THRESHOLD || !enclosing_play_mode_->mouse_left.pressed) {
+        remaining_capacity_ = std::min<float>(CAPACITY_MAX, remaining_capacity_ + CAPACITY_RECOVER_SPEED * elapsed);
+        is_shooting_ = false;
+        return std::nullopt;
+    }
 
 
-	assert(remaining_capacity_ >= CAPACITY_THRESHOLD && enclosing_play_mode_->mouse_left.pressed);
-	is_shooting_ = true;
-	remaining_capacity_ = std::max<float>(CAPACITY_MIN, remaining_capacity_ - CAPACITY_DRAIN_SPEED * elapsed);
+    assert(remaining_capacity_ >= CAPACITY_THRESHOLD && enclosing_play_mode_->mouse_left.pressed);
+    is_shooting_ = true;
+    remaining_capacity_ = std::max<float>(CAPACITY_MIN, remaining_capacity_ - CAPACITY_DRAIN_SPEED * elapsed);
 
-	glm::vec3 ray_start = enclosing_play_mode_->comet.camera->transform->make_local_to_world()[3];
-	glm::vec4 ray_direction_homogeneous = glm::mat4(enclosing_play_mode_->comet.camera->transform->make_local_to_world())
-		* glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
-	auto ray_direction = glm::normalize(glm::vec3(ray_direction_homogeneous));
-	auto raySphere = [](glm::vec3 ray_start,
-	                    glm::vec3 ray_direction, //< normalized ray direction vector
-	                    glm::vec3 sphere_pos,
-	                    float sphere_radius) -> std::optional<float> {
-		// adapted from:
-		// https://github.com/SebLague/Solar-System/blob/0c60882be69b8e96d6660c28405b9d19caee76d5/Assets/Scripts/Celestial/Shaders/Includes/Math.cginc
-		glm::vec3 offset = ray_start - sphere_pos;
-		float a = 1; // Set to dot(rayDir, rayDir) if rayDir might not be normalized
-		float b = 2 * dot(offset, ray_direction);
-		float c = glm::dot(offset, offset) - sphere_radius * sphere_radius;
-		float d = b * b - 4 * a * c; // Discriminant from quadratic formula
+    glm::vec3 ray_start = enclosing_play_mode_->comet.camera->transform->make_local_to_world()[3];
+    glm::vec4 ray_direction_homogeneous =
+            glm::mat4(enclosing_play_mode_->comet.camera->transform->make_local_to_world())
+            * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
+    auto ray_direction = glm::normalize(glm::vec3(ray_direction_homogeneous));
+    auto raySphere = [](glm::vec3 ray_start,
+                        glm::vec3 ray_direction, //< normalized ray direction vector
+                        glm::vec3 sphere_pos,
+                        float sphere_radius) -> std::optional<float> {
+        // adapted from:
+        // https://github.com/SebLague/Solar-System/blob/0c60882be69b8e96d6660c28405b9d19caee76d5/Assets/Scripts/Celestial/Shaders/Includes/Math.cginc
+        glm::vec3 offset = ray_start - sphere_pos;
+        float a = 1; // Set to dot(rayDir, rayDir) if rayDir might not be normalized
+        float b = 2 * dot(offset, ray_direction);
+        float c = glm::dot(offset, offset) - sphere_radius * sphere_radius;
+        float d = b * b - 4 * a * c; // Discriminant from quadratic formula
 
-		// Number of intersections: 0 when d < 0; 1 when d = 0; 2 when d > 0
-		if (d > 0) {
-			float s = sqrt(d);
-			float dstToSphereNear = (-b - s) / (2 * a);
+        // Number of intersections: 0 when d < 0; 1 when d = 0; 2 when d > 0
+        if (d > 0) {
+            float s = sqrt(d);
+            float dstToSphereNear = (-b - s) / (2 * a);
 //			float dstToSphereFar = (-b + s) / (2 * a);
 
-			// Ignore intersections that occur behind the ray
-			if (dstToSphereNear >= 0) {
-				return std::make_optional<float>(dstToSphereNear);
-			}
-		}
-		// Ray did not intersect sphere
-		return std::nullopt;
-	};
+            // Ignore intersections that occur behind the ray
+            if (dstToSphereNear >= 0) {
+                return std::make_optional<float>(dstToSphereNear);
+            }
+        }
+        // Ray did not intersect sphere
+        return std::nullopt;
+    };
 
-	std::optional<ShootingTarget> current_target;
+    std::optional<ShootingTarget> current_target;
 
     /* intersection with planet is delayed */
     for (size_t astroid_idx = 0; astroid_idx < enclosing_play_mode_->asteroids.size(); astroid_idx++) {
@@ -970,26 +999,26 @@ std::optional<PlayMode::ShootingTarget> PlayMode::Shooter::updateAndGetBeamInter
         if (astroid_distance.has_value() && astroid_distance.value() < BEAM_MAX_LEN &&
             (!current_target.has_value() || astroid_distance.value() < current_target->distance)) {
             current_target =
-                ShootingTarget{
-                    ShootingTargetType::ASTROID,
-                    0,
-                    (int) astroid_idx,
-                    *astroid_distance};
+                    ShootingTarget{
+                            ShootingTargetType::ASTROID,
+                            0,
+                            (int) astroid_idx,
+                            *astroid_distance};
         }
     }
 
-	// set the beam position
-	beam_start_ = glm::vec4(enclosing_play_mode_->comet.transform->make_local_to_world()[3], 1.0f);
+    // set the beam position
+    beam_start_ = glm::vec4(enclosing_play_mode_->comet.transform->make_local_to_world()[3], 1.0f);
 
-	if (current_target.has_value()) {
-		beam_end_ = glm::vec4(ray_start + ray_direction * current_target->distance, 1.0f);
-	} else {
-		beam_end_ = glm::vec4(ray_start + ray_direction * BEAM_MAX_LEN, 1.0f);
-	}
+    if (current_target.has_value()) {
+        beam_end_ = glm::vec4(ray_start + ray_direction * current_target->distance, 1.0f);
+    } else {
+        beam_end_ = glm::vec4(ray_start + ray_direction * BEAM_MAX_LEN, 1.0f);
+    }
 
-	return current_target;
+    return current_target;
 }
 
 void PlayMode::Shooter::drawHud() {
-	// TODO(xiaoqiao)
+    // TODO(xiaoqiao)
 }
