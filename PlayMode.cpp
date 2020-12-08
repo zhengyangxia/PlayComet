@@ -26,6 +26,7 @@ Load<MeshBuffer> comet_meshes(LoadTagDefault, []() -> MeshBuffer const * {
 Load<Scene> comet_scene(LoadTagDefault, []() -> Scene const * {
     return new Scene(data_path("comet.scene"),
                      [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name) {
+						 std::cout << mesh_name << std::endl;
                          Mesh const &mesh = comet_meshes->lookup(mesh_name);
                          scene.drawables.emplace_back(transform);
                          Scene::Drawable &drawable = scene.drawables.back();
@@ -174,7 +175,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 
     // todo shoot task -> asteroids
     planet_name_to_task["Mars"] = std::make_shared<ShootTask>(&comet, planet_name_to_transform["Mars"], 150.f,
-                                                              asteroids, flowers[0], &shooter);
+                                                              &asteroids, flowers[0], &shooter);
 
 
     // match planet to sun
@@ -640,6 +641,8 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
     draw_arrow.draw(comet.arrow_pos);
     comet.arrow_pos.clear();
+
+	shooter.drawHud();
 
     { //use DrawLines to overlay some text:
         glDisable(GL_DEPTH_TEST);

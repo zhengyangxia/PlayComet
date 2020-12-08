@@ -104,20 +104,39 @@ ResultType ShootTask::UpdateTask(float elapsed) {
         return state;
     }
 
-	shooter->updateAndGetBeamIntersection(elapsed);
-
-    if (true){
-        
-        has_item = true;
-        flower->scale = glm::vec3(1.f);
-        flower->position = asteroids[item_idx].transform->make_local_to_world()[3];
+	shooter->setEnabled(true);
+    std::optional<ShootingTarget> shooting_result = shooter->updateAndGetBeamIntersection(elapsed);
+    if (shooting_result.has_value() && shooting_result->type == ShootingTargetType::ASTEROID) {
+        int asteroid_idx = shooting_result->asteroid_index;
+        auto it = std::find(asteroids_indices_current_task.begin(), asteroids_indices_current_task.end(), asteroid_idx);
+        if (it != asteroids_indices_current_task.end()) {
+            asteroids->at(asteroid_idx).transform->scale = glm::vec3(0.0f);
+        }
     }
 
-    // if (has_item){
-    //     glm::vec3 delta = flower->position - comet->transform->make_local_to_world()[3] - comet->dirz;
-    // }
+    if (true && !has_item){
+        has_item = true;
+        flower->scale = glm::vec3(10.f);
+        flower->position = asteroids->at(item_idx).transform->make_local_to_world()[3];
+        
+        flower->parent = comet->transform;
+        flower->position = glm::vec4(flower->position.x, flower->position.y, flower->position.z, 1.f) * glm::mat4(flower->make_world_to_local());
+        flower->rotation = glm::angleAxis(glm::radians(45.f), glm::vec3(1.f,0.f,0.f));
+    }
 
+    if (has_item && flower_time > 0.f){
+        
+        glm::vec3 delta = flower->position - comet->dirz;
+        flower->position -= delta * 5.f * elapsed;
+        flower_time -= elapsed;
+        if (flower_time <= 0.f){
+            flower_time = 0.f;
+            flower->position = glm::vec3(0.0f, 0.0f, 1.0f);
+        }
+    }
+    // std::cout << flower_time << " " << flower->position.x << " " << flower->position.y << " " << flower->position.z << std::endl;
     if (CheckLanded()){
+	    shooter->setEnabled(false);
         if (has_item){
             state = ResultType::SUCCESS;
             score = 100;
@@ -127,20 +146,32 @@ ResultType ShootTask::UpdateTask(float elapsed) {
     return ResultType::NOT_COMPLETE;
 }
 
-Shooter::Shooter(Comet *comet, std::vector<Asteroid> *astroids) {
+Shooter::Shooter(Comet *comet, std::vector<Asteroid> *asteroids) {
     this->comet_ = comet;
-    this->astroids_ = astroids;
+    this->asteroids_ = asteroids;
 
-    glGenVertexArrays(1, &vao_);
-    glGenBuffers(1, &vertex_position_vbo_);
-    glGenBuffers(1, &vertex_color_vbo_);
-    glBindVertexArray(vao_);
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_position_vbo_);
+    glGenVertexArrays(1, &beam_vao_);
+    glGenBuffers(1, &beam_position_vbo_);
+    glGenBuffers(1, &beam_color_vbo_);
+    glBindVertexArray(beam_vao_);
+    glBindBuffer(GL_ARRAY_BUFFER, beam_position_vbo_);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *) 0);
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_color_vbo_);
+    glBindBuffer(GL_ARRAY_BUFFER, beam_color_vbo_);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *) 0);
+
+    glGenVertexArrays(1, &hud_vao_);
+    glGenBuffers(1, &hud_position_vbo_);
+    glGenBuffers(1, &hud_color_vbo_);
+    glBindVertexArray(hud_vao_);
+    glBindBuffer(GL_ARRAY_BUFFER, hud_position_vbo_);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *) 0);
+    glBindBuffer(GL_ARRAY_BUFFER, hud_color_vbo_);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *) 0);
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
@@ -172,9 +203,12 @@ void main()
 }
 
 Shooter::~Shooter() {
-    glDeleteVertexArrays(1, &vao_);
-    glDeleteBuffers(1, &vertex_color_vbo_);
-    glDeleteBuffers(1, &vertex_position_vbo_);
+    glDeleteVertexArrays(1, &beam_vao_);
+    glDeleteBuffers(1, &beam_color_vbo_);
+    glDeleteBuffers(1, &beam_position_vbo_);
+    glDeleteVertexArrays(1, &hud_vao_);
+    glDeleteBuffers(1, &hud_color_vbo_);
+    glDeleteBuffers(1, &hud_position_vbo_);
     glDeleteProgram(program_);
     GL_ERRORS();
 }
@@ -187,7 +221,7 @@ void Shooter::drawBeam() {
     glUseProgram(program_);
     GL_ERRORS();
 
-    glBindVertexArray(vao_);
+    glBindVertexArray(beam_vao_);
     GL_ERRORS();
 
     Scene::Camera *camera = comet_->camera;
@@ -207,9 +241,9 @@ void Shooter::drawBeam() {
         beam_position_in_clip[i] = camera->make_projection() * beam_position_in_clip[i];
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_position_vbo_);
+    glBindBuffer(GL_ARRAY_BUFFER, beam_position_vbo_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(beam_position_in_clip), beam_position_in_clip, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_color_vbo_);
+    glBindBuffer(GL_ARRAY_BUFFER, beam_color_vbo_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(beam_colors_), beam_colors_, GL_DYNAMIC_DRAW);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -220,17 +254,88 @@ void Shooter::drawBeam() {
     GL_ERRORS();
 }
 
+void Shooter::drawHud() {
+    if (!is_enabled_) {
+        return;
+    }
+    GL_ERRORS();
+    glDisable(GL_DEPTH_TEST);
+    glUseProgram(program_);
+    glBindVertexArray(hud_vao_);
+
+    constexpr float BAR_TOP_POS = 0.9f;
+    constexpr float BAR_LEFT_POS = 0.7f;
+    constexpr float BAR_HEIGHT = 0.05f;
+    constexpr float BAR_WIDTH = 0.1f;
+    constexpr float BAR_BORDER = 0.002f;
+
+    glm::vec4 white{1.0f, 1.0f, 1.0f, 1.0f};
+    glm::vec4 red{1.0f, 0.0f, 0.0f, 1.0f};
+    glm::vec4 black{0.0f, 0.0f, 0.0f, 1.0f};
+
+    glm::vec4 foreground_color = remaining_capacity_ < CAPACITY_THRESHOLD ? red : white;
+    glm::vec4 background_color = black;
+    float shooter_energy_bar_vertex_position[] = {
+        // the outer background rectangle
+        BAR_LEFT_POS, BAR_TOP_POS, 0.0f, 1.0f,
+        BAR_LEFT_POS, BAR_TOP_POS - BAR_HEIGHT, 0.0f, 1.0f,
+        BAR_LEFT_POS + BAR_WIDTH, BAR_TOP_POS, 0.0f, 1.0f,
+        BAR_LEFT_POS, BAR_TOP_POS - BAR_HEIGHT, 0.0f, 1.0f,
+        BAR_LEFT_POS + BAR_WIDTH, BAR_TOP_POS, 0.0f, 1.0f,
+        BAR_LEFT_POS + BAR_WIDTH, BAR_TOP_POS - BAR_HEIGHT, 0.0f, 1.0f,
+
+        // the inner background rectangle
+        BAR_LEFT_POS + BAR_BORDER, BAR_TOP_POS - BAR_BORDER, 0.0f, 1.0f,
+        BAR_LEFT_POS + BAR_BORDER, BAR_TOP_POS - BAR_HEIGHT + BAR_BORDER, 0.0f, 1.0f,
+        BAR_LEFT_POS + BAR_WIDTH - BAR_BORDER, BAR_TOP_POS - BAR_BORDER, 0.0f, 1.0f,
+        BAR_LEFT_POS + BAR_BORDER, BAR_TOP_POS - BAR_HEIGHT + BAR_BORDER, 0.0f, 1.0f,
+        BAR_LEFT_POS + BAR_WIDTH - BAR_BORDER, BAR_TOP_POS - BAR_BORDER, 0.0f, 1.0f,
+        BAR_LEFT_POS + BAR_WIDTH - BAR_BORDER, BAR_TOP_POS - BAR_HEIGHT + BAR_BORDER, 0.0f, 1.0f,
+
+        // the foreground rectangle
+        BAR_LEFT_POS, BAR_TOP_POS, 0.0f, 1.0f,
+        BAR_LEFT_POS, BAR_TOP_POS - BAR_HEIGHT, 0.0f, 1.0f,
+        BAR_LEFT_POS + BAR_WIDTH * remaining_capacity_ / CAPACITY_MAX, BAR_TOP_POS, 0.0f, 1.0f,
+        BAR_LEFT_POS, BAR_TOP_POS - BAR_HEIGHT, 0.0f, 1.0f,
+        BAR_LEFT_POS + BAR_WIDTH * remaining_capacity_ / CAPACITY_MAX, BAR_TOP_POS, 0.0f, 1.0f,
+        BAR_LEFT_POS + BAR_WIDTH * remaining_capacity_ / CAPACITY_MAX, BAR_TOP_POS - BAR_HEIGHT, 0.0f, 1.0f,
+    };
+    glm::vec4 shooter_energy_bar_vertex_color[] {
+        foreground_color, foreground_color, foreground_color, foreground_color, foreground_color, foreground_color,
+        background_color, background_color, background_color, background_color, background_color, background_color,
+        foreground_color, foreground_color, foreground_color, foreground_color, foreground_color, foreground_color,
+    };
+
+    glBindBuffer(GL_ARRAY_BUFFER, hud_position_vbo_);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(shooter_energy_bar_vertex_position), shooter_energy_bar_vertex_position, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, hud_color_vbo_);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(shooter_energy_bar_vertex_color), shooter_energy_bar_vertex_color, GL_DYNAMIC_DRAW);
+
+    glDrawArrays(GL_TRIANGLES, 0, 6 * 3);
+    GL_ERRORS();
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    glUseProgram(0);
+    GL_ERRORS();
+    glEnable(GL_DEPTH_TEST);
+}
+
+
 std::optional<ShootingTarget> Shooter::updateAndGetBeamIntersection(float elapsed) {
     if (!is_enabled_) { return std::nullopt; }
 
-    if (remaining_capacity_ < CAPACITY_THRESHOLD || !mouse_left_button_pressed) {
+    if (!mouse_left_button_pressed) {
         remaining_capacity_ = std::min<float>(CAPACITY_MAX, remaining_capacity_ + CAPACITY_RECOVER_SPEED * elapsed);
         is_shooting_ = false;
         return std::nullopt;
     }
 
+    if (mouse_left_button_pressed && remaining_capacity_ <= CAPACITY_MIN) {
+        is_shooting_ = false;
+        return std::nullopt;
+    }
 
-    assert(remaining_capacity_ >= CAPACITY_THRESHOLD && mouse_left_button_pressed);
+    assert(remaining_capacity_ > CAPACITY_MIN && mouse_left_button_pressed);
     is_shooting_ = true;
     remaining_capacity_ = std::max<float>(CAPACITY_MIN, remaining_capacity_ - CAPACITY_DRAIN_SPEED * elapsed);
 
@@ -269,19 +374,19 @@ std::optional<ShootingTarget> Shooter::updateAndGetBeamIntersection(float elapse
     std::optional<ShootingTarget> current_target;
 
     /* intersection with planet is delayed */
-    for (size_t astroid_idx = 0; astroid_idx < astroids_->size(); astroid_idx++) {
-        auto &astroid = astroids_->at(astroid_idx);
-        glm::vec3 sphere_pos = astroid.transform->make_local_to_world()[3];
-        float sphere_radius = astroid.radius;
-        std::optional<float> astroid_distance = raySphere(ray_start, ray_direction, sphere_pos, sphere_radius);
-        if (astroid_distance.has_value() && astroid_distance.value() < BEAM_MAX_LEN &&
-            (!current_target.has_value() || astroid_distance.value() < current_target->distance)) {
+    for (size_t asteroid_idx = 0; asteroid_idx < asteroids_->size(); asteroid_idx++) {
+        auto &asteroid = asteroids_->at(asteroid_idx);
+        glm::vec3 sphere_pos = asteroid.transform->make_local_to_world()[3];
+        float sphere_radius = asteroid.radius;
+        std::optional<float> asteroid_distance = raySphere(ray_start, ray_direction, sphere_pos, sphere_radius);
+        if (asteroid_distance.has_value() && asteroid_distance.value() < BEAM_MAX_LEN &&
+            (!current_target.has_value() || asteroid_distance.value() < current_target->distance)) {
             current_target =
                 ShootingTarget{
-                    ShootingTargetType::ASTROID,
+                    ShootingTargetType::ASTEROID,
                     0,
-                    (int) astroid_idx,
-                    *astroid_distance};
+                    (int) asteroid_idx,
+                    *asteroid_distance};
         }
     }
 
@@ -297,6 +402,3 @@ std::optional<ShootingTarget> Shooter::updateAndGetBeamIntersection(float elapse
     return current_target;
 }
 
-void Shooter::drawHud() {
-    // TODO(xiaoqiao)
-}
