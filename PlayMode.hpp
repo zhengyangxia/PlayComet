@@ -20,6 +20,8 @@
 #include "SkyBox.hpp"
 #include "Sound.hpp"
 
+#include "Task.h"
+
 // xiaoqiao: dirty workaround for namespace stuff.. should fix it later if i have time
 using namespace game_graphics;
 using namespace game_graphics::post_processor;
@@ -40,7 +42,7 @@ struct PlayMode : Mode {
 	struct Button {
 		uint8_t downs = 0;
 		uint8_t pressed = 0;
-	} left, right, down, up, mouse_left;
+	} left, right, down, up, mouse_left, key_e;
 
 	//local copy of the game scene (so code can change it during gameplay):
 	Scene scene;
@@ -63,20 +65,14 @@ struct PlayMode : Mode {
 	float land_limit = 5.f;
 	float landing_dis = FLT_MAX;
 
-	//player info:
-	struct Comet {
-		//transform is at player's feet and will be yawed by mouse left/right motion:
-		Scene::Transform *transform = nullptr;
-		//camera is at player's head and will be pitched by mouse up/down motion:
-		Scene::Camera *camera = nullptr;
-	} comet;
+	Comet comet;
 
 	Scene::Transform *comet_parent = nullptr;
 
 	Scene::Camera *universal_camera = nullptr;
 
-	static constexpr float COMET_RADIUS = 1.f;
-	static constexpr float PLANET_RADIUS = 20.0f;
+//	static constexpr float COMET_RADIUS = 1.f;
+//	static constexpr float PLANET_RADIUS = 20.0f;
 	static constexpr float SUN_RADIUS = 300.0f;
 
 	Scene::Transform *sun = nullptr;
@@ -86,8 +82,6 @@ struct PlayMode : Mode {
 	glm::vec3 camera_world_rot;
 
 	glm::vec3 comet_velocity = glm::vec3(0.0f, 0.5f, 0.0f);
-	glm::vec3 dirx = glm::vec3(1.0f, 0.0f, 0.0f);
-	glm::vec3 dirz = glm::vec3(0.0f, 0.0f, 1.0f);
 	glm::vec2 mouse_motion;
 	// glm::vec3 diry = glm::vec3(0.0f, 0.0f, 1.0f);
 	Revolve revolve;
@@ -96,46 +90,7 @@ struct PlayMode : Mode {
 	std::shared_ptr< Sound::PlayingSample > bgm;
 
 	size_t score = 0;
-	float court_time = 0.f;
-	size_t courting = 0;
 
-	std::vector<Scene::Transform*> asteroids;
-
-	struct Asteroid
-	{
-		Asteroid(Scene::Transform* t, float p, float d, glm::vec3 vec):transform(t), dist(d), period(p), revolve_vec(vec){};
-		Scene::Transform* transform;
-		float radius = 15.f;
-		float dist = 0.f;
-		float period = 0.f;
-		glm::vec3 revolve_vec;
-	};
-
-	struct TrajectoryTarget
-	{
-		TrajectoryTarget(Scene::Transform* t, int s):transform(t), state(s){};
-		Scene::Transform* transform;
-		float radius = 5.f; // todo distance
-		int state = 1; // 1 = present, 0 = has been hit
-	};
-
-	struct PlanetSystem
-	{
-		PlanetSystem(Scene::Transform* t):transform(t){};
-		Scene::Transform *transform;
-		std::vector<Asteroid> asteroids;
-		int trajectory_state = 0; // 1 -> hit all trajectory targets
-		// std::vector<Scene::TrajectoryTarget> trajectory_targets;
-	};
-
-    std::unordered_map<std::string, std::vector<TrajectoryTarget>> trajectory_targets;
-
-	struct Planets{
-		std::vector<PlanetSystem> planet_systems;
-		std::vector<bool> hit_bitmap;
-		std::vector<int> radius{200, 150, 100};
-		size_t planet_num = 0;
-	} planets;
 
 	std::priority_queue<std::pair< float, Scene::Transform* >> nearest_3;
 	std::vector<glm::vec2> arrow_pos;
@@ -207,13 +162,32 @@ struct PlayMode : Mode {
 
 	DrawArrow draw_arrow;
 
+	// final version
+    std::vector<Asteroid> asteroids;
+
+    Scene::Transform * ongoing_task_planet = nullptr;
+
+    std::unordered_map<std::string, std::vector<TrajectoryTarget>> trajectory_targets;
+
+    std::vector<Scene::Transform*> planet_transforms;
+    std::unordered_map<std::string, Scene::Transform*> planet_name_to_transform;
+    std::unordered_map<std::string, std::shared_ptr<BaseTask>> planet_name_to_task;
+
 private:
 	void detect_collision_and_update_state();
 	void shoot();
 	void reset_speed();
 
+	void detect_failure_collision();
+	void update_arrow();
+
+	size_t finished_task = 0;
+    std::string notice_str;
+
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_WIDTH = 480;
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_HEIGHT = 270;
+
+	static constexpr float TRAJECTORY_DETECT_DIST = 500.f;
 
 	Shooter shooter{this};
 	SkyBox skybox{};
