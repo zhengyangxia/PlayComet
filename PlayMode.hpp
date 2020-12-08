@@ -89,6 +89,7 @@ struct PlayMode : Mode {
 	GravityUtil gravityUtil;
 
 	std::shared_ptr< Sound::PlayingSample > bgm;
+	std::shared_ptr< Sound::PlayingSample > effect;
 
 	size_t score = 0;
 
