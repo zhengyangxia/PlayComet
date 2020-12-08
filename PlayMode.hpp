@@ -62,7 +62,7 @@ struct PlayMode : Mode {
 
 	bool speed_is_reset = false;
 	float launch_duration = 0.f;
-	float launch_limit = 2.f;
+	float launch_limit = 5.f;
 	float land_duration = 0.f;
 	float land_limit = 5.f;
 	float landing_dis = FLT_MAX;

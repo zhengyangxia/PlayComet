@@ -70,7 +70,6 @@ Load<Scene> comet_scene(LoadTagDefault, []() -> Scene const * {
                          }
 
                          // Sphere.001 is the mesh for the sun.
-                         // TODO(xiaoqiao, zizhuol): change blender so the mesh for sun has a better name
                          bool is_emissive = mesh_name == "Sphere.001";
                          GLuint program_id = lit_color_texture_program_pipeline.program;
                          after_hit[drawable.transform->name] = 0.0f;
@@ -309,7 +308,14 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
         if (state == GameState::Grounded) {
             speed_is_reset = true;
             state = GameState::Launched;
+            camera_world_pos = comet.camera->transform->make_local_to_world()[3];
+            // std::cout << camera_world_pos.x << " " << camera_world_pos.y << " " << camera_world_pos.z << std::endl;
+            comet.camera->transform->parent = comet.transform;
+            comet.camera->transform->position = glm::mat4(comet.camera->transform->parent->make_world_to_local()) * glm::vec4(camera_world_pos.x, camera_world_pos.y, camera_world_pos.z, 1.f);
+            // std::cout << comet.camera->transform->make_local_to_world()[3].x << " " << comet.camera->transform->make_local_to_world()[3].y << " " << comet.camera->transform->make_local_to_world()[3].z << std::endl;
+            comet.camera->transform->rotation = initial_camera_rotation;
             camera_world_pos = comet.camera->transform->position;
+            
             return true;
         }
 
@@ -386,7 +392,7 @@ void PlayMode::reset_speed() {
     assert(comet.transform->parent);
     // TODO set position = local_to_world & set parent = null ?
     glm::vec3 center = comet.transform->parent->position;
-
+    comet.transform->position *= 1.1f;
     comet.transform->position += comet.transform->parent->position;
     comet.transform->parent = comet_parent;
 
@@ -407,11 +413,13 @@ void PlayMode::update(float elapsed) {
         return;
     }
 
-    if (speed_is_reset) {
-        speed_is_reset = false;
-        reset_speed();
-        return;
-    }
+    // if (speed_is_reset) {
+    //     speed_is_reset = false;
+        
+        
+        
+    //     return;
+    // }
 
     //player walking:
     if (state != GameState::Grounded && state != GameState::Landed) {
@@ -498,15 +506,14 @@ void PlayMode::update(float elapsed) {
 
     if (state == GameState::Launched) {
         launch_duration += elapsed;
-        comet.camera->transform->position = (camera_world_pos - comet.transform->make_local_to_world()[3]) *
-                                            (1.f - launch_duration / launch_limit) +
-                                            comet.transform->make_local_to_world()[3];
+        // std::cout << comet.camera->transform->position.x << " " << comet.camera->transform->position.y << " " << comet.camera->transform->position.z << std::endl;
+        comet.camera->transform->position = (camera_world_pos - glm::vec3(0.f, -25.f, 5.f)) * (1.f - launch_duration/launch_limit) + glm::vec3(0.f, -25.f, 5.f);
         if (launch_duration < launch_limit) {
             return;
         } else {
-            comet.camera->transform->parent = comet.transform;
             comet.camera->transform->position = glm::vec3(0.f, -25.f, 5.f);
-            comet.camera->transform->rotation = initial_camera_rotation;
+            reset_speed();
+            speed_is_reset = false;
         }
         launch_duration = 0.f;
         state = GameState::Flying;

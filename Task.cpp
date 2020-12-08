@@ -37,7 +37,7 @@ ResultType TrajectTask::UpdateTask(float elapsed) {
     state = ResultType::NOT_COMPLETE;
 
     if (trajectory_next_index == targets->size()){
-        notice = "Land on the planet to complete the task! ";
+        notice = "Land on the planet to complete the task!";
     }
 
     if (CheckLanded()){
@@ -110,11 +110,7 @@ ResultType ShootTask::UpdateTask(float elapsed) {
 			        flowers[num_flower]->scale = glm::vec3(10.f);
 			        flowers[num_flower]->position = asteroids->at(asteroid_idx).transform->make_local_to_world()[3];
 			        flowers[num_flower]->parent = comet->transform;
-			        flowers[num_flower]->position = glm::vec4(flowers[num_flower]->position.x,
-			                                                  flowers[num_flower]->position.y,
-			                                                  flowers[num_flower]->position.z,
-			                                                  1.f)
-				        * glm::mat4(flowers[num_flower]->make_world_to_local());
+			        flowers[num_flower]->position = glm::mat4(flowers[num_flower]->parent->make_world_to_local()) * glm::vec4(flowers[num_flower]->position.x, flowers[num_flower]->position.y, flowers[num_flower]->position.z, 1.f);
 			        flowers[num_flower]->rotation = glm::angleAxis(glm::radians(45.f), glm::vec3(1.f, 0.f, 0.f));
 			        flower_times[num_flower] = 2.f;
 			        num_flower++;
