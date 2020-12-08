@@ -135,20 +135,19 @@ ResultType ShootTask::UpdateTask(float elapsed) {
             asteroids->at(asteroid_idx).transform->scale = glm::vec3(0.0f);
             int internal_idx = (int)(it-asteroids_indices_current_task.begin());
             std::cout << "shot " << internal_idx << std::endl;
-            // if (flower_indices.find(internal_idx) != flower_indices.end()){
-            //     int flower_idx = (int)(flower_indices.find(internal_idx) - flower_indices.begin());
-            //     flowers[flower_idx]->scale = glm::vec3(10.f);
-            //     flowers[flower_idx]->position = asteroids->at(asteroid_idx).transform->make_local_to_world()[3];
-            //     flowers[flower_idx]->parent = comet->transform;
-            //     flowers[flower_idx]->position = glm::vec4(flowers[flower_idx]->position.x, flowers[flower_idx]->position.y, flowers[flower_idx]->position.z, 1.f) * glm::mat4(flowers[flower_idx]->make_world_to_local());
-            //     flowers[flower_idx]->rotation = glm::angleAxis(glm::radians(45.f), glm::vec3(1.f,0.f,0.f));
-            //     flower_times[flower_idx] = 2.f;
-            //     num_flower ++;
-            // }
+            if (flower_indices.find(internal_idx) != flower_indices.end()){
+                flowers[num_flower]->scale = glm::vec3(10.f);
+                flowers[num_flower]->position = asteroids->at(asteroid_idx).transform->make_local_to_world()[3];
+                flowers[num_flower]->parent = comet->transform;
+                flowers[num_flower]->position = glm::vec4(flowers[num_flower]->position.x, flowers[num_flower]->position.y, flowers[num_flower]->position.z, 1.f) * glm::mat4(flowers[num_flower]->make_world_to_local());
+                flowers[num_flower]->rotation = glm::angleAxis(glm::radians(45.f), glm::vec3(1.f,0.f,0.f));
+                flower_times[num_flower] = 2.f;
+                num_flower ++;
+            }
 
         }
     }
-    for (size_t i = 0; i < flower_indices.size(); i++){
+    for (int i = 0; i < num_flower; i++){
         if (flower_times[i] > 0.f){
             flowers[i]->position -= flowers[i]->position * 5.f * elapsed;
             flower_times[i] -= elapsed;
