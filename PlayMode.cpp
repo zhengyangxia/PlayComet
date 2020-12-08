@@ -123,7 +123,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
     std::string trajectoryPrefix = "Tra";
     std::set<std::string> planetNames{"Earth", "Jupiter", "Mars"};
     std::string asteroidPrefix = "Asteroid";
-
+	std::vector<Scene::Transform*> flowers;
     for (const std::string &planet_name : planetNames) {
         trajectory_targets.insert(
                 std::pair<std::string, std::vector<TrajectoryTarget>>(planet_name, std::vector<TrajectoryTarget>()));
@@ -150,12 +150,20 @@ PlayMode::PlayMode() : scene(*comet_scene) {
                 trajectory_targets["Mars"].push_back(TrajectoryTarget(&transform, 1));
             }
 
-        }
+        } else if (std::strncmp(transform.name.c_str(), "Cylinder", 8) == 0){
+			std::cout << "found flower" << std::endl;
+			flowers.push_back(&transform);
+		}
 
     }
 
     auto cur_trajectory_target = trajectory_targets.find("Earth");
     assert(cur_trajectory_target != trajectory_targets.end());
+
+
+	// match asteroids to planets and initialize the related info
+    initialize_asteroids(asteroids, planet_transforms);
+
 
     planet_name_to_task["Earth"] = std::make_shared<TrajectTask>(comet.transform, planet_name_to_transform["Earth"],
                                                                  150.f,
@@ -164,11 +172,9 @@ PlayMode::PlayMode() : scene(*comet_scene) {
     planet_name_to_task["Jupiter"] = std::make_shared<CourtTask>(comet.transform, planet_name_to_transform["Jupiter"],
                                                                  150.f);
     // todo shoot task -> asteroids
-    planet_name_to_task["Mars"] = std::make_shared<ShootTask>(comet.transform, planet_name_to_transform["Mars"], 150.f);
+    planet_name_to_task["Mars"] = std::make_shared<ShootTask>(comet.transform, planet_name_to_transform["Mars"], 150.f, asteroids, flowers[0]);
 
-    // match asteroids to planets and initialize the related info
-    initialize_asteroids(asteroids, planet_transforms);
-
+    
     // match planet to sun
     for (auto &ps: planet_transforms) {
         ps->parent = sun;
@@ -328,8 +334,8 @@ void PlayMode::reset_speed() {
     glm::quat rotation = glm::rotation(glm::normalize(comet_velocity), glm::normalize(speed_vector));
     comet.transform->rotation = rotation * comet.transform->rotation;
     comet.transform->scale = glm::vec3(1.0f);
-    dirx = rotation * dirx;
-    dirz = rotation * dirz;
+    comet.dirx = rotation * comet.dirx;
+    comet.dirz = rotation * comet.dirz;
     constexpr float LaunchSpeed = 10.f;
     comet_velocity = speed_vector * LaunchSpeed;
 
@@ -365,24 +371,24 @@ void PlayMode::update(float elapsed) {
             comet_velocity = (deltav + new_comet_velocity) * 0.995f;
         else
             comet_velocity = new_comet_velocity * 0.995f;
-        dirx = rotation * dirx;
-        dirz = rotation * dirz;
+        comet.dirx = rotation * comet.dirx;
+        comet.dirz = rotation * comet.dirz;
 
         comet.transform->rotation = rotation * comet.transform->rotation;
         comet.transform->position += comet_velocity * elapsed;
 
         rotation = glm::angleAxis(glm::radians(move.z * elapsed * 45), glm::normalize(comet_velocity));
         comet.transform->rotation = rotation * comet.transform->rotation;
-        dirx = rotation * dirx;
-        dirz = rotation * dirz;
+        comet.dirx = rotation * comet.dirx;
+        comet.dirz = rotation * comet.dirz;
 
         glm::quat rotation_x = glm::angleAxis(-mouse_motion.x * comet.camera->fovy * elapsed, dirz);
         glm::quat rotation_y = glm::angleAxis(-mouse_motion.y * comet.camera->fovy * elapsed, dirx);
 
         comet_velocity = rotation_x * rotation_y * comet_velocity;
         comet.transform->rotation = rotation_x * rotation_y * comet.transform->rotation;
-        dirx = rotation_x * dirx;
-        dirz = rotation_y * dirz;
+        comet.dirx = rotation_x * comet.dirx;
+        comet.dirz = rotation_y * comet.dirz;
 
     }
 
@@ -410,15 +416,10 @@ void PlayMode::update(float elapsed) {
         if (land_duration < land_limit) {
             return;
         } else {
-            // std::cout << comet.camera->transform->position.x << " " << comet.camera->transform->position.y << " " << comet.camera->transform->position.z << std::endl;
-            // std::cout << comet.transform->position.x << " " << comet.transform->position.y << " " << comet.transform->position.z << std::endl;
-            // std::cout << comet.transform->make_local_to_world()[3].x << " " << comet.transform->make_local_to_world()[3].y << " " << comet.transform->make_local_to_world()[3].z << std::endl;
             camera_world_pos = comet.camera->transform->make_local_to_world()[3];
             comet.camera->transform->parent = comet_parent;
             comet.camera->transform->position = camera_world_pos;
             comet.camera->transform->rotation = comet.transform->rotation * initial_camera_rotation;
-            // std::cout << comet.camera->transform->make_local_to_world()[3].x << " " << comet.camera->transform->make_local_to_world()[3].y << " " << comet.camera->transform->make_local_to_world()[3].z << std::endl;
-            // std::cout << comet.camera->transform->position.x << " " << comet.camera->transform->position.y << " " << comet.camera->transform->position.z << std::endl;
         }
         land_duration = 0.f;
         state = GameState::Grounded;

@@ -10,6 +10,7 @@
 #pragma once
 
 #include "Scene.hpp"
+#include <iostream>
 
 static constexpr float COMET_RADIUS = 1.f;
 
@@ -33,6 +34,16 @@ struct TrajectoryTarget {
     float radius = 25.f; // todo distance
     int state = 1; // 1 = present, 0 = has been hit
 };
+
+//player info:
+struct Comet {
+    //transform is at player's feet and will be yawed by mouse left/right motion:
+    Scene::Transform *transform = nullptr;
+    //camera is at player's head and will be pitched by mouse up/down motion:
+    Scene::Camera *camera = nullptr;
+    glm::vec3 dirx = glm::vec3(1.0f, 0.0f, 0.0f);
+    glm::vec3 dirz = glm::vec3(0.0f, 0.0f, 1.0f);
+} 
 
 class BaseTask {
 public:
@@ -108,7 +119,18 @@ private:
 
 class ShootTask : public BaseTask {
 public:
-    ShootTask(Scene::Transform *c, Scene::Transform *p, float pr) : BaseTask(c, p, pr) {};
+    ShootTask(Scene::Transform *c, Scene::Transform *p, float pr, std::vector<Asteroid> ast, Scene::Transform* f) : BaseTask(c, p, pr) {
+        for (auto a : ast){
+            if (a.transform->parent == p){
+                asteroids.push_back(a);
+            }
+        }
+        has_item = false;
+        item_idx = 0;
+        flower = f;
+        flower_time = 2.f;
+        flower->scale *= 0.f;
+    };
 
     ~ShootTask() override = default;
     ResultType UpdateTask(float elapsed) override;
@@ -116,5 +138,8 @@ public:
 private:
     // variables
     std::vector<Asteroid> asteroids;
-
+    Scene::Transform *flower;
+    int item_idx;
+    bool has_item;
+    float flower_time;
 };
