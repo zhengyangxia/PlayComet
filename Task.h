@@ -320,9 +320,9 @@ private:
     static constexpr float CAPACITY_DRAIN_SPEED = 0.1f;
 //    static constexpr float CAPACITY_THRESHOLD = 0.1f;
 
-	static constexpr float BEAM_ENERGY_BAR_TOP_POS = 0.9f;
-	static constexpr float BEAM_ENERGY_BAR_LEFT_POS = 0.7f;
-	static constexpr float BEAM_ENERGY_BAR_HEIGHT = 0.05f;
+	static constexpr float BEAM_ENERGY_BAR_TOP_POS = -0.45f;
+	static constexpr float BEAM_ENERGY_BAR_LEFT_POS = 0.08f;
+	static constexpr float BEAM_ENERGY_BAR_HEIGHT = 0.04f;
 	static constexpr float BEAM_ENERGY_BAR_WIDTH = 0.1f;
 	static constexpr glm::vec4 white{1.0f};
 	static constexpr glm::vec4 black{0.0f, 0.0f, 0.0f, 1.0f};
@@ -330,8 +330,8 @@ private:
 	ProgressBarView energy_bar{glm::vec2(BEAM_ENERGY_BAR_LEFT_POS, BEAM_ENERGY_BAR_TOP_POS),
 	                           glm::vec2(BEAM_ENERGY_BAR_WIDTH, BEAM_ENERGY_BAR_HEIGHT), remaining_capacity_, white,
 	                           black};
-	ProgressBarView target_health_bar{glm::vec2{0.05f, 0.0f},
-	                                  glm::vec2{0.02f, 0.07f},
+	ProgressBarView target_health_bar{glm::vec2{0.05f, 0.01f},
+	                                  glm::vec2{0.05f, 0.02f},
 	                                  0.0f, white, black};
 
     std::optional<float> target_health_ = std::nullopt;
