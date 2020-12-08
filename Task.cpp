@@ -61,24 +61,24 @@ ResultType TrajectTask::UpdateTask(float elapsed) {
         }
     }
 
-    notice = "Follow the trajectory over the planet\nYou have finished " + std::to_string(trajectory_next_index) + "/" + std::to_string(targets->size());
+    notice = "Head to the next checkpoint!\nCheckpoint: " + std::to_string(trajectory_next_index) + "/" + std::to_string(targets->size());
 
     state = ResultType::NOT_COMPLETE;
 
     if (trajectory_next_index == targets->size()){
-        notice = "Land to gain the score! ";
+        notice = "Land on the planet to complete the task! ";
     }
 
     if (CheckLanded()){
-        if (trajectory_next_index >= targets->size()){
-            notice = "";
-            state = ResultType::SUCCESS;
-            for (auto& t: *targets) {
-                t.transform->scale = glm::vec3(5.f, 5.f, 5.f);
-            }
-        }else{
-            state = ResultType::NOT_COMPLETE_LANDED;
+        // if (trajectory_next_index >= targets->size()){
+        notice = "";
+        state = ResultType::SUCCESS;
+        for (auto& t: *targets) {
+            t.transform->scale = glm::vec3(5.f, 5.f, 5.f);
         }
+        // }else{
+        //     state = ResultType::NOT_COMPLETE_LANDED;
+        // }
     }
 
     return state;
@@ -88,15 +88,25 @@ ResultType CourtTask::UpdateTask(float elapsed) {
     if (state == ResultType::SUCCESS){
         return state;
     }
-
-    court_time += elapsed;
-    court_time = std::min(10.f, court_time);
-
-    float dist = GetDistance();
+    
+    float dist = GetDistance() - COMET_RADIUS - planet_radius;
     if (dist > court_dist){
         court_time = 0.f;
+    } else {
+        court_time += elapsed;
+        court_time = std::min(court_limit, court_time);
     }
-
+    // std::cout << court_time << " " << court_limit << " " << court_dist << std::endl;
+    notice = "";
+    if (court_time < court_limit){
+        notice = "Keep close around the planet!\n";
+        notice += "Courted: "+std::to_string((int)court_time)+"/"+std::to_string((int)court_limit)+"s\n";
+        notice += "Distance: "+std::to_string((int)dist)+"/"+std::to_string(int(court_dist))+"km\n";
+    } else {
+        notice = "Land on the planet to complete the task!";
+    }
+    // std::cout << notice << std::endl;
+    
     if (CheckLanded()){
         state = ResultType::SUCCESS;
         score = (size_t) (court_time * 10.f);

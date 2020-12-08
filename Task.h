@@ -13,6 +13,7 @@
 #include "Sound.hpp"
 #include <memory>
 #include <iostream>
+#include <random>
 
 static constexpr float COMET_RADIUS = 1.f;
 
@@ -116,7 +117,10 @@ private:
 
 class CourtTask : public BaseTask {
 public:
-    CourtTask(Comet *c, Scene::Transform *p, float pr) : BaseTask(c, p, pr) {};
+    CourtTask(Comet *c, Scene::Transform *p, float pr) : BaseTask(c, p, pr) {
+        court_limit = (rand()%5+1) * 5.f;
+        court_dist = (rand()%3+1) * 50.f;
+    };
 
     ~CourtTask() override = default;
 
@@ -125,8 +129,8 @@ public:
 private:
     // variables
     float court_time = 0.f;
-//    float court_limit = 0.f;
-    float court_dist = 100.f;
+    float court_limit;
+    float court_dist ;
 };
 
 class ShootTask : public BaseTask {
