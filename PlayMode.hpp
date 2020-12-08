@@ -66,13 +66,7 @@ struct PlayMode : Mode {
 	float land_limit = 5.f;
 	float landing_dis = FLT_MAX;
 
-	//player info:
-	struct Comet {
-		//transform is at player's feet and will be yawed by mouse left/right motion:
-		Scene::Transform *transform = nullptr;
-		//camera is at player's head and will be pitched by mouse up/down motion:
-		Scene::Camera *camera = nullptr;
-	} comet;
+	Comet comet;
 
 	Scene::Transform *comet_parent = nullptr;
 
@@ -89,8 +83,6 @@ struct PlayMode : Mode {
 	glm::vec3 camera_world_rot;
 
 	glm::vec3 comet_velocity = glm::vec3(0.0f, 0.5f, 0.0f);
-	glm::vec3 dirx = glm::vec3(1.0f, 0.0f, 0.0f);
-	glm::vec3 dirz = glm::vec3(0.0f, 0.0f, 1.0f);
 	glm::vec2 mouse_motion;
 	// glm::vec3 diry = glm::vec3(0.0f, 0.0f, 1.0f);
 	Revolve revolve;
@@ -126,7 +118,9 @@ private:
 
 	void detect_failure_collision();
 	void update_arrow();
+
 	size_t finished_task = 0;
+    std::string notice_str;
 
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_WIDTH = 480;
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_HEIGHT = 270;

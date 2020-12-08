@@ -161,8 +161,10 @@ PlayMode::PlayMode() : scene(*comet_scene) {
                                                                  150.f,
                                                                  &cur_trajectory_target->second); // earth radius?
 
-    planet_name_to_task["Jupiter"] = std::make_shared<CourtTask>(comet.transform, planet_name_to_transform["Jupiter"],
-                                                                 150.f);
+                                                                 planet_name_to_task["Jupiter"] = std::make_shared<CourtTask>(
+                                                                         comet.transform,
+                                                                         planet_name_to_transform["Jupiter"],
+                                                                         150.f);
     // todo shoot task -> asteroids
     planet_name_to_task["Mars"] = std::make_shared<ShootTask>(comet.transform, planet_name_to_transform["Mars"], 150.f);
 
@@ -328,8 +330,8 @@ void PlayMode::reset_speed() {
     glm::quat rotation = glm::rotation(glm::normalize(comet_velocity), glm::normalize(speed_vector));
     comet.transform->rotation = rotation * comet.transform->rotation;
     comet.transform->scale = glm::vec3(1.0f);
-    dirx = rotation * dirx;
-    dirz = rotation * dirz;
+    comet.dirx = rotation * comet.dirx;
+    comet.dirz = rotation * comet.dirz;
     constexpr float LaunchSpeed = 10.f;
     comet_velocity = speed_vector * LaunchSpeed;
 
@@ -365,24 +367,24 @@ void PlayMode::update(float elapsed) {
             comet_velocity = (deltav + new_comet_velocity) * 0.995f;
         else
             comet_velocity = new_comet_velocity * 0.995f;
-        dirx = rotation * dirx;
-        dirz = rotation * dirz;
+        comet.dirx = rotation * comet.dirx;
+        comet.dirz = rotation * comet.dirz;
 
         comet.transform->rotation = rotation * comet.transform->rotation;
         comet.transform->position += comet_velocity * elapsed;
 
         rotation = glm::angleAxis(glm::radians(move.z * elapsed * 45), glm::normalize(comet_velocity));
         comet.transform->rotation = rotation * comet.transform->rotation;
-        dirx = rotation * dirx;
-        dirz = rotation * dirz;
+        comet.dirx = rotation * comet.dirx;
+        comet.dirz = rotation * comet.dirz;
 
-        glm::quat rotation_x = glm::angleAxis(-mouse_motion.x * comet.camera->fovy * elapsed, dirz);
-        glm::quat rotation_y = glm::angleAxis(-mouse_motion.y * comet.camera->fovy * elapsed, dirx);
+        glm::quat rotation_x = glm::angleAxis(-mouse_motion.x * comet.camera->fovy * elapsed, comet.dirz);
+        glm::quat rotation_y = glm::angleAxis(-mouse_motion.y * comet.camera->fovy * elapsed, comet.dirx);
 
         comet_velocity = rotation_x * rotation_y * comet_velocity;
         comet.transform->rotation = rotation_x * rotation_y * comet.transform->rotation;
-        dirx = rotation_x * dirx;
-        dirz = rotation_y * dirz;
+        comet.dirx = rotation_x * comet.dirx;
+        comet.dirz = rotation_y * comet.dirz;
 
     }
 
@@ -455,10 +457,11 @@ void PlayMode::update(float elapsed) {
         assert(task_pair != planet_name_to_task.end());
         auto task = task_pair->second;
         ResultType result = task->UpdateTask(elapsed);
+        notice_str = task->GetNotice();
         if (result == ResultType::NOT_COMPLETE) {
             return;
         }
-        if (result == ResultType::NOT_COMPLETE_LANDED){
+        if (result == ResultType::NOT_COMPLETE_LANDED) {
             state = GameState::Landed;
             comet.transform->parent = ongoing_task_planet;
             glm::vec3 planet_world_position = ongoing_task_planet->position;
@@ -494,22 +497,27 @@ void PlayMode::update(float elapsed) {
     }
 
     // 3. if key E pressed -> within a certain distance to one planet -> set ongoing task
-    // TODO
-    if (key_e.pressed){
-        for (auto transform : planet_transforms) {
-            BaseTask *t = planet_name_to_task[transform->name].get();
-            assert(t);
-            if (t->GetState() != ResultType::SUCCESS) {
-                glm::vec3 planet_pos = transform->position;
-                float comet_planet_dist = glm::distance(comet.transform->position, planet_pos);
-                if (comet_planet_dist < 1000.f) {
+    notice_str = "";
+    for (auto transform : planet_transforms) {
+        BaseTask *t = planet_name_to_task[transform->name].get();
+        assert(t);
+        if (t->GetState() != ResultType::SUCCESS) {
+            glm::vec3 planet_pos = transform->position;
+            float comet_planet_dist = glm::distance(comet.transform->position, planet_pos);
+            if (comet_planet_dist < 1000.f) {
+                notice_str = "Press E to start the task";
+                if (key_e.pressed) {
                     ongoing_task_planet = transform;
                     break;
                 }
             }
         }
+    }
+
+    if (ongoing_task_planet) {
         return;
     }
+
 
     // 4. ？
     if (state == GameState::Flying)
@@ -650,6 +658,9 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
                             glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + 0.1f * H + ofs, 0.0),
                             glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
                             glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+        } else if (notice_str.empty()) {
+//            std::string delimiter = "\n";
+//            std::string token = s.substr(0, s.find(delimiter));
         }
 
         if (landing_dis < 3000.f && state == GameState::Flying) {
@@ -776,15 +787,15 @@ void PlayMode::detect_failure_collision() {
 
     // for planets
     for (Scene::Transform *transform : planet_transforms) {
-        if (transform == ongoing_task_planet){
+        if (transform == ongoing_task_planet) {
             continue;
         }
 
-        BaseTask * t = planet_name_to_task[transform->name].get();
+        BaseTask *t = planet_name_to_task[transform->name].get();
         assert(t);
         glm::vec3 planet_pos = transform->position;
         float comet_planet_dist = glm::distance(comet.transform->position, planet_pos);
-        if (comet_planet_dist <= COMET_RADIUS + t->planet_radius){
+        if (comet_planet_dist <= COMET_RADIUS + t->planet_radius) {
             state = GameState::Landed;
             comet.transform->parent = transform;
             glm::vec3 planet_world_position = transform->position;
