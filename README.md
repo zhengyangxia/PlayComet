@@ -10,7 +10,7 @@ Screen Shot:
 
 How To Play:
 
-Reach as many planets as you can before crashing into the Sun. Press wasd to move around and qe to tilt. Press the left mouse button to shoot (only in certain tasks).
+Try to approach and complete the tasks of as many planets as you can before crashing into the Sun. Press wasd to move around and qe to tilt. Press the left mouse button to shoot (only in certain tasks).
 
 Sources: 
 Sound Effect:
