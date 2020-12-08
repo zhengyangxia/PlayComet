@@ -5,7 +5,6 @@
 #include "Task.h"
 #include "gl_errors.hpp"
 #include "gl_compile_program.hpp"
-#include "Load.hpp"
 #include "data_path.hpp"
 
 Load<Sound::Sample> landing_sample(LoadTagDefault, []() -> Sound::Sample const * {
@@ -436,7 +435,7 @@ void Shooter::setShooting(bool value) {
     if (value) {
         if (!is_shooting_) {
             is_shooting_ = true;
-            sound_effect = Sound::loop(*laser_sample, 1.0f, 0.0f);
+            sound_effect = Sound::loop(*laser_sample, 0.1f, 0.0f);
         }
     } else {
         if (is_shooting_) {
