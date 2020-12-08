@@ -96,6 +96,7 @@ ResultType ShootTask::UpdateTask(float elapsed) {
 	shooter->setEnabled(true);
     std::optional<ShootingTarget> shooting_result = shooter->updateAndGetBeamIntersection(elapsed);
 	shooter->notify_target_health(std::nullopt);
+    
 	if (shooting_result.has_value() && shooting_result->type == ShootingTargetType::ASTEROID) {
         int asteroid_idx = shooting_result->asteroid_index;
         auto it = std::find(asteroids_indices_current_task.begin(), asteroids_indices_current_task.end(), asteroid_idx);
@@ -131,6 +132,11 @@ ResultType ShootTask::UpdateTask(float elapsed) {
                 flowers[i]->position = glm::vec3(i-1.f, 0.0f, 0.0f);
             }
         }
+    }
+    notice = "Find the flowers hidden in the asteroids!\n";
+    notice += "Flowers: "+std::to_string(num_flower)+"/"+std::to_string(flowers.size());
+    if (num_flower == flowers.size()){
+        notice = "Land on the planet to complete the task!";
     }
     comet->add_arrow(glm::vec4(planet->make_local_to_world()[3],1.0f));
     if (CheckLanded()){
