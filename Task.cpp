@@ -282,7 +282,10 @@ void Shooter::drawHud() {
         return;
     }
     GL_ERRORS();
+    aim_png.draw();
+
     glDisable(GL_DEPTH_TEST);
+
     glUseProgram(program_);
     glBindVertexArray(hud_vao_);
 
