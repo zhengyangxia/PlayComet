@@ -95,7 +95,7 @@ struct PlayMode : Mode {
 	size_t score = 0;
 
 
-	std::priority_queue<std::pair< float, Scene::Transform* >> nearest_3;
+	std::priority_queue<std::pair<float, Scene::Transform* >> nearest_3;
 
 
 	ParticleGenerator *particle_comet_tail;
@@ -118,7 +118,9 @@ private:
 	void shoot();
 	void reset_speed();
 
-	void detect_failure_collision();
+    static constexpr float TASK_DETECT_DIST = 1000.f;
+
+    void detect_failure_collision();
 	void update_arrow();
 
 	size_t finished_task = 0;
@@ -127,7 +129,6 @@ private:
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_WIDTH = 480;
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_HEIGHT = 270;
 
-	static constexpr float TRAJECTORY_DETECT_DIST = 500.f;
 
 	Shooter shooter{&comet, &asteroids};
 	SkyBox skybox{};

@@ -292,13 +292,13 @@ PlayMode::~PlayMode() {
 }
 
 bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
-	if (evt.type == SDL_MOUSEBUTTONDOWN && evt.button.button == SDL_BUTTON_LEFT) {
-		shooter.mouse_left_button_pressed = true;
-		return true;
-	} else if (evt.type == SDL_MOUSEBUTTONUP && evt.button.button == SDL_BUTTON_LEFT) {
-		shooter.mouse_left_button_pressed = false;
-		return true;
-	}
+    if (evt.type == SDL_MOUSEBUTTONDOWN && evt.button.button == SDL_BUTTON_LEFT) {
+        shooter.mouse_left_button_pressed = true;
+        return true;
+    } else if (evt.type == SDL_MOUSEBUTTONUP && evt.button.button == SDL_BUTTON_LEFT) {
+        shooter.mouse_left_button_pressed = false;
+        return true;
+    }
 
     if (state == GameState::Launched || state == GameState::Landed) {
         // not accept any input
@@ -473,6 +473,9 @@ void PlayMode::update(float elapsed) {
     if (state == GameState::Landed) {
         land_duration += elapsed;
         comet.camera->transform->position += elapsed * glm::normalize(comet.camera->transform->position) * 1000.f;
+        if (ongoing_task_planet) {
+            after_hit[ongoing_task_planet->name] = land_duration / land_limit;
+        }
         if (land_duration < land_limit) {
             return;
         } else {
@@ -481,6 +484,9 @@ void PlayMode::update(float elapsed) {
             comet.camera->transform->position = camera_world_pos;
             comet.camera->transform->rotation = comet.transform->rotation * initial_camera_rotation;
         }
+
+        ongoing_task_planet = nullptr;
+
         land_duration = 0.f;
         state = GameState::Grounded;
         /*
@@ -545,7 +551,7 @@ void PlayMode::update(float elapsed) {
 
         comet.transform->position = comet_world_position - planet_world_position;
 
-        ongoing_task_planet = nullptr;
+//        ongoing_task_planet = nullptr;
         finished_task += 1;
 
         if (finished_task == planet_transforms.size()) {
@@ -563,7 +569,7 @@ void PlayMode::update(float elapsed) {
         if (t->GetState() != ResultType::SUCCESS) {
             glm::vec3 planet_pos = transform->position;
             float comet_planet_dist = glm::distance(comet.transform->position, planet_pos);
-            if (comet_planet_dist < 1000.f) {
+            if (comet_planet_dist < TASK_DETECT_DIST) {
                 notice_str = "Press E to start the task";
                 if (key_e.pressed) {
                     ongoing_task_planet = transform;
@@ -604,43 +610,7 @@ void PlayMode::update_arrow() {
     while (!nearest_3.empty()) {
         auto p = nearest_3.top();
         auto t = p.second;
-        // 左右: x, 上下: y
-        // glm::vec4 planet_position_in_camera_space =
-        // 	glm::mat4(comet.camera->transform->make_world_to_local()) *
-        // 	glm::vec4(t->position, 1.0f);
-
-        glm::vec4 planet_position_in_clip_space =
-                comet.camera->make_projection() *
-                glm::mat4(comet.camera->transform->make_world_to_local()) *
-                glm::vec4(t->position, 1.0f);
-        planet_position_in_clip_space /= planet_position_in_clip_space.w;
-
-        if (planet_position_in_clip_space.x > -1 && planet_position_in_clip_space.x < 1 &&
-            planet_position_in_clip_space.y > -1 && planet_position_in_clip_space.y < 1 &&
-            planet_position_in_clip_space.z > -1 && planet_position_in_clip_space.z < 1) {
-            //in camera show hud
-        } else {
-            //show arrow
-            float x = planet_position_in_clip_space.x;
-            float y = planet_position_in_clip_space.y;
-            float z = planet_position_in_clip_space.z;
-            x = std::min(0.95f, x);
-            x = std::max(-0.95f, x);
-            y = std::min(0.95f, y);
-            y = std::max(-0.95f, y);
-            if (z > 1 || z < -1) {
-                float x_abs = std::abs(x);
-                float y_abs = std::abs(y);
-                if (x_abs < 0.95 && y_abs < 0.95) {
-                    if (x > 0) {
-                        x = -0.95f;
-                    } else {
-                        x = 0.95f;
-                    }
-                }
-            }
-            comet.arrow_pos.push_back(glm::vec2(x, y));
-        }
+		comet.add_arrow(glm::vec4(t->position, 1.0f));
         nearest_3.pop();
     }
 
@@ -698,7 +668,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
     draw_arrow.draw(comet.arrow_pos);
     comet.arrow_pos.clear();
 
-	shooter.drawHud();
+    shooter.drawHud();
 
     { //use DrawLines to overlay some text:
         glDisable(GL_DEPTH_TEST);
@@ -729,27 +699,29 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
             size_t start_pos = 0;
             size_t line_count = 0;
             while (notice_str.find(delimiter, start_pos) != std::string::npos) {
-                std::string token = notice_str.substr(start_pos, notice_str.find(delimiter, start_pos)-start_pos);
+                std::string token = notice_str.substr(start_pos, notice_str.find(delimiter, start_pos) - start_pos);
 
                 lines.draw_text(token,
                                 glm::vec3(-aspect + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
                                 glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
                                 glm::u8vec4(0x00, 0x00, 0x00, 0x00));
                 lines.draw_text(token,
-                                glm::vec3(-aspect + 0.1f * line_count * H + ofs, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
+                                glm::vec3(-aspect + 0.1f * line_count * H + ofs, 0.55f + 0.1f * H - 0.15f * line_count,
+                                          0.0),
                                 glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
                                 glm::u8vec4(0xff, 0xff, 0xff, 0x00));
                 start_pos += token.length() + delimiter.length();
                 line_count += 1;
             }
             if (notice_str.length() > start_pos) {
-                std::string token = notice_str.substr(start_pos, notice_str.length()-start_pos);
+                std::string token = notice_str.substr(start_pos, notice_str.length() - start_pos);
                 lines.draw_text(token,
                                 glm::vec3(-aspect + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
                                 glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
                                 glm::u8vec4(0x00, 0x00, 0x00, 0x00));
                 lines.draw_text(token,
-                                glm::vec3(-aspect + 0.1f * line_count * H + ofs, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
+                                glm::vec3(-aspect + 0.1f * line_count * H + ofs, 0.55f + 0.1f * H - 0.15f * line_count,
+                                          0.0),
                                 glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
                                 glm::u8vec4(0xff, 0xff, 0xff, 0x00));
             }
@@ -824,9 +796,9 @@ void PlayMode::detect_failure_collision() {
     // for asteroids
     for (auto i = 0; i < asteroids.size(); ++i) {
         auto &t = asteroids[i];
-	    if (t.destroyed) {
-		    continue;
-	    }
+        if (t.destroyed) {
+            continue;
+        }
         if (glm::distance(comet_pos, t.transform->make_local_to_world()[3]) <= COMET_RADIUS + t.radius) {
             state = GameState::EndLose;
             break;
@@ -850,7 +822,7 @@ void PlayMode::detect_failure_collision() {
             glm::vec3 comet_world_position = comet.transform->position;
 
             comet.transform->position = comet_world_position - planet_world_position;
-			Sound::play(*landing_sample, 1.0f, 0.0f);
+            Sound::play(*landing_sample, 1.0f, 0.0f);
             break;
         }
     }
