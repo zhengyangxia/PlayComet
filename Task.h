@@ -42,6 +42,15 @@ struct Asteroid {
     float dist = 0.f;
     float period = 0.f;
     glm::vec3 revolve_vec;
+	bool destroyed = false;
+
+	void destroy() {
+		if (destroyed) {
+			return;
+		}
+		destroyed = true;
+		transform->scale = glm::vec3(0.0f);
+	}
 };
 
 struct TrajectoryTarget {
@@ -145,10 +154,10 @@ public:
 			}
 		}
 		num_flower = 0;
-        flowers = f;
-        for (auto flower : flowers){
-            
+        
+        for (auto flower : f){
             flower->scale *= 0.f;
+            flowers.push_back(flower);
             flower_times.push_back(-1.f);
         }
         while (flower_indices.size() < flowers.size()){

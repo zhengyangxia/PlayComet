@@ -523,7 +523,6 @@ void PlayMode::update(float elapsed) {
     // 4. ？
     if (state == GameState::Flying) {
         update_arrow();
-        shooter.updateAndGetBeamIntersection(elapsed);
     }
 
     // bgm->set_position(comet.camera->transform->position, 1.0f / 60.0f);
@@ -767,6 +766,9 @@ void PlayMode::detect_failure_collision() {
     // for asteroids
     for (auto i = 0; i < asteroids.size(); ++i) {
         auto &t = asteroids[i];
+	    if (t.destroyed) {
+		    continue;
+	    }
         if (glm::distance(comet_pos, t.transform->make_local_to_world()[3]) <= COMET_RADIUS + t.radius) {
             state = GameState::EndLose;
             break;

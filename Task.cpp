@@ -135,16 +135,17 @@ ResultType ShootTask::UpdateTask(float elapsed) {
             asteroids->at(asteroid_idx).transform->scale = glm::vec3(0.0f);
             int internal_idx = (int)(it-asteroids_indices_current_task.begin());
             std::cout << "shot " << internal_idx << std::endl;
-            if (flower_indices.find(internal_idx) != flower_indices.end()){
-                num_flower ++;
-                flowers[internal_idx]->scale = glm::vec3(10.f);
-                flowers[internal_idx]->position = asteroids->at(asteroid_idx).transform->make_local_to_world()[3];
-                flowers[internal_idx]->parent = comet->transform;
-                flowers[internal_idx]->position = glm::vec4(flowers[internal_idx]->position.x, flowers[internal_idx]->position.y, flowers[internal_idx]->position.z, 1.f) * glm::mat4(flowers[internal_idx]->make_world_to_local());
-                flowers[internal_idx]->rotation = glm::angleAxis(glm::radians(45.f), glm::vec3(1.f,0.f,0.f));
-                flower_times[internal_idx] = 2.f;
-            }
-           
+            // if (flower_indices.find(internal_idx) != flower_indices.end()){
+            //     int flower_idx = (int)(flower_indices.find(internal_idx) - flower_indices.begin());
+            //     flowers[flower_idx]->scale = glm::vec3(10.f);
+            //     flowers[flower_idx]->position = asteroids->at(asteroid_idx).transform->make_local_to_world()[3];
+            //     flowers[flower_idx]->parent = comet->transform;
+            //     flowers[flower_idx]->position = glm::vec4(flowers[flower_idx]->position.x, flowers[flower_idx]->position.y, flowers[flower_idx]->position.z, 1.f) * glm::mat4(flowers[flower_idx]->make_world_to_local());
+            //     flowers[flower_idx]->rotation = glm::angleAxis(glm::radians(45.f), glm::vec3(1.f,0.f,0.f));
+            //     flower_times[flower_idx] = 2.f;
+            //     num_flower ++;
+            // }
+
         }
     }
     for (size_t i = 0; i < flower_indices.size(); i++){
@@ -161,7 +162,7 @@ ResultType ShootTask::UpdateTask(float elapsed) {
     if (CheckLanded()){
 	    shooter->setEnabled(false);
             // state = ResultType::SUCCESS;
-            score = 100;
+        score = (size_t) (num_flower * 50.f);
         Sound::play(*landing_sample, 1.0f, 0.0f);
     }
 
@@ -400,6 +401,9 @@ std::optional<ShootingTarget> Shooter::updateAndGetBeamIntersection(float elapse
     /* intersection with planet is delayed */
     for (size_t asteroid_idx = 0; asteroid_idx < asteroids_->size(); asteroid_idx++) {
         auto &asteroid = asteroids_->at(asteroid_idx);
+        if (asteroid.destroyed) {
+            continue;
+        }
         glm::vec3 sphere_pos = asteroid.transform->make_local_to_world()[3];
         float sphere_radius = asteroid.radius;
         std::optional<float> asteroid_distance = raySphere(ray_start, ray_direction, sphere_pos, sphere_radius);
