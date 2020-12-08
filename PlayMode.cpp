@@ -526,9 +526,10 @@ void PlayMode::update(float elapsed) {
 
 
     // 4. ？
-    if (state == GameState::Flying)
+    if (state == GameState::Flying) {
         update_arrow();
-
+        shooter.updateAndGetBeamIntersection(elapsed);
+    }
 
     // bgm->set_position(comet.camera->transform->position, 1.0f / 60.0f);
 }
@@ -948,41 +949,22 @@ std::optional<PlayMode::ShootingTarget> PlayMode::Shooter::updateAndGetBeamInter
 
 	std::optional<ShootingTarget> current_target;
 
-	for (size_t planet_system_idx = 0;
-	     planet_system_idx < enclosing_play_mode_->planets.planet_systems.size();
-	     planet_system_idx++) {
-		// 1. detect collision with the planet
-		PlanetSystem &system = enclosing_play_mode_->planets.planet_systems.at(planet_system_idx);
-
-		glm::vec3 planet_pos = system.transform->make_local_to_world()[3];
-		float planet_radius = enclosing_play_mode_->planets.radius.at(planet_system_idx);
-		std::optional<float> planet_distance = raySphere(ray_start, ray_direction, planet_pos, planet_radius);
-		if (planet_distance.has_value() && planet_distance.value() < BEAM_MAX_LEN &&
-			(!current_target.has_value() || planet_distance.value() < current_target->distance)) {
-			current_target =
-				ShootingTarget{
-					ShootingTargetType::PLANET,
-					(int) planet_system_idx,
-					0,
-					*planet_distance};
-		}
-
-		for (size_t astroid_idx = 0; astroid_idx < system.asteroids.size(); astroid_idx++) {
-			auto &astroid = system.asteroids.at(astroid_idx);
-			glm::vec3 sphere_pos = astroid.transform->make_local_to_world()[3];
-			float sphere_radius = astroid.radius;
-			std::optional<float> astroid_distance = raySphere(ray_start, ray_direction, sphere_pos, sphere_radius);
-			if (astroid_distance.has_value() && astroid_distance.value() < BEAM_MAX_LEN &&
-				(!current_target.has_value() || astroid_distance.value() < current_target->distance)) {
-				current_target =
-					ShootingTarget{
-						ShootingTargetType::ASTROID,
-						(int) planet_system_idx,
-						(int) astroid_idx,
-						*astroid_distance};
-			}
-		}
-	}
+    /* intersection with planet is delayed */
+    for (size_t astroid_idx = 0; astroid_idx < enclosing_play_mode_->asteroids.size(); astroid_idx++) {
+        auto &astroid = enclosing_play_mode_->asteroids.at(astroid_idx);
+        glm::vec3 sphere_pos = astroid.transform->make_local_to_world()[3];
+        float sphere_radius = astroid.radius;
+        std::optional<float> astroid_distance = raySphere(ray_start, ray_direction, sphere_pos, sphere_radius);
+        if (astroid_distance.has_value() && astroid_distance.value() < BEAM_MAX_LEN &&
+            (!current_target.has_value() || astroid_distance.value() < current_target->distance)) {
+            current_target =
+                ShootingTarget{
+                    ShootingTargetType::ASTROID,
+                    0,
+                    (int) astroid_idx,
+                    *astroid_distance};
+        }
+    }
 
 	// set the beam position
 	beam_start_ = glm::vec4(enclosing_play_mode_->comet.transform->make_local_to_world()[3], 1.0f);

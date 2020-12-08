@@ -98,7 +98,7 @@ struct PlayMode : Mode {
 	enum class ShootingTargetType { SUN, PLANET, ASTROID };
 	struct ShootingTarget {
 		ShootingTargetType type;
-		// only valid when type == PLANET or ASTROID
+		// only valid when type == PLANET
 		int planet_system_index;
 		// only valid when type == ASTROID
 		int astroid_index;
