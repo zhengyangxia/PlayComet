@@ -128,24 +128,28 @@ ResultType ShootTask::UpdateTask(float elapsed) {
 
 	shooter->setEnabled(true);
     std::optional<ShootingTarget> shooting_result = shooter->updateAndGetBeamIntersection(elapsed);
-    if (shooting_result.has_value() && shooting_result->type == ShootingTargetType::ASTEROID) {
+	shooter->notify_target_health(std::nullopt);
+	if (shooting_result.has_value() && shooting_result->type == ShootingTargetType::ASTEROID) {
         int asteroid_idx = shooting_result->asteroid_index;
         auto it = std::find(asteroids_indices_current_task.begin(), asteroids_indices_current_task.end(), asteroid_idx);
         if (it != asteroids_indices_current_task.end()) {
-            asteroids->at(asteroid_idx).transform->scale = glm::vec3(0.0f);
-            int internal_idx = (int)(it-asteroids_indices_current_task.begin());
-            std::cout << "shot " << internal_idx << std::endl;
-            // if (flower_indices.find(internal_idx) != flower_indices.end()){
-            //     int flower_idx = (int)(flower_indices.find(internal_idx) - flower_indices.begin());
-            //     flowers[flower_idx]->scale = glm::vec3(10.f);
-            //     flowers[flower_idx]->position = asteroids->at(asteroid_idx).transform->make_local_to_world()[3];
-            //     flowers[flower_idx]->parent = comet->transform;
-            //     flowers[flower_idx]->position = glm::vec4(flowers[flower_idx]->position.x, flowers[flower_idx]->position.y, flowers[flower_idx]->position.z, 1.f) * glm::mat4(flowers[flower_idx]->make_world_to_local());
-            //     flowers[flower_idx]->rotation = glm::angleAxis(glm::radians(45.f), glm::vec3(1.f,0.f,0.f));
-            //     flower_times[flower_idx] = 2.f;
-            //     num_flower ++;
-            // }
-
+            // shooting 0.5 sec would destroy an asteriod
+            asteroids->at(asteroid_idx).health_damage(elapsed * 2);
+	        shooter->notify_target_health(asteroids->at(asteroid_idx).health);
+            if (asteroids->at(asteroid_idx).destroyed) {
+                int internal_idx = (int)(it-asteroids_indices_current_task.begin());
+                std::cout << "shot " << internal_idx << std::endl;
+                // if (flower_indices.find(internal_idx) != flower_indices.end()){
+                //     int flower_idx = (int)(flower_indices.find(internal_idx) - flower_indices.begin());
+                //     flowers[flower_idx]->scale = glm::vec3(10.f);
+                //     flowers[flower_idx]->position = asteroids->at(asteroid_idx).transform->make_local_to_world()[3];
+                //     flowers[flower_idx]->parent = comet->transform;
+                //     flowers[flower_idx]->position = glm::vec4(flowers[flower_idx]->position.x, flowers[flower_idx]->position.y, flowers[flower_idx]->position.z, 1.f) * glm::mat4(flowers[flower_idx]->make_world_to_local());
+                //     flowers[flower_idx]->rotation = glm::angleAxis(glm::radians(45.f), glm::vec3(1.f,0.f,0.f));
+                //     flower_times[flower_idx] = 2.f;
+                //     num_flower ++;
+                // }
+            }
         }
     }
     for (size_t i = 0; i < flower_indices.size(); i++){
@@ -283,67 +287,12 @@ void Shooter::drawHud() {
     }
     GL_ERRORS();
     aim_png.draw();
-
-    glDisable(GL_DEPTH_TEST);
-
-    glUseProgram(program_);
-    glBindVertexArray(hud_vao_);
-
-    constexpr float BAR_TOP_POS = 0.9f;
-    constexpr float BAR_LEFT_POS = 0.7f;
-    constexpr float BAR_HEIGHT = 0.05f;
-    constexpr float BAR_WIDTH = 0.1f;
-    constexpr float BAR_BORDER = 0.002f;
-
-    glm::vec4 white{1.0f, 1.0f, 1.0f, 1.0f};
-    glm::vec4 red{1.0f, 0.0f, 0.0f, 1.0f};
-    glm::vec4 black{0.0f, 0.0f, 0.0f, 1.0f};
-
-    glm::vec4 foreground_color = remaining_capacity_ < CAPACITY_THRESHOLD ? red : white;
-    glm::vec4 background_color = black;
-    float shooter_energy_bar_vertex_position[] = {
-        // the outer background rectangle
-        BAR_LEFT_POS, BAR_TOP_POS, 0.0f, 1.0f,
-        BAR_LEFT_POS, BAR_TOP_POS - BAR_HEIGHT, 0.0f, 1.0f,
-        BAR_LEFT_POS + BAR_WIDTH, BAR_TOP_POS, 0.0f, 1.0f,
-        BAR_LEFT_POS, BAR_TOP_POS - BAR_HEIGHT, 0.0f, 1.0f,
-        BAR_LEFT_POS + BAR_WIDTH, BAR_TOP_POS, 0.0f, 1.0f,
-        BAR_LEFT_POS + BAR_WIDTH, BAR_TOP_POS - BAR_HEIGHT, 0.0f, 1.0f,
-
-        // the inner background rectangle
-        BAR_LEFT_POS + BAR_BORDER, BAR_TOP_POS - BAR_BORDER, 0.0f, 1.0f,
-        BAR_LEFT_POS + BAR_BORDER, BAR_TOP_POS - BAR_HEIGHT + BAR_BORDER, 0.0f, 1.0f,
-        BAR_LEFT_POS + BAR_WIDTH - BAR_BORDER, BAR_TOP_POS - BAR_BORDER, 0.0f, 1.0f,
-        BAR_LEFT_POS + BAR_BORDER, BAR_TOP_POS - BAR_HEIGHT + BAR_BORDER, 0.0f, 1.0f,
-        BAR_LEFT_POS + BAR_WIDTH - BAR_BORDER, BAR_TOP_POS - BAR_BORDER, 0.0f, 1.0f,
-        BAR_LEFT_POS + BAR_WIDTH - BAR_BORDER, BAR_TOP_POS - BAR_HEIGHT + BAR_BORDER, 0.0f, 1.0f,
-
-        // the foreground rectangle
-        BAR_LEFT_POS, BAR_TOP_POS, 0.0f, 1.0f,
-        BAR_LEFT_POS, BAR_TOP_POS - BAR_HEIGHT, 0.0f, 1.0f,
-        BAR_LEFT_POS + BAR_WIDTH * remaining_capacity_ / CAPACITY_MAX, BAR_TOP_POS, 0.0f, 1.0f,
-        BAR_LEFT_POS, BAR_TOP_POS - BAR_HEIGHT, 0.0f, 1.0f,
-        BAR_LEFT_POS + BAR_WIDTH * remaining_capacity_ / CAPACITY_MAX, BAR_TOP_POS, 0.0f, 1.0f,
-        BAR_LEFT_POS + BAR_WIDTH * remaining_capacity_ / CAPACITY_MAX, BAR_TOP_POS - BAR_HEIGHT, 0.0f, 1.0f,
-    };
-    glm::vec4 shooter_energy_bar_vertex_color[] {
-        foreground_color, foreground_color, foreground_color, foreground_color, foreground_color, foreground_color,
-        background_color, background_color, background_color, background_color, background_color, background_color,
-        foreground_color, foreground_color, foreground_color, foreground_color, foreground_color, foreground_color,
-    };
-
-    glBindBuffer(GL_ARRAY_BUFFER, hud_position_vbo_);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(shooter_energy_bar_vertex_position), shooter_energy_bar_vertex_position, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, hud_color_vbo_);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(shooter_energy_bar_vertex_color), shooter_energy_bar_vertex_color, GL_DYNAMIC_DRAW);
-
-    glDrawArrays(GL_TRIANGLES, 0, 6 * 3);
-    GL_ERRORS();
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-    glUseProgram(0);
-    GL_ERRORS();
-    glEnable(GL_DEPTH_TEST);
+	energy_bar.setPercentage(remaining_capacity_ / CAPACITY_MAX);
+	energy_bar.draw();
+	if (target_health_.has_value()) {
+		target_health_bar.setPercentage(*target_health_);
+		target_health_bar.draw();
+	}
 }
 
 
@@ -447,3 +396,114 @@ void Shooter::setShooting(bool value) {
     }
 }
 
+ProgressBarView::ProgressBarView(glm::vec2 position,
+                                 glm::vec2 size,
+                                 float percentage,
+                                 glm::vec4 foreground_color,
+                                 glm::vec4 background_color)
+	: position_{position},
+	  size_{size},
+	  percentage_{percentage},
+	  foreground_color_{foreground_color},
+	  background_color_{background_color} {
+	glGenVertexArrays(1, &vao_);
+	glGenBuffers(1, &position_vbo_);
+	glGenBuffers(1, &color_vbo_);
+	glBindVertexArray(vao_);
+	glBindBuffer(GL_ARRAY_BUFFER, position_vbo_);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *) 0);
+	glBindBuffer(GL_ARRAY_BUFFER, color_vbo_);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *) 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	program_ = gl_compile_program(
+		R"glsl(
+#version 330 core
+layout (location = 0) in vec4 aPos;
+layout (location = 1) in vec4 aColor;
+
+out vec4 Color;
+
+void main()
+{
+    gl_Position = aPos;
+    Color = aColor;
+}
+)glsl",
+		R"glsl(
+#version 330 core
+in vec4 Color;
+out vec4 FragColor;
+void main()
+{
+  FragColor = Color;
+}
+)glsl"
+	);
+	GL_ERRORS();
+}
+
+ProgressBarView::~ProgressBarView() {
+	glDeleteVertexArrays(1, &vao_);
+	glDeleteBuffers(1, &color_vbo_);
+	glDeleteBuffers(1, &position_vbo_);
+	glDeleteProgram(program_);
+	GL_ERRORS();
+}
+
+void ProgressBarView::draw() {
+	constexpr float BAR_BORDER = 0.001f;
+
+	glDisable(GL_DEPTH_TEST);
+
+	glUseProgram(program_);
+	glBindVertexArray(vao_);
+
+	float shooter_energy_bar_vertex_position[] = {
+		// the outer background rectangle
+		position_.x, position_.y, 0.0f, 1.0f,
+		position_.x, position_.y - size_.y, 0.0f, 1.0f,
+		position_.x + size_.x, position_.y, 0.0f, 1.0f,
+		position_.x, position_.y - size_.y, 0.0f, 1.0f,
+		position_.x + size_.x, position_.y, 0.0f, 1.0f,
+		position_.x + size_.x, position_.y - size_.y, 0.0f, 1.0f,
+
+		// the inner background rectangle
+		position_.x + BAR_BORDER, position_.y - BAR_BORDER, 0.0f, 1.0f,
+		position_.x + BAR_BORDER, position_.y - size_.y + BAR_BORDER, 0.0f, 1.0f,
+		position_.x + size_.x - BAR_BORDER, position_.y - BAR_BORDER, 0.0f, 1.0f,
+		position_.x + BAR_BORDER, position_.y - size_.y + BAR_BORDER, 0.0f, 1.0f,
+		position_.x + size_.x - BAR_BORDER, position_.y - BAR_BORDER, 0.0f, 1.0f,
+		position_.x + size_.x - BAR_BORDER, position_.y - size_.y + BAR_BORDER, 0.0f, 1.0f,
+
+		// the foreground rectangle
+		position_.x, position_.y, 0.0f, 1.0f,
+		position_.x, position_.y - size_.y, 0.0f, 1.0f,
+		position_.x + size_.x * percentage_, position_.y, 0.0f, 1.0f,
+		position_.x, position_.y - size_.y, 0.0f, 1.0f,
+		position_.x + size_.x * percentage_, position_.y, 0.0f, 1.0f,
+		position_.x + size_.x * percentage_, position_.y - size_.y, 0.0f, 1.0f,
+	};
+	glm::vec4 shooter_energy_bar_vertex_color[] {
+		foreground_color_, foreground_color_, foreground_color_, foreground_color_, foreground_color_, foreground_color_,
+		background_color_, background_color_, background_color_, background_color_, background_color_, background_color_,
+		foreground_color_, foreground_color_, foreground_color_, foreground_color_, foreground_color_, foreground_color_,
+	};
+
+	glBindBuffer(GL_ARRAY_BUFFER, position_vbo_);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(shooter_energy_bar_vertex_position), shooter_energy_bar_vertex_position, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, color_vbo_);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(shooter_energy_bar_vertex_color), shooter_energy_bar_vertex_color, GL_DYNAMIC_DRAW);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6 * 3);
+	GL_ERRORS();
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+	glUseProgram(0);
+	GL_ERRORS();
+	glEnable(GL_DEPTH_TEST);
+}

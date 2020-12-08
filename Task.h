@@ -45,6 +45,16 @@ struct Asteroid {
     float period = 0.f;
     glm::vec3 revolve_vec;
 	bool destroyed = false;
+	float health = 1.0f;
+	void health_damage(float delta) {
+		if (destroyed) {
+			return;
+		}
+		health = std::max(0.0f, health - delta);
+		if (health < 1e-7) {
+			destroy();
+		}
+	}
 
 	void destroy() {
 		if (destroyed) {
@@ -193,9 +203,39 @@ struct ShootingTarget {
     int asteroid_index;
     float distance;
 };
+
+class ProgressBarView {
+public:
+	ProgressBarView(glm::vec2 position,
+	                glm::vec2 size,
+	                float percentage,
+	                glm::vec4 foreground_color,
+	                glm::vec4 background_color);
+	~ProgressBarView();
+
+	ProgressBarView(const ProgressBarView &) = delete;
+	ProgressBarView& operator=(const ProgressBarView&) = delete;
+	ProgressBarView(ProgressBarView &&) = delete;
+	ProgressBarView& operator=(ProgressBarView &&) = delete;
+
+	void setPercentage(float percentage) { percentage_ = percentage; }
+	void draw();
+
+private:
+	glm::vec2 position_;
+	glm::vec2 size_;
+	float percentage_ = 0.0f;
+	glm::vec4 foreground_color_;
+	glm::vec4 background_color_;
+	GLuint vao_;
+	GLuint position_vbo_;
+	GLuint color_vbo_;
+	GLuint program_;
+};
+
 class Shooter {
 public:
-    explicit Shooter(Comet *comet, std::vector<Asteroid> *asteroids);
+    Shooter(Comet *comet, std::vector<Asteroid> *asteroids);
     ~Shooter();
     Shooter(const Shooter &) = delete;
     Shooter& operator=(const Shooter&) = delete;
@@ -219,6 +259,8 @@ public:
     /* draw the beam if activation is enabled, do nothing otherwise */
     void drawBeam();
 
+	void notify_target_health(std::optional<float> health) { this->target_health_ = health; }
+
     bool mouse_left_button_pressed = false;
 private:
 
@@ -240,7 +282,23 @@ private:
     static constexpr float CAPACITY_MAX = 1.0f;
     static constexpr float CAPACITY_RECOVER_SPEED = 0.1f;
     static constexpr float CAPACITY_DRAIN_SPEED = 0.1f;
-    static constexpr float CAPACITY_THRESHOLD = 0.1f;
+//    static constexpr float CAPACITY_THRESHOLD = 0.1f;
+
+	static constexpr float BEAM_ENERGY_BAR_TOP_POS = 0.9f;
+	static constexpr float BEAM_ENERGY_BAR_LEFT_POS = 0.7f;
+	static constexpr float BEAM_ENERGY_BAR_HEIGHT = 0.05f;
+	static constexpr float BEAM_ENERGY_BAR_WIDTH = 0.1f;
+	static constexpr glm::vec4 white{1.0f};
+	static constexpr glm::vec4 black{0.0f, 0.0f, 0.0f, 1.0f};
+
+	ProgressBarView energy_bar{glm::vec2(BEAM_ENERGY_BAR_LEFT_POS, BEAM_ENERGY_BAR_TOP_POS),
+	                           glm::vec2(BEAM_ENERGY_BAR_WIDTH, BEAM_ENERGY_BAR_HEIGHT), remaining_capacity_, white,
+	                           black};
+	ProgressBarView target_health_bar{glm::vec2{0.05f, 0.0f},
+	                                  glm::vec2{0.02f, 0.07f},
+	                                  0.0f, white, black};
+
+    std::optional<float> target_health_ = std::nullopt;
 
     Comet *comet_ = nullptr;
     std::vector<Asteroid> *asteroids_ = nullptr;
