@@ -11,6 +11,8 @@
 
 #include "Scene.hpp"
 #include "Sound.hpp"
+#include "PngView.hpp"
+#include "data_path.hpp"
 #include <memory>
 #include <iostream>
 #include <random>
@@ -218,6 +220,10 @@ private:
     bool is_shooting_ = false;
 
 	void setShooting(bool value);
+
+	static constexpr float AIM_SIZE_Y = 0.1;
+	static constexpr float AIM_SIZE_X = AIM_SIZE_Y * 9 / 16;
+	PngView aim_png{glm::vec2( - AIM_SIZE_X / 2, AIM_SIZE_Y / 2), glm::vec2(AIM_SIZE_X, AIM_SIZE_Y), data_path("aim.png")};
 
     std::shared_ptr<Sound::PlayingSample> sound_effect;
 

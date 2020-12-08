@@ -524,7 +524,6 @@ void PlayMode::update(float elapsed) {
     // 4. ？
     if (state == GameState::Flying) {
         update_arrow();
-        shooter.updateAndGetBeamIntersection(elapsed);
     }
 
     // bgm->set_position(comet.camera->transform->position, 1.0f / 60.0f);

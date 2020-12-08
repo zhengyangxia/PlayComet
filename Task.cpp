@@ -132,6 +132,7 @@ ResultType ShootTask::UpdateTask(float elapsed) {
         int asteroid_idx = shooting_result->asteroid_index;
         auto it = std::find(asteroids_indices_current_task.begin(), asteroids_indices_current_task.end(), asteroid_idx);
         if (it != asteroids_indices_current_task.end()) {
+            std::cout << "shooting target: " << asteroid_idx << std::endl;
             asteroids->at(asteroid_idx).destroy();
             if (it-asteroids_indices_current_task.begin() == item_idx){
                 has_item = true;
@@ -280,7 +281,10 @@ void Shooter::drawHud() {
         return;
     }
     GL_ERRORS();
+    aim_png.draw();
+
     glDisable(GL_DEPTH_TEST);
+
     glUseProgram(program_);
     glBindVertexArray(hud_vao_);
 

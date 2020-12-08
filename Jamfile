@@ -113,6 +113,7 @@ GAME_NAMES =
 	TexFramebuffer
 	SkyBox
 	DrawArrow
+	PngView
 	Task
 	;
 
