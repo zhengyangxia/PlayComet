@@ -12,6 +12,7 @@
 #include <queue>
 #include <utility>
 #include <algorithm>
+#include <cstdlib>
 
 #include "Revolve.hpp"
 #include "GravityUtil.hpp"

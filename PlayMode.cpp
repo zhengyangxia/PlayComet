@@ -123,7 +123,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
     std::string trajectoryPrefix = "Tra";
     std::set<std::string> planetNames{"Earth", "Jupiter", "Mars"};
     std::string asteroidPrefix = "Asteroid";
-
+	std::vector<Scene::Transform*> flowers;
     for (const std::string &planet_name : planetNames) {
         trajectory_targets.insert(
                 std::pair<std::string, std::vector<TrajectoryTarget>>(planet_name, std::vector<TrajectoryTarget>()));
@@ -150,27 +150,32 @@ PlayMode::PlayMode() : scene(*comet_scene) {
                 trajectory_targets["Mars"].push_back(TrajectoryTarget(&transform, 1));
             }
 
-        }
+        } else if (std::strncmp(transform.name.c_str(), "Cylinder", 8) == 0){
+			std::cout << "found flower" << std::endl;
+			flowers.push_back(&transform);
+		}
 
     }
 
     auto cur_trajectory_target = trajectory_targets.find("Earth");
     assert(cur_trajectory_target != trajectory_targets.end());
 
-    planet_name_to_task["Earth"] = std::make_shared<TrajectTask>(comet.transform, planet_name_to_transform["Earth"],
+
+	// match asteroids to planets and initialize the related info
+    initialize_asteroids(asteroids, planet_transforms);
+
+
+    planet_name_to_task["Earth"] = std::make_shared<TrajectTask>(&comet, planet_name_to_transform["Earth"],
                                                                  150.f,
                                                                  &cur_trajectory_target->second); // earth radius?
 
-                                                                 planet_name_to_task["Jupiter"] = std::make_shared<CourtTask>(
-                                                                         comet.transform,
+    planet_name_to_task["Jupiter"] = std::make_shared<CourtTask>(&comet,
                                                                          planet_name_to_transform["Jupiter"],
                                                                          150.f);
     // todo shoot task -> asteroids
-    planet_name_to_task["Mars"] = std::make_shared<ShootTask>(comet.transform, planet_name_to_transform["Mars"], 150.f);
+    planet_name_to_task["Mars"] = std::make_shared<ShootTask>(&comet, planet_name_to_transform["Mars"], 150.f, asteroids, flowers[0]);
 
-    // match asteroids to planets and initialize the related info
-    initialize_asteroids(asteroids, planet_transforms);
-
+    
     // match planet to sun
     for (auto &ps: planet_transforms) {
         ps->parent = sun;
@@ -418,15 +423,10 @@ void PlayMode::update(float elapsed) {
         if (land_duration < land_limit) {
             return;
         } else {
-            // std::cout << comet.camera->transform->position.x << " " << comet.camera->transform->position.y << " " << comet.camera->transform->position.z << std::endl;
-            // std::cout << comet.transform->position.x << " " << comet.transform->position.y << " " << comet.transform->position.z << std::endl;
-            // std::cout << comet.transform->make_local_to_world()[3].x << " " << comet.transform->make_local_to_world()[3].y << " " << comet.transform->make_local_to_world()[3].z << std::endl;
             camera_world_pos = comet.camera->transform->make_local_to_world()[3];
             comet.camera->transform->parent = comet_parent;
             comet.camera->transform->position = camera_world_pos;
             comet.camera->transform->rotation = comet.transform->rotation * initial_camera_rotation;
-            // std::cout << comet.camera->transform->make_local_to_world()[3].x << " " << comet.camera->transform->make_local_to_world()[3].y << " " << comet.camera->transform->make_local_to_world()[3].z << std::endl;
-            // std::cout << comet.camera->transform->position.x << " " << comet.camera->transform->position.y << " " << comet.camera->transform->position.z << std::endl;
         }
         land_duration = 0.f;
         state = GameState::Grounded;
@@ -571,10 +571,22 @@ void PlayMode::update_arrow() {
             //show arrow
             float x = planet_position_in_clip_space.x;
             float y = planet_position_in_clip_space.y;
+			float z = planet_position_in_clip_space.z;
             x = std::min(0.95f, x);
             x = std::max(-0.95f, x);
             y = std::min(0.95f, y);
             y = std::max(-0.95f, y);
+			if (z>1 || z<-1){
+				float x_abs = std::abs(x);
+				float y_abs = std::abs(y);
+				if (x_abs < 0.95 && y_abs <0.95){
+					if (x>0){
+						x = -0.95f;
+					}else{
+						x = 0.95f;
+					}
+				}
+			}
             arrow_pos.push_back(glm::vec2(x, y));
         }
         nearest_3.pop();
