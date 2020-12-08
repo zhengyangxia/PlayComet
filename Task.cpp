@@ -120,7 +120,7 @@ ResultType ShootTask::UpdateTask(float elapsed) {
 
         }
     }
-    for (int i = 0; i < num_flower; i++){
+    for (unsigned int i = 0; i < num_flower; i++){
         if (flower_times[i] > 0.f){
             flowers[i]->position -= (flowers[i]->position - glm::vec3(i-1.f, 0.0f, 0.0f)) * 5.f * elapsed;
             flower_times[i] -= elapsed;
@@ -141,7 +141,7 @@ ResultType ShootTask::UpdateTask(float elapsed) {
         state = ResultType::SUCCESS;
         score = num_flower * 50;
         Sound::play(*landing_sample, 1.0f, 0.0f);
-        for (int i = 0; i < num_flower; i++){
+        for (unsigned int i = 0; i < num_flower; i++){
             flowers[i]->parent = nullptr;
             flowers[i]->scale *= 0.f;
         }
