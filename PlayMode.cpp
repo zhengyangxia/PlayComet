@@ -165,16 +165,15 @@ PlayMode::PlayMode() : scene(*comet_scene) {
     initialize_asteroids(asteroids, planet_transforms);
 
 
-    planet_name_to_task["Earth"] = std::make_shared<TrajectTask>(comet.transform, planet_name_to_transform["Earth"],
+    planet_name_to_task["Earth"] = std::make_shared<TrajectTask>(&comet, planet_name_to_transform["Earth"],
                                                                  150.f,
                                                                  &cur_trajectory_target->second); // earth radius?
 
-                                                                 planet_name_to_task["Jupiter"] = std::make_shared<CourtTask>(
-                                                                         comet.transform,
+    planet_name_to_task["Jupiter"] = std::make_shared<CourtTask>(&comet,
                                                                          planet_name_to_transform["Jupiter"],
                                                                          150.f);
     // todo shoot task -> asteroids
-    planet_name_to_task["Mars"] = std::make_shared<ShootTask>(comet.transform, planet_name_to_transform["Mars"], 150.f, asteroids, flowers[0]);
+    planet_name_to_task["Mars"] = std::make_shared<ShootTask>(&comet, planet_name_to_transform["Mars"], 150.f, asteroids, flowers[0]);
 
     
     // match planet to sun

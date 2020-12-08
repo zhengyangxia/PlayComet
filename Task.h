@@ -45,21 +45,12 @@ struct TrajectoryTarget {
     int state = 1; // 1 = present, 0 = has been hit
 };
 
-//player info:
-struct Comet {
-    //transform is at player's feet and will be yawed by mouse left/right motion:
-    Scene::Transform *transform = nullptr;
-    //camera is at player's head and will be pitched by mouse up/down motion:
-    Scene::Camera *camera = nullptr;
-    glm::vec3 dirx = glm::vec3(1.0f, 0.0f, 0.0f);
-    glm::vec3 dirz = glm::vec3(0.0f, 0.0f, 1.0f);
-} 
 
 class BaseTask {
 public:
     float planet_radius{};
 
-    BaseTask(Scene::Transform *c, Scene::Transform *p, float pr) : planet_radius{pr}, comet{c}, planet{p},
+    BaseTask(Comet *c, Scene::Transform *p, float pr) : planet_radius{pr}, comet{c}, planet{p},
                                                                    state{ResultType::NOT_COMPLETE} {};
 
     virtual ~BaseTask() = default;
@@ -73,25 +64,25 @@ public:
     std::string GetNotice() { return notice; };
 
 protected:
-    Scene::Transform *comet;
+    Comet *comet;
     Scene::Transform *planet;
     ResultType state{};
     std::string notice{};
     size_t score{};
 
     float GetDistance() {
-        return glm::distance(comet->make_local_to_world()[3], planet->make_local_to_world()[3]);
+        return glm::distance(comet->transform->make_local_to_world()[3], planet->make_local_to_world()[3]);
     }
 
     bool CheckLanded() {
-        float comet_planet_dist = glm::distance(comet->make_local_to_world()[3], planet->make_local_to_world()[3]);
+        float comet_planet_dist = glm::distance(comet->transform->make_local_to_world()[3], planet->make_local_to_world()[3]);
         return comet_planet_dist <= COMET_RADIUS + planet_radius;
     };
 };
 
 class TrajectTask : public BaseTask {
 public:
-    TrajectTask(Scene::Transform *c, Scene::Transform *p, float pr, std::vector<TrajectoryTarget> *trajectory_targets)
+    TrajectTask(Comet *c, Scene::Transform *p, float pr, std::vector<TrajectoryTarget> *trajectory_targets)
             : BaseTask(c, p, pr) {
         assert(trajectory_targets);
         targets = trajectory_targets;
@@ -119,7 +110,7 @@ private:
 
 class CourtTask : public BaseTask {
 public:
-    CourtTask(Scene::Transform *c, Scene::Transform *p, float pr) : BaseTask(c, p, pr) {};
+    CourtTask(Comet *c, Scene::Transform *p, float pr) : BaseTask(c, p, pr) {};
 
     ~CourtTask() override = default;
 
@@ -134,7 +125,7 @@ private:
 
 class ShootTask : public BaseTask {
 public:
-    ShootTask(Scene::Transform *c, Scene::Transform *p, float pr, std::vector<Asteroid> ast, Scene::Transform* f) : BaseTask(c, p, pr) {
+    ShootTask(Comet *c, Scene::Transform *p, float pr, std::vector<Asteroid> ast, Scene::Transform* f) : BaseTask(c, p, pr) {
         for (auto a : ast){
             if (a.transform->parent == p){
                 asteroids.push_back(a);

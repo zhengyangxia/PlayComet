@@ -21,7 +21,6 @@
 #include "Sound.hpp"
 
 #include "Task.h"
-#include "Celestial.hpp"
 
 // xiaoqiao: dirty workaround for namespace stuff.. should fix it later if i have time
 using namespace game_graphics;
