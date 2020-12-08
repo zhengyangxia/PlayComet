@@ -131,9 +131,9 @@ ResultType ShootTask::UpdateTask(float elapsed) {
         int asteroid_idx = shooting_result->asteroid_index;
         auto it = std::find(asteroids_indices_current_task.begin(), asteroids_indices_current_task.end(), asteroid_idx);
         if (it != asteroids_indices_current_task.end()) {
-            asteroids->at(asteroid_idx).transform->scale = glm::vec3(0.0f);
+            // asteroids->at(asteroid_idx).transform->scale = glm::vec3(0.0f);
+            asteroids->at(asteroid_idx).destroy();
             int internal_idx = (int)(it-asteroids_indices_current_task.begin());
-            std::cout << "shot " << internal_idx << std::endl;
             if (flower_indices.find(internal_idx) != flower_indices.end()){
                 flowers[num_flower]->scale = glm::vec3(10.f);
                 flowers[num_flower]->position = asteroids->at(asteroid_idx).transform->make_local_to_world()[3];
@@ -159,9 +159,13 @@ ResultType ShootTask::UpdateTask(float elapsed) {
 
     if (CheckLanded()){
 	    shooter->setEnabled(false);
-            // state = ResultType::SUCCESS;
+        state = ResultType::SUCCESS;
         score = (size_t) (num_flower * 50.f);
         Sound::play(*landing_sample, 1.0f, 0.0f);
+        for (int i = 0; i < num_flower; i++){
+            flowers[i]->parent = nullptr;
+            flowers[i]->scale *= 0.f;
+        }
     }
 
     return ResultType::NOT_COMPLETE;
