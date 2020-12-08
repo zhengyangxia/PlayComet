@@ -8,7 +8,7 @@ ResultType TrajectTask::UpdateTask(float elapsed) {
     if (state == ResultType::SUCCESS){
         return state;
     }
-    // TODO
+
     if (trajectory_next_index >= 0 && trajectory_next_index < targets->size()){
         auto &t = (*targets)[trajectory_next_index];
         t.transform->scale = glm::vec3(5.f, 5.f, 5.f);
@@ -19,10 +19,17 @@ ResultType TrajectTask::UpdateTask(float elapsed) {
         }
     }
 
+    notice = "Follow the trajectory over the planet\nYou have finished " + std::to_string(trajectory_next_index) + "/" + std::to_string(targets->size());
+
     state = ResultType::NOT_COMPLETE;
+
+    if (trajectory_next_index == targets->size()){
+        notice = "Land to gain the score! ";
+    }
 
     if (CheckLanded()){
         if (trajectory_next_index >= targets->size()){
+            notice = "";
             state = ResultType::SUCCESS;
             for (auto& t: *targets) {
                 t.transform->scale = glm::vec3(5.f, 5.f, 5.f);
