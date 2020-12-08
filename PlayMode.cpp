@@ -150,7 +150,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
                 trajectory_targets["Mars"].push_back(TrajectoryTarget(&transform, 1));
             }
 
-        } else if (std::strncmp(transform.name.c_str(), "Cylinder", 8) == 0){
+        } else if (std::strncmp(transform.name.c_str(), "Flower", 8) == 0){
 			std::cout << "found flower" << std::endl;
 			flowers.push_back(&transform);
 		}
@@ -580,7 +580,7 @@ void PlayMode::update_arrow() {
 					}
 				}
 			}
-            arrow_pos.push_back(glm::vec2(x, y));
+            comet.arrow_pos.push_back(glm::vec2(x, y));
         }
         nearest_3.pop();
     }
@@ -634,8 +634,8 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
     add_processor.draw(render_ofb, threshold_ofb, add_ofb);
     tone_mapping_processor.draw(add_ofb, nullptr);
 
-    draw_arrow.draw(arrow_pos);
-    arrow_pos.clear();
+    draw_arrow.draw(comet.arrow_pos);
+    comet.arrow_pos.clear();
 
     { //use DrawLines to overlay some text:
         glDisable(GL_DEPTH_TEST);

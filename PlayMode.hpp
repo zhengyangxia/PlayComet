@@ -94,7 +94,6 @@ struct PlayMode : Mode {
 
 
 	std::priority_queue<std::pair< float, Scene::Transform* >> nearest_3;
-	std::vector<glm::vec2> arrow_pos;
 
 	ParticleGenerator *particle_comet_tail;
 
