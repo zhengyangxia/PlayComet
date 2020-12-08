@@ -116,7 +116,8 @@ struct PlayMode : Mode {
 private:
 	void detect_collision_and_update_state();
 	void shoot();
-	void reset_speed();
+	void reset_speed(glm::vec3 speed_vector);
+	void reset_parent();
 
     static constexpr float TASK_DETECT_DIST = 1000.f;
 
@@ -125,6 +126,7 @@ private:
 
 	size_t finished_task = 0;
     std::string notice_str{};
+	glm::vec3 speed_vector;
 
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_WIDTH = 480;
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_HEIGHT = 270;
