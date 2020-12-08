@@ -66,7 +66,7 @@ struct PlayMode : Mode {
 	float land_limit = 5.f;
 	float landing_dis = FLT_MAX;
 
-	Task::Comet comet;
+	Comet comet;
 
 	Scene::Transform *comet_parent = nullptr;
 
@@ -83,7 +83,10 @@ struct PlayMode : Mode {
 	glm::vec3 camera_world_rot;
 
 	glm::vec3 comet_velocity = glm::vec3(0.0f, 0.5f, 0.0f);
+<<<<<<< HEAD
 	
+=======
+>>>>>>> 858b522376e57f165f4e232ce2b48e57543b2825
 	glm::vec2 mouse_motion;
 	// glm::vec3 diry = glm::vec3(0.0f, 0.0f, 1.0f);
 	Revolve revolve;
@@ -119,7 +122,9 @@ private:
 
 	void detect_failure_collision();
 	void update_arrow();
+
 	size_t finished_task = 0;
+    std::string notice_str;
 
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_WIDTH = 480;
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_HEIGHT = 270;

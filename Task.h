@@ -14,6 +14,16 @@
 
 static constexpr float COMET_RADIUS = 1.f;
 
+//player info:
+struct Comet {
+    //transform is at player's feet and will be yawed by mouse left/right motion:
+    Scene::Transform *transform = nullptr;
+    //camera is at player's head and will be pitched by mouse up/down motion:
+    Scene::Camera *camera = nullptr;
+    glm::vec3 dirx = glm::vec3(1.0f, 0.0f, 0.0f);
+    glm::vec3 dirz = glm::vec3(0.0f, 0.0f, 1.0f);
+};
+
 enum class ResultType {
     NOT_COMPLETE, NOT_COMPLETE_LANDED, SUCCESS
 };
@@ -51,12 +61,16 @@ public:
 
     BaseTask(Scene::Transform *c, Scene::Transform *p, float pr) : planet_radius{pr}, comet{c}, planet{p},
                                                                    state{ResultType::NOT_COMPLETE} {};
+
     virtual ~BaseTask() = default;
+
     virtual ResultType UpdateTask(float elapsed) = 0; //< abstract function
 
-    size_t GetScore(){return score;};
+    size_t GetScore() { return score; };
 
-    ResultType GetState(){ return state;};
+    ResultType GetState() { return state; };
+
+    std::string GetNotice() { return notice; };
 
 protected:
     Scene::Transform *comet;
@@ -65,7 +79,7 @@ protected:
     std::string notice{};
     size_t score{};
 
-    float GetDistance(){
+    float GetDistance() {
         return glm::distance(comet->make_local_to_world()[3], planet->make_local_to_world()[3]);
     }
 
@@ -92,6 +106,7 @@ public:
             // cur_trajectory_target_vec[0].transform->scale = glm::vec3(5.f, 5.f, 5.f);
         }
     };
+
     ~TrajectTask() override = default;
 
     ResultType UpdateTask(float elapsed) override;
@@ -133,6 +148,7 @@ public:
     };
 
     ~ShootTask() override = default;
+
     ResultType UpdateTask(float elapsed) override;
 
 private:
