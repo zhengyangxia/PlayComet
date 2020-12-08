@@ -95,7 +95,7 @@ struct PlayMode : Mode {
 	size_t score = 0;
 
 
-	std::priority_queue<std::pair< float, Scene::Transform* >> nearest_3;
+	std::priority_queue<std::pair<float, Scene::Transform* >> nearest_3;
 
 
 	ParticleGenerator *particle_comet_tail;
@@ -118,7 +118,7 @@ private:
 	void shoot();
 	void reset_speed();
 
-    static constexpr float TASK_DETECT_DIST = 400.f;
+    static constexpr float TASK_DETECT_DIST = 1000.f;
 
     void detect_failure_collision();
 	void update_arrow();

@@ -170,7 +170,7 @@ public:
 
 private:
     // variables
-    int trajectory_next_index = -1; // -1=no targets; index >= 0 =next target; size of trajectory vector -> hit all trajectory targets
+    size_t trajectory_next_index{0}; // -1=no targets; index >= 0 =next target; size of trajectory vector -> hit all trajectory targets
     std::vector<TrajectoryTarget> *targets{nullptr};
 };
 
@@ -316,8 +316,8 @@ private:
     float remaining_capacity_ = 1.0f;
     static constexpr float CAPACITY_MIN = 0.0f;
     static constexpr float CAPACITY_MAX = 1.0f;
-    static constexpr float CAPACITY_RECOVER_SPEED = 0.1f;
-    static constexpr float CAPACITY_DRAIN_SPEED = 0.1f;
+    static constexpr float CAPACITY_RECOVER_SPEED = 0.05f;
+    static constexpr float CAPACITY_DRAIN_SPEED = 0.2f;
 //    static constexpr float CAPACITY_THRESHOLD = 0.1f;
 
 	static constexpr float BEAM_ENERGY_BAR_TOP_POS = -0.45f;
@@ -346,7 +346,7 @@ private:
     glm::vec4 beam_start_ = glm::vec4(-1000.0f, 0.0f, 0.0f, 1.0f);
     glm::vec4 beam_end_ = glm::vec4(1000.0f, 0.0f, 0.0f, 1.0f);
 
-    static constexpr float BEAM_MAX_LEN = 10000.0f;
+    static constexpr float BEAM_MAX_LEN = 1000.0f;
     static constexpr float BEAM_WIDTH = 0.5f;
     glm::vec4 beam_colors_[4] = {
         glm::vec4(0.5f, 0.8f, 5.2f, 1.0f),

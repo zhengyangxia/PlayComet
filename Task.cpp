@@ -101,7 +101,7 @@ ResultType ShootTask::UpdateTask(float elapsed) {
         auto it = std::find(asteroids_indices_current_task.begin(), asteroids_indices_current_task.end(), asteroid_idx);
         if (it != asteroids_indices_current_task.end()) {
 	        // shooting 0.5 sec would destroy an asteriod
-	        asteroids->at(asteroid_idx).health_damage(elapsed * 2);
+	        asteroids->at(asteroid_idx).health_damage(elapsed);
 	        shooter->notify_target_health(asteroids->at(asteroid_idx).health);
 	        if (asteroids->at(asteroid_idx).destroyed) {
 		        int internal_idx = (int) (it - asteroids_indices_current_task.begin());
@@ -124,11 +124,11 @@ ResultType ShootTask::UpdateTask(float elapsed) {
     }
     for (int i = 0; i < num_flower; i++){
         if (flower_times[i] > 0.f){
-            flowers[i]->position -= flowers[i]->position * 5.f * elapsed;
+            flowers[i]->position -= (flowers[i]->position - glm::vec3(i-1.f, 0.0f, 0.0f)) * 5.f * elapsed;
             flower_times[i] -= elapsed;
             if (flower_times[i] <= 0.f){
                 flower_times[i] = 0.f;
-                flowers[i]->position = glm::vec3(0.0f, 0.0f, 0.0f);
+                flowers[i]->position = glm::vec3(i-1.f, 0.0f, 0.0f);
             }
         }
     }
