@@ -38,8 +38,9 @@ ResultType TrajectTask::UpdateTask(float elapsed) {
 
     if (trajectory_next_index == targets->size()){
         notice = "Land on the planet to complete the task!";
+        comet->add_arrow(glm::vec4(planet->make_local_to_world()[3],1.0f));
     }
-
+    
     if (CheckLanded()){
         // if (trajectory_next_index >= targets->size()){
         notice = "";

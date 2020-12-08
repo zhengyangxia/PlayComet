@@ -167,7 +167,6 @@ PlayMode::PlayMode() : scene(*comet_scene) {
             }
 
         } else if (std::strncmp(transform.name.c_str(), "Flower", 6) == 0) {
-            std::cout << "found flower" << std::endl;
             flowers.push_back(&transform);
         }
 
@@ -284,7 +283,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 
     particle_comet_tail = new ParticleGenerator();
 
-    // bgm = Sound::loop_3D(*music_sample, 2.5f, comet.camera->transform->position, 10.0f);
+    bgm = Sound::loop_3D(*music_sample, 2.5f, comet.camera->transform->position, 10.0f);
 }
 
 PlayMode::~PlayMode() {
@@ -596,7 +595,7 @@ void PlayMode::update(float elapsed) {
         update_arrow();
     }
 
-    // bgm->set_position(comet.camera->transform->position, 1.0f / 60.0f);
+    bgm->set_position(comet.camera->transform->position, 1.0f / 60.0f);
 }
 
 void PlayMode::update_arrow() {

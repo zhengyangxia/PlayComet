@@ -76,7 +76,7 @@ struct Asteroid {
     Asteroid(Scene::Transform *t, float p, float d, glm::vec3 vec) : transform(t), dist(d), period(p),
                                                                      revolve_vec(vec) {};
     Scene::Transform *transform;
-    float radius = 15.f;
+    float radius = 10.f;
     float dist = 0.f;
     float period = 0.f;
     glm::vec3 revolve_vec;
