@@ -119,7 +119,7 @@ private:
 	void update_arrow();
 
 	size_t finished_task = 0;
-    std::string notice_str;
+    std::string notice_str{};
 
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_WIDTH = 480;
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_HEIGHT = 270;

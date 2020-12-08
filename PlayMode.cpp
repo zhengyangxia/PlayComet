@@ -158,13 +158,13 @@ PlayMode::PlayMode() : scene(*comet_scene) {
     assert(cur_trajectory_target != trajectory_targets.end());
 
     planet_name_to_task["Earth"] = std::make_shared<TrajectTask>(comet.transform, planet_name_to_transform["Earth"],
-                                                                 150.f,
+                                                                 175.f,
                                                                  &cur_trajectory_target->second); // earth radius?
 
-                                                                 planet_name_to_task["Jupiter"] = std::make_shared<CourtTask>(
-                                                                         comet.transform,
-                                                                         planet_name_to_transform["Jupiter"],
-                                                                         150.f);
+    planet_name_to_task["Jupiter"] = std::make_shared<CourtTask>(
+            comet.transform,
+            planet_name_to_transform["Jupiter"],
+            200.f);
     // todo shoot task -> asteroids
     planet_name_to_task["Mars"] = std::make_shared<ShootTask>(comet.transform, planet_name_to_transform["Mars"], 150.f);
 
@@ -646,9 +646,33 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
                             glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + 0.1f * H + ofs, 0.0),
                             glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
                             glm::u8vec4(0xff, 0xff, 0xff, 0x00));
-        } else if (notice_str.empty()) {
-//            std::string delimiter = "\n";
-//            std::string token = s.substr(0, s.find(delimiter));
+        }
+
+
+        if (notice_str.length() > 0) {
+            std::string delimiter = "\n";
+            size_t start_pos = 0;
+            size_t line_count = 0;
+            while (notice_str.find(delimiter, start_pos) != std::string::npos) {
+                std::string token = notice_str.substr(start_pos, notice_str.find(delimiter));
+                lines.draw_text(token, glm::vec3(-1.6f + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
+                                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+                                glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+                lines.draw_text(token, glm::vec3(-1.6f + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
+                                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+                                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+                start_pos += token.length() + delimiter.length();
+                line_count += 1;
+            }
+            if (notice_str.length() > start_pos){
+                std::string token = notice_str.substr(start_pos, notice_str.length());
+                lines.draw_text(token, glm::vec3(-1.6f + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
+                                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+                                glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+                lines.draw_text(token, glm::vec3(-1.6f + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
+                                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+                                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+            }
         }
 
         if (landing_dis < 3000.f && state == GameState::Flying) {
