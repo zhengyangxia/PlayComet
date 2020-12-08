@@ -475,6 +475,7 @@ void PlayMode::update(float elapsed) {
     if (state == GameState::Landed) {
         land_duration += elapsed;
         comet.camera->transform->position += elapsed * glm::normalize(comet.camera->transform->position) * 1000.f;
+        after_hit[ongoing_task_planet->name] = land_duration/land_limit;
         if (land_duration < land_limit) {
             return;
         } else {
@@ -483,6 +484,9 @@ void PlayMode::update(float elapsed) {
             comet.camera->transform->position = camera_world_pos;
             comet.camera->transform->rotation = comet.transform->rotation * initial_camera_rotation;
         }
+
+        ongoing_task_planet = nullptr;
+
         land_duration = 0.f;
         state = GameState::Grounded;
         /*
@@ -547,7 +551,7 @@ void PlayMode::update(float elapsed) {
 
         comet.transform->position = comet_world_position - planet_world_position;
 
-        ongoing_task_planet = nullptr;
+//        ongoing_task_planet = nullptr;
         finished_task += 1;
 
         if (finished_task == planet_transforms.size()) {
