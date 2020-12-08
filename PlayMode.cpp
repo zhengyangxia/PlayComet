@@ -37,6 +37,12 @@ Load<Scene> comet_scene(LoadTagDefault, []() -> Scene const * {
                                  {"Planet1",   "planet/jupiter.png"},
                                  {"Planet2",   "planet/earth.png"},
                                  {"Planet3",   "planet/mars.png"},
+                                 {"Saturn",    "planet/saturn.png"},
+                                 {"Uranus",    "planet/uranus.png"},
+                                 {"Mercury",   "planet/mercury.png"},
+                                 {"Venus",     "planet/venus.png"},
+                                 {"Venus2",    "planet/venus_at.png"},
+                                 {"Neptune",   "planet/neptune.png"},
                                  {"Asteroid",  "planet/asteroid.png"}
                          };
 
@@ -121,7 +127,8 @@ Load<Sound::Sample> music_sample(LoadTagDefault, []() -> Sound::Sample const * {
 PlayMode::PlayMode() : scene(*comet_scene) {
     std::string planetPrefix = "Planet";
     std::string trajectoryPrefix = "Tra";
-    std::set<std::string> planetNames{"Earth", "Jupiter", "Mars"};
+    std::set<std::string> planetNames{"Earth", "Jupiter", "Mars", "Mercury", "Saturn", "Uranus", "Venus", "Venus2",
+                                      "Neptune"};
     std::string asteroidPrefix = "Asteroid";
     std::vector<Scene::Transform *> flowers;
     for (const std::string &planet_name : planetNames) {
@@ -139,7 +146,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
         } else if (std::strlen(transform.name.c_str()) >= 3 && std::strncmp(transform.name.c_str(), "Sun", 3) == 0) {
             sun = &transform;
         } else if (transform.name.find(asteroidPrefix) == 0) {
-            asteroids.push_back(Asteroid(&transform, get_random_float(50.f, 20.f), get_random_float(1000.f, 500.f),
+            asteroids.push_back(Asteroid(&transform, get_random_float(50.f, 20.f), get_random_float(600.f, 200.f),
                                          get_random_vec()));
         } else if (transform.name.find(trajectoryPrefix) == 0) {
             if (transform.name.find("Earth") == trajectoryPrefix.length() + 1) {
@@ -148,34 +155,87 @@ PlayMode::PlayMode() : scene(*comet_scene) {
                 trajectory_targets["Jupiter"].push_back(TrajectoryTarget(&transform, 1));
             } else if (transform.name.find("Mars") == trajectoryPrefix.length() + 1) {
                 trajectory_targets["Mars"].push_back(TrajectoryTarget(&transform, 1));
+            } else if (transform.name.find("Mercury") == trajectoryPrefix.length() + 1) {
+                trajectory_targets["Mercury"].push_back(TrajectoryTarget(&transform, 1));
+            } else if (transform.name.find("Saturn") == trajectoryPrefix.length() + 1) {
+                trajectory_targets["Saturn"].push_back(TrajectoryTarget(&transform, 1));
+            } else if (transform.name.find("Uranus") == trajectoryPrefix.length() + 1) {
+                trajectory_targets["Uranus"].push_back(TrajectoryTarget(&transform, 1));
+            } else if (transform.name.find("Venus2") == trajectoryPrefix.length() + 1) {
+                trajectory_targets["Venus2"].push_back(TrajectoryTarget(&transform, 1));
+            } else if (transform.name.find("Venus") == trajectoryPrefix.length() + 1) {
+                trajectory_targets["Venus"].push_back(TrajectoryTarget(&transform, 1));
+            } else if (transform.name.find("Neptune") == trajectoryPrefix.length() + 1) {
+                trajectory_targets["Neptune"].push_back(TrajectoryTarget(&transform, 1));
             }
 
-        } else if (std::strncmp(transform.name.c_str(), "Flower", 8) == 0){
-			std::cout << "found flower" << std::endl;
-			flowers.push_back(&transform);
-		}
+        } else if (std::strncmp(transform.name.c_str(), "Flower", 8) == 0) {
+            std::cout << "found flower" << std::endl;
+            flowers.push_back(&transform);
+        }
 
     }
 
     auto cur_trajectory_target = trajectory_targets.find("Earth");
     assert(cur_trajectory_target != trajectory_targets.end());
 
-
-    // match asteroids to planets and initialize the related info
-    initialize_asteroids(asteroids, planet_transforms);
-    planet_name_to_task["Earth"] = std::make_shared<TrajectTask>(&comet, planet_name_to_transform["Earth"],
-                                                                 175.f,
-                                                                 &cur_trajectory_target->second); // earth radius?
-
     planet_name_to_task["Jupiter"] = std::make_shared<CourtTask>(
             &comet,
             planet_name_to_transform["Jupiter"],
             200.f);
 
-    // todo shoot task -> asteroids
-    planet_name_to_task["Mars"] = std::make_shared<ShootTask>(&comet, planet_name_to_transform["Mars"], 150.f,
-                                                              &asteroids, flowers, &shooter);
+    // match asteroids to planets and initialize the related info
+    initialize_asteroids(asteroids, planet_transforms);
 
+    planet_name_to_task["Earth"] = std::make_shared<TrajectTask>(
+            &comet, planet_name_to_transform["Earth"],
+            175.f,
+            &cur_trajectory_target->second); // earth radius?
+
+
+    // todo shoot task -> asteroids
+    planet_name_to_task["Mars"] = std::make_shared<ShootTask>
+            (&comet, planet_name_to_transform["Mars"], 150.f,
+             &asteroids, flowers, &shooter);
+
+    planet_name_to_task["Saturn"] = std::make_shared<CourtTask>(
+            &comet,
+            planet_name_to_transform["Saturn"],
+            100.f);
+
+    cur_trajectory_target = trajectory_targets.find("Mercury");
+    assert(cur_trajectory_target != trajectory_targets.end());
+    planet_name_to_task["Mercury"] = std::make_shared<TrajectTask>(
+            &comet, planet_name_to_transform["Mercury"],
+            150.f,
+            &cur_trajectory_target->second);
+
+
+    planet_name_to_task["Uranus"] = std::make_shared<ShootTask>(
+            &comet,
+            planet_name_to_transform["Uranus"],
+            150.f,
+            &asteroids, flowers, &shooter);
+
+    planet_name_to_task["Venus"] = std::make_shared<CourtTask>(
+            &comet,
+            planet_name_to_transform["Venus"],
+            200.f);
+
+    cur_trajectory_target = trajectory_targets.find("Venus2");
+    assert(cur_trajectory_target != trajectory_targets.end());
+
+    planet_name_to_task["Venus2"] = std::make_shared<TrajectTask>(
+            &comet,
+            planet_name_to_transform["Venus2"],
+            200.f,
+            &cur_trajectory_target->second);
+
+    planet_name_to_task["Neptune"] = std::make_shared<ShootTask>(
+            &comet,
+            planet_name_to_transform["Neptune"],
+            150.f,
+            &asteroids, flowers, &shooter);
 
     // match planet to sun
     for (auto &ps: planet_transforms) {
@@ -234,13 +294,13 @@ PlayMode::~PlayMode() {
 }
 
 bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
-	if (evt.type == SDL_MOUSEBUTTONDOWN && evt.button.button == SDL_BUTTON_LEFT) {
-		shooter.mouse_left_button_pressed = true;
-		return true;
-	} else if (evt.type == SDL_MOUSEBUTTONUP && evt.button.button == SDL_BUTTON_LEFT) {
-		shooter.mouse_left_button_pressed = false;
-		return true;
-	}
+    if (evt.type == SDL_MOUSEBUTTONDOWN && evt.button.button == SDL_BUTTON_LEFT) {
+        shooter.mouse_left_button_pressed = true;
+        return true;
+    } else if (evt.type == SDL_MOUSEBUTTONUP && evt.button.button == SDL_BUTTON_LEFT) {
+        shooter.mouse_left_button_pressed = false;
+        return true;
+    }
 
     if (state == GameState::Launched || state == GameState::Landed) {
         // not accept any input
@@ -415,6 +475,9 @@ void PlayMode::update(float elapsed) {
     if (state == GameState::Landed) {
         land_duration += elapsed;
         comet.camera->transform->position += elapsed * glm::normalize(comet.camera->transform->position) * 1000.f;
+        if (ongoing_task_planet) {
+            after_hit[ongoing_task_planet->name] = land_duration / land_limit;
+        }
         if (land_duration < land_limit) {
             return;
         } else {
@@ -423,6 +486,9 @@ void PlayMode::update(float elapsed) {
             comet.camera->transform->position = camera_world_pos;
             comet.camera->transform->rotation = comet.transform->rotation * initial_camera_rotation;
         }
+
+        ongoing_task_planet = nullptr;
+
         land_duration = 0.f;
         state = GameState::Grounded;
         /*
@@ -487,7 +553,7 @@ void PlayMode::update(float elapsed) {
 
         comet.transform->position = comet_world_position - planet_world_position;
 
-        ongoing_task_planet = nullptr;
+//        ongoing_task_planet = nullptr;
         finished_task += 1;
 
         if (finished_task == planet_transforms.size()) {
@@ -505,7 +571,7 @@ void PlayMode::update(float elapsed) {
         if (t->GetState() != ResultType::SUCCESS) {
             glm::vec3 planet_pos = transform->position;
             float comet_planet_dist = glm::distance(comet.transform->position, planet_pos);
-            if (comet_planet_dist < 1000.f) {
+            if (comet_planet_dist < TASK_DETECT_DIST) {
                 notice_str = "Press E to start the task";
                 if (key_e.pressed) {
                     ongoing_task_planet = transform;
@@ -570,17 +636,17 @@ void PlayMode::update_arrow() {
             x = std::max(-0.95f, x);
             y = std::min(0.95f, y);
             y = std::max(-0.95f, y);
-			if (z>1 || z<-1){
-				float x_abs = std::abs(x);
-				float y_abs = std::abs(y);
-				if (x_abs < 0.95 && y_abs <0.95){
-					if (x>0){
-						x = -0.95f;
-					}else{
-						x = 0.95f;
-					}
-				}
-			}
+            if (z > 1 || z < -1) {
+                float x_abs = std::abs(x);
+                float y_abs = std::abs(y);
+                if (x_abs < 0.95 && y_abs < 0.95) {
+                    if (x > 0) {
+                        x = -0.95f;
+                    } else {
+                        x = 0.95f;
+                    }
+                }
+            }
             comet.arrow_pos.push_back(glm::vec2(x, y));
         }
         nearest_3.pop();
@@ -640,7 +706,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
     draw_arrow.draw(comet.arrow_pos);
     comet.arrow_pos.clear();
 
-	shooter.drawHud();
+    shooter.drawHud();
 
     { //use DrawLines to overlay some text:
         glDisable(GL_DEPTH_TEST);
@@ -671,27 +737,29 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
             size_t start_pos = 0;
             size_t line_count = 0;
             while (notice_str.find(delimiter, start_pos) != std::string::npos) {
-                std::string token = notice_str.substr(start_pos, notice_str.find(delimiter, start_pos)-start_pos);
+                std::string token = notice_str.substr(start_pos, notice_str.find(delimiter, start_pos) - start_pos);
 
                 lines.draw_text(token,
-                                glm::vec3(-1.6f + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
+                                glm::vec3(-aspect + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
                                 glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
                                 glm::u8vec4(0x00, 0x00, 0x00, 0x00));
                 lines.draw_text(token,
-                                glm::vec3(-1.6f + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
+                                glm::vec3(-aspect + 0.1f * line_count * H + ofs, 0.55f + 0.1f * H - 0.15f * line_count,
+                                          0.0),
                                 glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
                                 glm::u8vec4(0xff, 0xff, 0xff, 0x00));
                 start_pos += token.length() + delimiter.length();
                 line_count += 1;
             }
             if (notice_str.length() > start_pos) {
-                std::string token = notice_str.substr(start_pos, notice_str.length()-start_pos);
+                std::string token = notice_str.substr(start_pos, notice_str.length() - start_pos);
                 lines.draw_text(token,
-                                glm::vec3(-1.6f + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
+                                glm::vec3(-aspect + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
                                 glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
                                 glm::u8vec4(0x00, 0x00, 0x00, 0x00));
                 lines.draw_text(token,
-                                glm::vec3(-1.6f + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
+                                glm::vec3(-aspect + 0.1f * line_count * H + ofs, 0.55f + 0.1f * H - 0.15f * line_count,
+                                          0.0),
                                 glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
                                 glm::u8vec4(0xff, 0xff, 0xff, 0x00));
             }
@@ -736,11 +804,11 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
                             glm::u8vec4(0xff, 0xff, 0xff, 0x00));
         } else {
             lines.draw_text(score_str.c_str(),
-                            glm::vec3(-1.6f + 0.1f * H, 0.7f + 0.1f * H, 0.0),
+                            glm::vec3(-aspect + 0.1f * H, 0.7f + 0.1f * H, 0.0),
                             glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
                             glm::u8vec4(0x00, 0x00, 0x00, 0x00));
             lines.draw_text(score_str.c_str(),
-                            glm::vec3(-1.6f + 0.1f * H + ofs, 0.7f + 0.1f * H + ofs, 0.0),
+                            glm::vec3(-aspect + 0.1f * H + ofs, 0.7f + 0.1f * H + ofs, 0.0),
                             glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
                             glm::u8vec4(0xff, 0xff, 0xff, 0x00));
         }
@@ -766,9 +834,9 @@ void PlayMode::detect_failure_collision() {
     // for asteroids
     for (auto i = 0; i < asteroids.size(); ++i) {
         auto &t = asteroids[i];
-	    if (t.destroyed) {
-		    continue;
-	    }
+        if (t.destroyed) {
+            continue;
+        }
         if (glm::distance(comet_pos, t.transform->make_local_to_world()[3]) <= COMET_RADIUS + t.radius) {
             state = GameState::EndLose;
             break;
@@ -792,7 +860,7 @@ void PlayMode::detect_failure_collision() {
             glm::vec3 comet_world_position = comet.transform->position;
 
             comet.transform->position = comet_world_position - planet_world_position;
-			// Sound::play(*landing_sample, 1.0f, 0.0f);
+            Sound::play(*landing_sample, 1.0f, 0.0f);
             break;
         }
     }

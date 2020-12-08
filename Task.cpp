@@ -5,7 +5,6 @@
 #include "Task.h"
 #include "gl_errors.hpp"
 #include "gl_compile_program.hpp"
-#include "Load.hpp"
 #include "data_path.hpp"
 
 Load<Sound::Sample> landing_sample(LoadTagDefault, []() -> Sound::Sample const * {
@@ -133,26 +132,29 @@ ResultType ShootTask::UpdateTask(float elapsed) {
         int asteroid_idx = shooting_result->asteroid_index;
         auto it = std::find(asteroids_indices_current_task.begin(), asteroids_indices_current_task.end(), asteroid_idx);
         if (it != asteroids_indices_current_task.end()) {
-            // shooting 0.5 sec would destroy an asteriod
-            asteroids->at(asteroid_idx).health_damage(elapsed * 2);
+	        // shooting 0.5 sec would destroy an asteriod
+	        asteroids->at(asteroid_idx).health_damage(elapsed * 2);
 	        shooter->notify_target_health(asteroids->at(asteroid_idx).health);
-            if (asteroids->at(asteroid_idx).destroyed) {
-                int internal_idx = (int)(it-asteroids_indices_current_task.begin());
-                std::cout << "shot " << internal_idx << std::endl;
-                // if (flower_indices.find(internal_idx) != flower_indices.end()){
-                //     int flower_idx = (int)(flower_indices.find(internal_idx) - flower_indices.begin());
-                //     flowers[flower_idx]->scale = glm::vec3(10.f);
-                //     flowers[flower_idx]->position = asteroids->at(asteroid_idx).transform->make_local_to_world()[3];
-                //     flowers[flower_idx]->parent = comet->transform;
-                //     flowers[flower_idx]->position = glm::vec4(flowers[flower_idx]->position.x, flowers[flower_idx]->position.y, flowers[flower_idx]->position.z, 1.f) * glm::mat4(flowers[flower_idx]->make_world_to_local());
-                //     flowers[flower_idx]->rotation = glm::angleAxis(glm::radians(45.f), glm::vec3(1.f,0.f,0.f));
-                //     flower_times[flower_idx] = 2.f;
-                //     num_flower ++;
-                // }
-            }
+	        if (asteroids->at(asteroid_idx).destroyed) {
+		        int internal_idx = (int) (it - asteroids_indices_current_task.begin());
+		        if (flower_indices.find(internal_idx) != flower_indices.end()) {
+			        flowers[num_flower]->scale = glm::vec3(10.f);
+			        flowers[num_flower]->position = asteroids->at(asteroid_idx).transform->make_local_to_world()[3];
+			        flowers[num_flower]->parent = comet->transform;
+			        flowers[num_flower]->position = glm::vec4(flowers[num_flower]->position.x,
+			                                                  flowers[num_flower]->position.y,
+			                                                  flowers[num_flower]->position.z,
+			                                                  1.f)
+				        * glm::mat4(flowers[num_flower]->make_world_to_local());
+			        flowers[num_flower]->rotation = glm::angleAxis(glm::radians(45.f), glm::vec3(1.f, 0.f, 0.f));
+			        flower_times[num_flower] = 2.f;
+			        num_flower++;
+		        }
+	        }
+
         }
     }
-    for (size_t i = 0; i < flower_indices.size(); i++){
+    for (int i = 0; i < num_flower; i++){
         if (flower_times[i] > 0.f){
             flowers[i]->position -= flowers[i]->position * 5.f * elapsed;
             flower_times[i] -= elapsed;
@@ -165,9 +167,13 @@ ResultType ShootTask::UpdateTask(float elapsed) {
 
     if (CheckLanded()){
 	    shooter->setEnabled(false);
-            // state = ResultType::SUCCESS;
+        state = ResultType::SUCCESS;
         score = (size_t) (num_flower * 50.f);
         Sound::play(*landing_sample, 1.0f, 0.0f);
+        for (int i = 0; i < num_flower; i++){
+            flowers[i]->parent = nullptr;
+            flowers[i]->scale *= 0.f;
+        }
     }
 
     return ResultType::NOT_COMPLETE;
@@ -386,7 +392,7 @@ void Shooter::setShooting(bool value) {
     if (value) {
         if (!is_shooting_) {
             is_shooting_ = true;
-            sound_effect = Sound::loop(*laser_sample, 1.0f, 0.0f);
+            sound_effect = Sound::loop(*laser_sample, 0.1f, 0.0f);
         }
     } else {
         if (is_shooting_) {

@@ -17,6 +17,7 @@
 #include <iostream>
 #include <random>
 #include <optional>
+#include "Load.hpp"
 #include <set>
 
 static constexpr float COMET_RADIUS = 1.f;
@@ -271,7 +272,7 @@ private:
 
 	void setShooting(bool value);
 
-	static constexpr float AIM_SIZE_Y = 0.1;
+	static constexpr float AIM_SIZE_Y = 0.1f;
 	static constexpr float AIM_SIZE_X = AIM_SIZE_Y * 9 / 16;
 	PngView aim_png{glm::vec2( - AIM_SIZE_X / 2, AIM_SIZE_Y / 2), glm::vec2(AIM_SIZE_X, AIM_SIZE_Y), data_path("aim.png")};
 
@@ -326,3 +327,5 @@ private:
 
     GLuint program_;
 };
+
+extern Load<Sound::Sample> landing_sample;
