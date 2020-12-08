@@ -2,7 +2,7 @@
 
 Author: Yunfei Cheng, Zizhuo Lin, Xiaoqiao Xu, Zhengyang Xia
 
-Design: (TODO: In two sentences or fewer, describe what is new and interesting about your game.)
+Design: A romantic comet wanders in the vast universe, meeting and courting different planets in its way :D
 
 Screen Shot:
 
@@ -10,9 +10,9 @@ Screen Shot:
 
 How To Play:
 
-Reach as many planets as you can before crashing into the Sun. Press wasd to move around and qe to tilt.
+Reach as many planets as you can before crashing into the Sun. Press wasd to move around and qe to tilt. Press the left mouse button to shoot (only in certain tasks).
 
-Sources: (TODO: list a source URL for any assets you did not create yourself. Make sure you have a license for the asset.)
+Sources: 
 Sound Effect:
 BGM: https://freepd.com/ Mana Two Part 2
 Comet hit: https://freesound.org/people/HxcPotato/sounds/160883/
