@@ -31,6 +31,41 @@ struct Comet {
     glm::vec3 dirx = glm::vec3(1.0f, 0.0f, 0.0f);
     glm::vec3 dirz = glm::vec3(0.0f, 0.0f, 1.0f);
     std::vector<glm::vec2> arrow_pos;
+
+    void add_arrow(glm::vec4 pos){
+        glm::vec4 planet_position_in_clip_space =
+                camera->make_projection() *
+                glm::mat4(camera->transform->make_world_to_local()) *
+                pos;
+        planet_position_in_clip_space /= planet_position_in_clip_space.w;
+
+        if (planet_position_in_clip_space.x > -1 && planet_position_in_clip_space.x < 1 &&
+            planet_position_in_clip_space.y > -1 && planet_position_in_clip_space.y < 1 &&
+            planet_position_in_clip_space.z > -1 && planet_position_in_clip_space.z < 1) {
+            //in camera show hud
+        } else {
+            //show arrow
+            float x = planet_position_in_clip_space.x;
+            float y = planet_position_in_clip_space.y;
+            float z = planet_position_in_clip_space.z;
+            x = std::min(0.95f, x);
+            x = std::max(-0.95f, x);
+            y = std::min(0.95f, y);
+            y = std::max(-0.95f, y);
+            if (z > 1 || z < -1) {
+                float x_abs = std::abs(x);
+                float y_abs = std::abs(y);
+                if (x_abs < 0.95 && y_abs < 0.95) {
+                    if (x > 0) {
+                        x = -0.95f;
+                    } else {
+                        x = 0.95f;
+                    }
+                }
+            }
+            arrow_pos.push_back(glm::vec2(x, y));
+        }
+    }
 };
 
 enum class ResultType {
