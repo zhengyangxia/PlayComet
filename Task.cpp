@@ -133,34 +133,35 @@ ResultType ShootTask::UpdateTask(float elapsed) {
         auto it = std::find(asteroids_indices_current_task.begin(), asteroids_indices_current_task.end(), asteroid_idx);
         if (it != asteroids_indices_current_task.end()) {
             asteroids->at(asteroid_idx).transform->scale = glm::vec3(0.0f);
-            if (it-asteroids_indices_current_task.begin() == item_idx){
-                has_item = true;
-                flower->scale = glm::vec3(10.f);
-                flower->position = asteroids->at(asteroid_idx).transform->make_local_to_world()[3];
-                flower->parent = comet->transform;
-                flower->position = glm::vec4(flower->position.x, flower->position.y, flower->position.z, 1.f) * glm::mat4(flower->make_world_to_local());
-                flower->rotation = glm::angleAxis(glm::radians(45.f), glm::vec3(1.f,0.f,0.f));
+            int internal_idx = (int)(it-asteroids_indices_current_task.begin());
+            std::cout << "shot " << internal_idx << std::endl;
+            if (flower_indices.find(internal_idx) != flower_indices.end()){
+                num_flower ++;
+                flowers[internal_idx]->scale = glm::vec3(10.f);
+                flowers[internal_idx]->position = asteroids->at(asteroid_idx).transform->make_local_to_world()[3];
+                flowers[internal_idx]->parent = comet->transform;
+                flowers[internal_idx]->position = glm::vec4(flowers[internal_idx]->position.x, flowers[internal_idx]->position.y, flowers[internal_idx]->position.z, 1.f) * glm::mat4(flowers[internal_idx]->make_world_to_local());
+                flowers[internal_idx]->rotation = glm::angleAxis(glm::radians(45.f), glm::vec3(1.f,0.f,0.f));
+                flower_times[internal_idx] = 2.f;
             }
            
         }
     }
-
-    if (has_item && flower_time > 0.f){
-        glm::vec3 delta = flower->position;
-        flower->position -= delta * 5.f * elapsed;
-        flower_time -= elapsed;
-        if (flower_time <= 0.f){
-            flower_time = 0.f;
-            flower->position = glm::vec3(0.0f, 0.0f, 0.0f);
+    for (size_t i = 0; i < flower_indices.size(); i++){
+        if (flower_times[i] > 0.f){
+            flowers[i]->position -= flowers[i]->position * 5.f * elapsed;
+            flower_times[i] -= elapsed;
+            if (flower_times[i] <= 0.f){
+                flower_times[i] = 0.f;
+                flowers[i]->position = glm::vec3(0.0f, 0.0f, 0.0f);
+            }
         }
     }
-    // std::cout << flower_time << " " << flower->position.x << " " << flower->position.y << " " << flower->position.z << std::endl;
+
     if (CheckLanded()){
 	    shooter->setEnabled(false);
-        if (has_item){
-            state = ResultType::SUCCESS;
+            // state = ResultType::SUCCESS;
             score = 100;
-        }
         Sound::play(*landing_sample, 1.0f, 0.0f);
     }
 
