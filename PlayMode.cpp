@@ -215,7 +215,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
             &comet,
             planet_name_to_transform["Uranus"],
             150.f,
-            asteroids, flowers[0]);
+            &asteroids, flowers, &shooter);
 
     planet_name_to_task["Venus"] = std::make_shared<CourtTask>(
             &comet,
@@ -235,7 +235,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
             &comet,
             planet_name_to_transform["Neptune"],
             150.f,
-            asteroids, flowers[0]);
+            &asteroids, flowers, &shooter);
 
     // match planet to sun
     for (auto &ps: planet_transforms) {
