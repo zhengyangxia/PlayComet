@@ -674,11 +674,11 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
                 std::string token = notice_str.substr(start_pos, notice_str.find(delimiter, start_pos)-start_pos);
 
                 lines.draw_text(token,
-                                glm::vec3(-1.6f + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
+                                glm::vec3(-aspect + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
                                 glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
                                 glm::u8vec4(0x00, 0x00, 0x00, 0x00));
                 lines.draw_text(token,
-                                glm::vec3(-1.6f + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
+                                glm::vec3(-aspect + 0.1f * line_count * H + ofs, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
                                 glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
                                 glm::u8vec4(0xff, 0xff, 0xff, 0x00));
                 start_pos += token.length() + delimiter.length();
@@ -687,11 +687,11 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
             if (notice_str.length() > start_pos) {
                 std::string token = notice_str.substr(start_pos, notice_str.length()-start_pos);
                 lines.draw_text(token,
-                                glm::vec3(-1.6f + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
+                                glm::vec3(-aspect + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
                                 glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
                                 glm::u8vec4(0x00, 0x00, 0x00, 0x00));
                 lines.draw_text(token,
-                                glm::vec3(-1.6f + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
+                                glm::vec3(-aspect + 0.1f * line_count * H + ofs, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
                                 glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
                                 glm::u8vec4(0xff, 0xff, 0xff, 0x00));
             }
@@ -736,11 +736,11 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
                             glm::u8vec4(0xff, 0xff, 0xff, 0x00));
         } else {
             lines.draw_text(score_str.c_str(),
-                            glm::vec3(-1.6f + 0.1f * H, 0.7f + 0.1f * H, 0.0),
+                            glm::vec3(-aspect + 0.1f * H, 0.7f + 0.1f * H, 0.0),
                             glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
                             glm::u8vec4(0x00, 0x00, 0x00, 0x00));
             lines.draw_text(score_str.c_str(),
-                            glm::vec3(-1.6f + 0.1f * H + ofs, 0.7f + 0.1f * H + ofs, 0.0),
+                            glm::vec3(-aspect + 0.1f * H + ofs, 0.7f + 0.1f * H + ofs, 0.0),
                             glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
                             glm::u8vec4(0xff, 0xff, 0xff, 0x00));
         }
