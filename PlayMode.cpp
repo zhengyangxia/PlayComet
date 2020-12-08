@@ -26,7 +26,6 @@ Load<MeshBuffer> comet_meshes(LoadTagDefault, []() -> MeshBuffer const * {
 Load<Scene> comet_scene(LoadTagDefault, []() -> Scene const * {
     return new Scene(data_path("comet.scene"),
                      [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name) {
-						 std::cout << mesh_name << std::endl;
                          Mesh const &mesh = comet_meshes->lookup(mesh_name);
                          scene.drawables.emplace_back(transform);
                          Scene::Drawable &drawable = scene.drawables.back();
@@ -175,7 +174,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 
     // todo shoot task -> asteroids
     planet_name_to_task["Mars"] = std::make_shared<ShootTask>(&comet, planet_name_to_transform["Mars"], 150.f,
-                                                              &asteroids, flowers[0], &shooter);
+                                                              &asteroids, flowers, &shooter);
 
 
     // match planet to sun
@@ -524,7 +523,6 @@ void PlayMode::update(float elapsed) {
     // 4. ？
     if (state == GameState::Flying) {
         update_arrow();
-        shooter.updateAndGetBeamIntersection(elapsed);
     }
 
     // bgm->set_position(comet.camera->transform->position, 1.0f / 60.0f);
@@ -768,6 +766,9 @@ void PlayMode::detect_failure_collision() {
     // for asteroids
     for (auto i = 0; i < asteroids.size(); ++i) {
         auto &t = asteroids[i];
+	    if (t.destroyed) {
+		    continue;
+	    }
         if (glm::distance(comet_pos, t.transform->make_local_to_world()[3]) <= COMET_RADIUS + t.radius) {
             state = GameState::EndLose;
             break;

@@ -11,11 +11,14 @@
 
 #include "Scene.hpp"
 #include "Sound.hpp"
+#include "PngView.hpp"
+#include "data_path.hpp"
 #include <memory>
 #include <iostream>
 #include <random>
 #include <optional>
 #include "Load.hpp"
+#include <set>
 
 static constexpr float COMET_RADIUS = 1.f;
 
@@ -42,6 +45,15 @@ struct Asteroid {
     float dist = 0.f;
     float period = 0.f;
     glm::vec3 revolve_vec;
+	bool destroyed = false;
+
+	void destroy() {
+		if (destroyed) {
+			return;
+		}
+		destroyed = true;
+		transform->scale = glm::vec3(0.0f);
+	}
 };
 
 struct TrajectoryTarget {
@@ -137,18 +149,25 @@ private:
 
 class ShootTask : public BaseTask {
 public:
-	ShootTask(Comet *c, Scene::Transform *p, float pr, std::vector<Asteroid> *ast, Scene::Transform *f, Shooter *shooter)
+	ShootTask(Comet *c, Scene::Transform *p, float pr, std::vector<Asteroid> *ast, std::vector<Scene::Transform*> f, Shooter *shooter)
 		: BaseTask(c, p, pr), shooter{shooter}, asteroids{ast} {
 		for (size_t i = 0; i < ast->size(); i++) {
 			if (ast->at(i).transform->parent == p) {
 				asteroids_indices_current_task.push_back((int)i);
 			}
 		}
-		has_item = false;
-		item_idx = rand()%asteroids_indices_current_task.size();
-		flower = f;
-		flower_time = 2.f;
-		flower->scale *= 0.f;
+		num_flower = 0;
+        
+        for (auto flower : f){
+            flower->scale *= 0.f;
+            flowers.push_back(flower);
+            flower_times.push_back(-1.f);
+        }
+        while (flower_indices.size() < flowers.size()){
+            int idx = rand()%asteroids_indices_current_task.size();
+            std::cout << "inserting "<< idx << std::endl;
+            flower_indices.insert(idx);
+        }
 	};
 
     ~ShootTask() override = default;
@@ -160,10 +179,10 @@ private:
     Shooter *shooter = nullptr;
     std::vector<Asteroid> *asteroids = nullptr;
     std::vector<int> asteroids_indices_current_task;
-    Scene::Transform *flower;
-    int item_idx;
-    bool has_item;
-    float flower_time;
+    std::vector<Scene::Transform*> flowers;
+    std::set<int> flower_indices;
+    std::vector<float> flower_times;
+    int num_flower;
 };
 
 enum class ShootingTargetType { SUN, PLANET, ASTEROID };
@@ -210,6 +229,10 @@ private:
     bool is_shooting_ = false;
 
 	void setShooting(bool value);
+
+	static constexpr float AIM_SIZE_Y = 0.1;
+	static constexpr float AIM_SIZE_X = AIM_SIZE_Y * 9 / 16;
+	PngView aim_png{glm::vec2( - AIM_SIZE_X / 2, AIM_SIZE_Y / 2), glm::vec2(AIM_SIZE_X, AIM_SIZE_Y), data_path("aim.png")};
 
     std::shared_ptr<Sound::PlayingSample> sound_effect;
 
