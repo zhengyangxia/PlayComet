@@ -38,7 +38,6 @@ void DrawArrow::draw(std::vector<glm::vec2> arrow_pos){
         glm::vec2 top(0.0f, 0.03f);
         glm::vec2 normal = glm::normalize(a);
         float angle = glm::acos(glm::dot(normal, glm::vec2(0.0f, 1.0f)));
-        std::cout<<"angle "<<angle<<std::endl;
         glm::mat2 rotation_matrix(
             glm::cos(angle), -glm::sin(angle),
             glm::sin(angle), glm::cos(angle)

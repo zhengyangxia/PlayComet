@@ -556,10 +556,22 @@ void PlayMode::update_arrow() {
             //show arrow
             float x = planet_position_in_clip_space.x;
             float y = planet_position_in_clip_space.y;
+			float z = planet_position_in_clip_space.z;
             x = std::min(0.95f, x);
             x = std::max(-0.95f, x);
             y = std::min(0.95f, y);
             y = std::max(-0.95f, y);
+			if (z>1 || z<-1){
+				float x_abs = std::abs(x);
+				float y_abs = std::abs(y);
+				if (x_abs < 0.95 && y_abs <0.95){
+					if (x>0){
+						x = -0.95f;
+					}else{
+						x = 0.95f;
+					}
+				}
+			}
             arrow_pos.push_back(glm::vec2(x, y));
         }
         nearest_3.pop();
