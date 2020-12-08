@@ -10,6 +10,8 @@
 #pragma once
 
 #include "Scene.hpp"
+#include "Sound.hpp"
+#include <memory>
 #include <iostream>
 
 static constexpr float COMET_RADIUS = 1.f;
@@ -177,7 +179,12 @@ public:
     Shooter& operator=(Shooter &&) = delete;
 
     /* if set to true, the light beam (shooting mechanism) will be enabled */
-    void setEnabled(bool value) { is_enabled_ = value; }
+	void setEnabled(bool value) {
+		if (!value) {
+			setShooting(false);
+		}
+		is_enabled_ = value;
+    }
 
     /* update the beam and shot object if shooter is activated. do nothing otherwise */
     std::optional<ShootingTarget> updateAndGetBeamIntersection(float elapsed);
@@ -195,6 +202,10 @@ private:
 
     /* when set to true, there's a visible beam */
     bool is_shooting_ = false;
+
+	void setShooting(bool value);
+
+    std::shared_ptr<Sound::PlayingSample> sound_effect;
 
     float remaining_capacity_ = 1.0f;
     static constexpr float CAPACITY_MIN = 0.0f;

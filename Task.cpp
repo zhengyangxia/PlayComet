@@ -5,6 +5,8 @@
 #include "Task.h"
 #include "gl_errors.hpp"
 #include "gl_compile_program.hpp"
+#include "Load.hpp"
+#include "data_path.hpp"
 
 Load<Sound::Sample> landing_sample(LoadTagDefault, []() -> Sound::Sample const * {
     return new Sound::Sample(data_path("Mana Two - Part 1.wav"));
@@ -328,19 +330,21 @@ void Shooter::drawHud() {
 std::optional<ShootingTarget> Shooter::updateAndGetBeamIntersection(float elapsed) {
     if (!is_enabled_) { return std::nullopt; }
 
+    // only draw beam when is_enabled && is_shooting_
+
     if (!mouse_left_button_pressed) {
         remaining_capacity_ = std::min<float>(CAPACITY_MAX, remaining_capacity_ + CAPACITY_RECOVER_SPEED * elapsed);
-        is_shooting_ = false;
+        setShooting(false);
         return std::nullopt;
     }
 
     if (mouse_left_button_pressed && remaining_capacity_ <= CAPACITY_MIN) {
-        is_shooting_ = false;
+        setShooting(false);
         return std::nullopt;
     }
 
     assert(remaining_capacity_ > CAPACITY_MIN && mouse_left_button_pressed);
-    is_shooting_ = true;
+    setShooting(true);
     remaining_capacity_ = std::max<float>(CAPACITY_MIN, remaining_capacity_ - CAPACITY_DRAIN_SPEED * elapsed);
 
     glm::vec3 ray_start = comet_->camera->transform->make_local_to_world()[3];
@@ -404,5 +408,19 @@ std::optional<ShootingTarget> Shooter::updateAndGetBeamIntersection(float elapse
     }
 
     return current_target;
+}
+
+void Shooter::setShooting(bool value) {
+    if (value) {
+        if (!is_shooting_) {
+            is_shooting_ = true;
+            sound_effect = Sound::loop();
+        }
+    } else {
+        if (is_shooting_) {
+            is_shooting_ = false;
+            sound_effect->stop();
+        }
+    }
 }
 
