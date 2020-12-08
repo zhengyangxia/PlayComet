@@ -13,6 +13,7 @@
 #include <utility>
 #include <algorithm>
 #include <cstdlib>
+#include <optional>
 
 #include "Revolve.hpp"
 #include "GravityUtil.hpp"
