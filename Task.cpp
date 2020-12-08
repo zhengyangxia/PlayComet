@@ -136,9 +136,10 @@ ResultType ShootTask::UpdateTask(float elapsed) {
             int internal_idx = (int)(it-asteroids_indices_current_task.begin());
             if (flower_indices.find(internal_idx) != flower_indices.end()){
                 flowers[num_flower]->scale = glm::vec3(10.f);
-                flowers[num_flower]->position = asteroids->at(asteroid_idx).transform->make_local_to_world()[3];
+                glm::vec3 start_pos = asteroids->at(asteroid_idx).transform->make_local_to_world()[3];
                 flowers[num_flower]->parent = comet->transform;
-                flowers[num_flower]->position = glm::vec4(flowers[num_flower]->position.x, flowers[num_flower]->position.y, flowers[num_flower]->position.z, 1.f) * glm::mat4(flowers[num_flower]->make_world_to_local());
+                flowers[num_flower]->position = glm::mat4(flowers[num_flower]->make_world_to_local()) * glm::vec4(start_pos.x, start_pos.y, start_pos.z, 1.f);
+                start_pos = flowers[num_flower]->make_local_to_world()[3];
                 flowers[num_flower]->rotation = glm::angleAxis(glm::radians(45.f), glm::vec3(1.f,0.f,0.f));
                 flower_times[num_flower] = 2.f;
                 num_flower ++;
@@ -148,11 +149,11 @@ ResultType ShootTask::UpdateTask(float elapsed) {
     }
     for (int i = 0; i < num_flower; i++){
         if (flower_times[i] > 0.f){
-            flowers[i]->position -= flowers[i]->position * 5.f * elapsed;
+            flowers[i]->position -= (flowers[i]->position - glm::vec3(i-1.f, 0.0f, 0.0f)) * 5.f * elapsed;
             flower_times[i] -= elapsed;
             if (flower_times[i] <= 0.f){
                 flower_times[i] = 0.f;
-                flowers[i]->position = glm::vec3(0.0f, 0.0f, 0.0f);
+                flowers[i]->position = glm::vec3(i-1.f, 0.0f, 0.0f);
             }
         }
     }

@@ -103,8 +103,6 @@ void initialize_asteroids(std::vector<Asteroid> &asteroids, std::vector<Scene::T
     for (unsigned int i = 0; i < asteroids.size(); i++) {
         j = j % planet_transforms.size();
         auto &pt = planet_transforms[j];
-//		planet_system.asteroids.push_back(PlayMode::Asteroid(asteroids[i], get_random_float(50.f, 20.f), get_random_float(1000.f, 500.f), get_random_vec()));
-        // todo -> if shooting task?
         asteroids[i].transform->parent = pt;
         j += 1;
     }
