@@ -46,6 +46,9 @@ struct TrajectoryTarget {
     int state = 1; // 1 = present, 0 = has been hit
 };
 
+// forward declaration for Shooter class
+class Shooter;
+
 
 class BaseTask {
 public:
@@ -126,18 +129,19 @@ private:
 
 class ShootTask : public BaseTask {
 public:
-    ShootTask(Comet *c, Scene::Transform *p, float pr, std::vector<Asteroid> ast, Scene::Transform* f) : BaseTask(c, p, pr) {
-        for (auto a : ast){
-            if (a.transform->parent == p){
-                asteroids.push_back(a);
-            }
-        }
-        has_item = false;
-        item_idx = 0;
-        flower = f;
-        flower_time = 2.f;
-        flower->scale *= 0.f;
-    };
+	ShootTask(Comet *c, Scene::Transform *p, float pr, std::vector<Asteroid> ast, Scene::Transform *f, Shooter *shooter, std::vector<Asteroid> *astroid)
+		: BaseTask(c, p, pr), shooter{shooter} {
+		for (auto a : ast) {
+			if (a.transform->parent == p) {
+				asteroids.push_back(a);
+			}
+		}
+		has_item = false;
+		item_idx = 0;
+		flower = f;
+		flower_time = 2.f;
+		flower->scale *= 0.f;
+	};
 
     ~ShootTask() override = default;
 
@@ -145,9 +149,77 @@ public:
 
 private:
     // variables
+    Shooter *shooter = nullptr;
     std::vector<Asteroid> asteroids;
     Scene::Transform *flower;
     int item_idx;
     bool has_item;
     float flower_time;
+};
+
+enum class ShootingTargetType { SUN, PLANET, ASTROID };
+struct ShootingTarget {
+    ShootingTargetType type;
+    // only valid when type == PLANET
+    int planet_system_index;
+    // only valid when type == ASTROID
+    int astroid_index;
+    float distance;
+};
+class Shooter {
+public:
+    explicit Shooter(Comet *comet, std::vector<Asteroid> *astroids);
+    ~Shooter();
+    Shooter(const Shooter &) = delete;
+    Shooter& operator=(const Shooter&) = delete;
+    Shooter(Shooter &&) = delete;
+    Shooter& operator=(Shooter &&) = delete;
+
+    /* if set to true, the light beam (shooting mechanism) will be enabled */
+    void setEnabled(bool value) { is_enabled_ = value; }
+
+    /* update the beam and shot object if shooter is activated. do nothing otherwise */
+    std::optional<ShootingTarget> updateAndGetBeamIntersection(float elapsed);
+
+    /* draw the shooter-related information, e.g remaining capacity */
+    void drawHud();
+
+    /* draw the beam if activation is enabled, do nothing otherwise */
+    void drawBeam();
+
+    bool mouse_left_button_pressed = false;
+private:
+
+    bool is_enabled_ = true;
+
+    /* when set to true, there's a visible beam */
+    bool is_shooting_ = false;
+
+    float remaining_capacity_ = 1.0f;
+    static constexpr float CAPACITY_MIN = 0.0f;
+    static constexpr float CAPACITY_MAX = 1.0f;
+    static constexpr float CAPACITY_RECOVER_SPEED = 0.1f;
+    static constexpr float CAPACITY_DRAIN_SPEED = 0.1f;
+    static constexpr float CAPACITY_THRESHOLD = 0.1f;
+
+    Comet *comet_ = nullptr;
+    std::vector<Asteroid> *astroids_ = nullptr;
+
+    // [0]: start position, [1] end position
+    glm::vec4 beam_start_ = glm::vec4(-1000.0f, 0.0f, 0.0f, 1.0f);
+    glm::vec4 beam_end_ = glm::vec4(1000.0f, 0.0f, 0.0f, 1.0f);
+
+    static constexpr float BEAM_MAX_LEN = 10000.0f;
+    static constexpr float BEAM_WIDTH = 0.5f;
+    glm::vec4 beam_colors_[4] = {
+        glm::vec4(0.5f, 0.8f, 5.2f, 1.0f),
+        glm::vec4(0.5f, 0.8f, 5.2f, 1.0f),
+        glm::vec4(0.5f, 0.8f, 5.2f, 1.0f),
+        glm::vec4(0.5f, 0.8f, 5.2f, 1.0f),
+    };
+
+    GLuint vao_;
+    GLuint vertex_position_vbo_;
+    GLuint vertex_color_vbo_;
+    GLuint program_;
 };
