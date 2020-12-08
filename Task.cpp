@@ -68,17 +68,25 @@ ResultType ShootTask::UpdateTask(float elapsed) {
         return state;
     }
 
-    if (true){
-        
+    if (true && !has_item){
         has_item = true;
-        flower->scale = glm::vec3(1.f);
+        flower->scale = glm::vec3(10.f);
         flower->position = asteroids[item_idx].transform->make_local_to_world()[3];
     }
 
-    if (has_item){
+    if (has_item && flower_time > 0.f){
+        
         glm::vec3 delta = flower->position - comet->transform->make_local_to_world()[3] - comet->dirz;
+        flower->rotation = comet->transform->rotation;
+        flower->position -= delta * 5.f * elapsed;
+        flower_time -= elapsed;
+        if (flower_time <= 0.f){
+            flower_time = 0.f;
+            flower->parent = comet->transform;
+            flower->position = glm::vec3(0.0f, 0.0f, 1.0f);
+        }
     }
-
+    std::cout << flower_time << " " << flower->position.x << " " << flower->position.y << " " << flower->position.z << std::endl;
     if (CheckLanded()){
         if (has_item){
             state = ResultType::SUCCESS;

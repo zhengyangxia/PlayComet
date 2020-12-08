@@ -26,6 +26,7 @@ Load<MeshBuffer> comet_meshes(LoadTagDefault, []() -> MeshBuffer const * {
 Load<Scene> comet_scene(LoadTagDefault, []() -> Scene const * {
     return new Scene(data_path("comet.scene"),
                      [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name) {
+						 std::cout << mesh_name << std::endl;
                          Mesh const &mesh = comet_meshes->lookup(mesh_name);
                          scene.drawables.emplace_back(transform);
                          Scene::Drawable &drawable = scene.drawables.back();
@@ -151,7 +152,6 @@ PlayMode::PlayMode() : scene(*comet_scene) {
             }
 
         } else if (std::strncmp(transform.name.c_str(), "Cylinder", 8) == 0){
-			std::cout << "found flower" << std::endl;
 			flowers.push_back(&transform);
 		}
 
