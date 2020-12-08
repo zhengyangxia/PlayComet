@@ -15,6 +15,7 @@
 #include <iostream>
 #include <random>
 #include <optional>
+#include "Load.hpp"
 
 static constexpr float COMET_RADIUS = 1.f;
 
@@ -245,3 +246,5 @@ private:
 
     GLuint program_;
 };
+
+extern Load<Sound::Sample> landing_sample;

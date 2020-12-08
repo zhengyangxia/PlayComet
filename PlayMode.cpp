@@ -791,7 +791,7 @@ void PlayMode::detect_failure_collision() {
             glm::vec3 comet_world_position = comet.transform->position;
 
             comet.transform->position = comet_world_position - planet_world_position;
-			// Sound::play(*landing_sample, 1.0f, 0.0f);
+			Sound::play(*landing_sample, 1.0f, 0.0f);
             break;
         }
     }
