@@ -170,7 +170,7 @@ public:
 
 private:
     // variables
-    int trajectory_next_index = -1; // -1=no targets; index >= 0 =next target; size of trajectory vector -> hit all trajectory targets
+    size_t trajectory_next_index{0}; // -1=no targets; index >= 0 =next target; size of trajectory vector -> hit all trajectory targets
     std::vector<TrajectoryTarget> *targets{nullptr};
 };
 
