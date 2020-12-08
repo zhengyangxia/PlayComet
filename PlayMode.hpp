@@ -83,10 +83,6 @@ struct PlayMode : Mode {
 	glm::vec3 camera_world_rot;
 
 	glm::vec3 comet_velocity = glm::vec3(0.0f, 0.5f, 0.0f);
-<<<<<<< HEAD
-	
-=======
->>>>>>> 858b522376e57f165f4e232ce2b48e57543b2825
 	glm::vec2 mouse_motion;
 	// glm::vec3 diry = glm::vec3(0.0f, 0.0f, 1.0f);
 	Revolve revolve;
