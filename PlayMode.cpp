@@ -794,7 +794,7 @@ void PlayMode::detect_failure_collision() {
     if (state == GameState::EndLose) { return; }
 
     // for asteroids
-    for (auto i = 0; i < asteroids.size(); ++i) {
+    for (size_t i = 0; i < asteroids.size(); ++i) {
         auto &t = asteroids[i];
         if (t.destroyed) {
             continue;
