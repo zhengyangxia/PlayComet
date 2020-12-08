@@ -142,7 +142,7 @@ ResultType ShootTask::UpdateTask(float elapsed) {
     if (CheckLanded()){
 	    shooter->setEnabled(false);
         state = ResultType::SUCCESS;
-        score = (size_t) (num_flower * 50.f);
+        score = num_flower * 50;
         Sound::play(*landing_sample, 1.0f, 0.0f);
         for (int i = 0; i < num_flower; i++){
             flowers[i]->parent = nullptr;

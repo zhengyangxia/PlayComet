@@ -210,7 +210,6 @@ public:
         }
         while (flower_indices.size() < flowers.size()){
             int idx = rand()%asteroids_indices_current_task.size();
-            std::cout << "inserting "<< idx << std::endl;
             flower_indices.insert(idx);
         }
 	};
@@ -227,7 +226,7 @@ private:
     std::vector<Scene::Transform*> flowers;
     std::set<int> flower_indices;
     std::vector<float> flower_times;
-    int num_flower;
+    size_t num_flower;
 };
 
 enum class ShootingTargetType { SUN, PLANET, ASTEROID };
