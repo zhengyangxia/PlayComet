@@ -673,7 +673,8 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
             size_t start_pos = 0;
             size_t line_count = 0;
             while (notice_str.find(delimiter, start_pos) != std::string::npos) {
-                std::string token = notice_str.substr(start_pos, notice_str.find(delimiter));
+                std::string token = notice_str.substr(start_pos, notice_str.find(delimiter, start_pos)-start_pos);
+
                 lines.draw_text(token,
                                 glm::vec3(-1.6f + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
                                 glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
@@ -686,7 +687,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
                 line_count += 1;
             }
             if (notice_str.length() > start_pos) {
-                std::string token = notice_str.substr(start_pos, notice_str.length());
+                std::string token = notice_str.substr(start_pos, notice_str.length()-start_pos);
                 lines.draw_text(token,
                                 glm::vec3(-1.6f + 0.1f * line_count * H, 0.55f + 0.1f * H - 0.15f * line_count, 0.0),
                                 glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
@@ -698,53 +699,6 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
             }
         }
 
-        if (landing_dis < 3000.f && state == GameState::Flying) {
-            /* todo
-            std::string dis_str = "Distance: " + std::to_string((int) landing_dis);
-            if (landing_dis < 1000.f && courting < planets.planet_num && planets.hit_bitmap[courting] == false) {
-                dis_str += "/100km";
-                std::string court_str = "Courted: " + std::to_string((int) court_time) + "/10s";
-                lines.draw_text(court_str.c_str(),
-                                glm::vec3(-1.6f + 0.1f * H, 0.25f + 0.1f * H, 0.0),
-                                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-                                glm::u8vec4(0x00, 0x00, 0x00, 0x00));
-                lines.draw_text(court_str.c_str(),
-                                glm::vec3(-1.6f + 0.1f * H + ofs, 0.25f + 0.1f * H + ofs, 0.0),
-                                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-                                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
-                std::string target_str = "Target: " + planets.planet_systems.at(courting).transform->name;
-                lines.draw_text(target_str.c_str(),
-                                glm::vec3(-1.6f + 0.1f * H, 0.4f + 0.1f * H, 0.0),
-                                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-                                glm::u8vec4(0x00, 0x00, 0x00, 0x00));
-                lines.draw_text(target_str.c_str(),
-                                glm::vec3(-1.6f + 0.1f * H + ofs, 0.4f + 0.1f * H + ofs, 0.0),
-                                glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-                                glm::u8vec4(0xff, 0xff, 0xff, 0x00));
-            }
-            lines.draw_text(dis_str.c_str(),
-                            glm::vec3(-1.6f + 0.1f * H, 0.55f + 0.1f * H, 0.0),
-                            glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-                            glm::u8vec4(0x00, 0x00, 0x00, 0x00));
-            lines.draw_text(dis_str.c_str(),
-                            glm::vec3(-1.6f + 0.1f * H + ofs, 0.55f + 0.1f * H + ofs, 0.0),
-                            glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-                            glm::u8vec4(0xff, 0xff, 0xff, 0x00));
-                            */
-        }
-        /*
-        if (task_index == 0) {
-            std::string prompt = "Follow the trajectory over the planet";
-            lines.draw_text(prompt.c_str(),
-                            glm::vec3(-1.6f + 0.1f * H, 0.1f + 0.1f * H, 0.0),
-                            glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-                            glm::u8vec4(0x00, 0x00, 0x00, 0x00));
-            lines.draw_text(prompt.c_str(),
-                            glm::vec3(-1.6f + 0.1f * H + ofs, 0.1f + 0.1f * H + ofs, 0.0),
-                            glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-                            glm::u8vec4(0xff, 0xff, 0xff, 0x00));
-        }
-         */
 
         if (state == GameState::EndWin) {
             std::string prompt = "You have courted all the planets!";
@@ -837,7 +791,7 @@ void PlayMode::detect_failure_collision() {
             glm::vec3 comet_world_position = comet.transform->position;
 
             comet.transform->position = comet_world_position - planet_world_position;
-			Sound::play(*landing_sample, 1.0f, 0.0f);
+			// Sound::play(*landing_sample, 1.0f, 0.0f);
             break;
         }
     }

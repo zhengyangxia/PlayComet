@@ -10,7 +10,10 @@
 #pragma once
 
 #include "Scene.hpp"
+#include "Sound.hpp"
+#include <memory>
 #include <iostream>
+#include <random>
 
 static constexpr float COMET_RADIUS = 1.f;
 
@@ -114,7 +117,10 @@ private:
 
 class CourtTask : public BaseTask {
 public:
-    CourtTask(Comet *c, Scene::Transform *p, float pr) : BaseTask(c, p, pr) {};
+    CourtTask(Comet *c, Scene::Transform *p, float pr) : BaseTask(c, p, pr) {
+        court_limit = (rand()%5+1) * 5.f;
+        court_dist = (rand()%3+1) * 50.f;
+    };
 
     ~CourtTask() override = default;
 
@@ -123,8 +129,8 @@ public:
 private:
     // variables
     float court_time = 0.f;
-//    float court_limit = 0.f;
-    float court_dist = 100.f;
+    float court_limit;
+    float court_dist ;
 };
 
 class ShootTask : public BaseTask {
@@ -177,7 +183,12 @@ public:
     Shooter& operator=(Shooter &&) = delete;
 
     /* if set to true, the light beam (shooting mechanism) will be enabled */
-    void setEnabled(bool value) { is_enabled_ = value; }
+	void setEnabled(bool value) {
+		if (!value) {
+			setShooting(false);
+		}
+		is_enabled_ = value;
+    }
 
     /* update the beam and shot object if shooter is activated. do nothing otherwise */
     std::optional<ShootingTarget> updateAndGetBeamIntersection(float elapsed);
@@ -195,6 +206,10 @@ private:
 
     /* when set to true, there's a visible beam */
     bool is_shooting_ = false;
+
+	void setShooting(bool value);
+
+    std::shared_ptr<Sound::PlayingSample> sound_effect;
 
     float remaining_capacity_ = 1.0f;
     static constexpr float CAPACITY_MIN = 0.0f;

@@ -5,9 +5,15 @@
 #include "Task.h"
 #include "gl_errors.hpp"
 #include "gl_compile_program.hpp"
+#include "Load.hpp"
+#include "data_path.hpp"
 
 Load<Sound::Sample> landing_sample(LoadTagDefault, []() -> Sound::Sample const * {
-    return new Sound::Sample(data_path("hit1.wav"));
+    return new Sound::Sample(data_path("hit-1.wav"));
+});
+
+Load<Sound::Sample> laser_sample(LoadTagDefault, []() -> Sound::Sample const * {
+    return new Sound::Sample(data_path("laser.wav"));
 });
 
 ResultType TrajectTask::UpdateTask(float elapsed) {
@@ -59,25 +65,25 @@ ResultType TrajectTask::UpdateTask(float elapsed) {
         }
     }
 
-    notice = "Follow the trajectory over the planet\nYou have finished " + std::to_string(trajectory_next_index) + "/" + std::to_string(targets->size());
+    notice = "Head to the next checkpoint!\nCheckpoint: " + std::to_string(trajectory_next_index) + "/" + std::to_string(targets->size());
 
     state = ResultType::NOT_COMPLETE;
 
     if (trajectory_next_index == targets->size()){
-        notice = "Land to gain the score! ";
+        notice = "Land on the planet to complete the task! ";
     }
 
     if (CheckLanded()){
-        if (trajectory_next_index >= targets->size()){
-            notice = "";
-            state = ResultType::SUCCESS;
-            for (auto& t: *targets) {
-                t.transform->scale = glm::vec3(5.f, 5.f, 5.f);
-            }
-        }else{
-            state = ResultType::NOT_COMPLETE_LANDED;
+        // if (trajectory_next_index >= targets->size()){
+        notice = "";
+        state = ResultType::SUCCESS;
+        for (auto& t: *targets) {
+            t.transform->scale = glm::vec3(5.f, 5.f, 5.f);
         }
         Sound::play(*landing_sample, 1.0f, 0.0f);
+        // }else{
+        //     state = ResultType::NOT_COMPLETE_LANDED;
+        // }
     }
 
     return state;
@@ -87,15 +93,25 @@ ResultType CourtTask::UpdateTask(float elapsed) {
     if (state == ResultType::SUCCESS){
         return state;
     }
-
-    court_time += elapsed;
-    court_time = std::min(10.f, court_time);
-
-    float dist = GetDistance();
+    
+    float dist = GetDistance() - COMET_RADIUS - planet_radius;
     if (dist > court_dist){
         court_time = 0.f;
+    } else {
+        court_time += elapsed;
+        court_time = std::min(court_limit, court_time);
     }
-
+    // std::cout << court_time << " " << court_limit << " " << court_dist << std::endl;
+    notice = "";
+    if (court_time < court_limit){
+        notice = "Keep close around the planet!\n";
+        notice += "Courted: "+std::to_string((int)court_time)+"/"+std::to_string((int)court_limit)+"s\n";
+        notice += "Distance: "+std::to_string((int)dist)+"/"+std::to_string(int(court_dist))+"km\n";
+    } else {
+        notice = "Land on the planet to complete the task!";
+    }
+    // std::cout << notice << std::endl;
+    
     if (CheckLanded()){
         state = ResultType::SUCCESS;
         score = (size_t) (court_time * 10.f);
@@ -331,19 +347,21 @@ void Shooter::drawHud() {
 std::optional<ShootingTarget> Shooter::updateAndGetBeamIntersection(float elapsed) {
     if (!is_enabled_) { return std::nullopt; }
 
+    // only draw beam when is_enabled && is_shooting_
+
     if (!mouse_left_button_pressed) {
         remaining_capacity_ = std::min<float>(CAPACITY_MAX, remaining_capacity_ + CAPACITY_RECOVER_SPEED * elapsed);
-        is_shooting_ = false;
+        setShooting(false);
         return std::nullopt;
     }
 
     if (mouse_left_button_pressed && remaining_capacity_ <= CAPACITY_MIN) {
-        is_shooting_ = false;
+        setShooting(false);
         return std::nullopt;
     }
 
     assert(remaining_capacity_ > CAPACITY_MIN && mouse_left_button_pressed);
-    is_shooting_ = true;
+    setShooting(true);
     remaining_capacity_ = std::max<float>(CAPACITY_MIN, remaining_capacity_ - CAPACITY_DRAIN_SPEED * elapsed);
 
     glm::vec3 ray_start = comet_->camera->transform->make_local_to_world()[3];
@@ -407,5 +425,19 @@ std::optional<ShootingTarget> Shooter::updateAndGetBeamIntersection(float elapse
     }
 
     return current_target;
+}
+
+void Shooter::setShooting(bool value) {
+    if (value) {
+        if (!is_shooting_) {
+            is_shooting_ = true;
+            sound_effect = Sound::loop(*laser_sample, 1.0f, 0.0f);
+        }
+    } else {
+        if (is_shooting_) {
+            is_shooting_ = false;
+            sound_effect->stop();
+        }
+    }
 }
 
