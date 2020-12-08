@@ -256,11 +256,11 @@ void Shooter::drawBeam() {
 }
 
 void Shooter::drawHud() {
+    aim_png.draw();
     if (!is_enabled_) {
         return;
     }
     GL_ERRORS();
-    aim_png.draw();
 	energy_bar.setPercentage(remaining_capacity_ / CAPACITY_MAX);
 	energy_bar.draw();
 	if (target_health_.has_value()) {
