@@ -6,6 +6,10 @@
 #include "gl_errors.hpp"
 #include "gl_compile_program.hpp"
 
+Load<Sound::Sample> landing_sample(LoadTagDefault, []() -> Sound::Sample const * {
+    return new Sound::Sample(data_path("Mana Two - Part 1.wav"));
+});
+
 ResultType TrajectTask::UpdateTask(float elapsed) {
     if (state == ResultType::SUCCESS){
         return state;
