@@ -320,13 +320,19 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 			return true;
 		}
 	}
-	/*
-	else if (evt.type == SDL_MOUSEBUTTONDOWN) {
-		if (SDL_GetRelativeMouseMode() == SDL_FALSE) {
-			SDL_SetRelativeMouseMode(SDL_TRUE);
-			return true;
-		}
-	} */
+	else if (evt.type == SDL_MOUSEBUTTONDOWN && evt.button.button == SDL_BUTTON_LEFT) {
+		mouse_left.pressed = true;
+		return true;
+
+//		if (SDL_GetRelativeMouseMode() == SDL_FALSE) {
+//			SDL_SetRelativeMouseMode(SDL_TRUE);
+//			return true;
+//		}
+	}
+	else if (evt.type == SDL_MOUSEBUTTONUP && evt.button.button == SDL_BUTTON_LEFT) {
+		mouse_left.pressed = false;
+		return true;
+	}
 	else if (evt.type == SDL_MOUSEMOTION) {
 		mouse_motion = glm::vec2(
 			evt.motion.x / float(window_size.x)-0.5,
@@ -389,11 +395,11 @@ void PlayMode::update(float elapsed) {
 		return;
 	}
 
-	// TODO(xiaoqiao): which branch should I put this in?
-	shooter.updateAndGetBeamIntersection();
-
-	if (state == GameState::Flying)
+	if (state == GameState::Flying) {
 		detect_collision_and_update_state();
+		// TODO(xiaoqiao): which branch should I put this in?
+		shooter.updateAndGetBeamIntersection(elapsed);
+	}
 
 	if (state == GameState::Launched)
 	{
@@ -410,7 +416,6 @@ void PlayMode::update(float elapsed) {
 		}
 		launch_duration = 0.f;
 		state = GameState::Flying;
-		
 		return;
 	}
 
@@ -833,6 +838,9 @@ PlayMode::Shooter::~Shooter() {
 }
 
 void PlayMode::Shooter::drawBeam() {
+	if (!is_enabled_ || !is_shooting_) {
+		return;
+	}
 	GL_ERRORS();
 	glUseProgram(program_);
 	GL_ERRORS();
@@ -870,7 +878,20 @@ void PlayMode::Shooter::drawBeam() {
 	GL_ERRORS();
 }
 
-std::optional<PlayMode::ShootingTarget> PlayMode::Shooter::updateAndGetBeamIntersection() {
+std::optional<PlayMode::ShootingTarget> PlayMode::Shooter::updateAndGetBeamIntersection(float elapsed) {
+	if (!is_enabled_) { return std::nullopt; }
+
+	if (remaining_capacity_ < CAPACITY_THRESHOLD || !enclosing_play_mode_->mouse_left.pressed) {
+		remaining_capacity_ = std::min<float>(CAPACITY_MAX, remaining_capacity_ + CAPACITY_RECOVER_SPEED * elapsed);
+		is_shooting_ = false;
+		return std::nullopt;
+	}
+
+
+	assert(remaining_capacity_ >= CAPACITY_THRESHOLD && enclosing_play_mode_->mouse_left.pressed);
+	is_shooting_ = true;
+	remaining_capacity_ = std::max<float>(CAPACITY_MIN, remaining_capacity_ - CAPACITY_DRAIN_SPEED * elapsed);
+
 	glm::vec3 ray_start = enclosing_play_mode_->comet.camera->transform->make_local_to_world()[3];
 	glm::vec4 ray_direction_homogeneous = glm::mat4(enclosing_play_mode_->comet.camera->transform->make_local_to_world())
 		* glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
@@ -928,7 +949,7 @@ std::optional<PlayMode::ShootingTarget> PlayMode::Shooter::updateAndGetBeamInter
 			glm::vec3 sphere_pos = astroid.transform->make_local_to_world()[3];
 			float sphere_radius = astroid.radius;
 			std::optional<float> astroid_distance = raySphere(ray_start, ray_direction, sphere_pos, sphere_radius);
-			if (astroid_distance.has_value() && planet_distance.value() < BEAM_MAX_LEN &&
+			if (astroid_distance.has_value() && astroid_distance.value() < BEAM_MAX_LEN &&
 				(!current_target.has_value() || astroid_distance.value() < current_target->distance)) {
 				current_target =
 					ShootingTarget{
@@ -950,4 +971,8 @@ std::optional<PlayMode::ShootingTarget> PlayMode::Shooter::updateAndGetBeamInter
 	}
 
 	return current_target;
+}
+
+void PlayMode::Shooter::drawHud() {
+	// TODO(xiaoqiao)
 }
