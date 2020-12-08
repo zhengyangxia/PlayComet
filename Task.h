@@ -322,17 +322,20 @@ private:
 
 	static constexpr float BEAM_ENERGY_BAR_TOP_POS = -0.45f;
 	static constexpr float BEAM_ENERGY_BAR_LEFT_POS = 0.08f;
-	static constexpr float BEAM_ENERGY_BAR_HEIGHT = 0.04f;
+	static constexpr float BEAM_ENERGY_BAR_HEIGHT = 0.03f;
 	static constexpr float BEAM_ENERGY_BAR_WIDTH = 0.1f;
 	static constexpr glm::vec4 white{1.0f};
 	static constexpr glm::vec4 black{0.0f, 0.0f, 0.0f, 1.0f};
-
+	static constexpr glm::vec4 color_lightblue{42.f/256, 72.f/256, 193.f/256, 1.0f};
+	static constexpr glm::vec4 color_lightred{0.84f, 0.33f, 0.32f, 1.0f};
 	ProgressBarView energy_bar{glm::vec2(BEAM_ENERGY_BAR_LEFT_POS, BEAM_ENERGY_BAR_TOP_POS),
-	                           glm::vec2(BEAM_ENERGY_BAR_WIDTH, BEAM_ENERGY_BAR_HEIGHT), remaining_capacity_, white,
+	                           glm::vec2(BEAM_ENERGY_BAR_WIDTH, BEAM_ENERGY_BAR_HEIGHT),
+	                           remaining_capacity_,
+	                           color_lightblue,
 	                           black};
 	ProgressBarView target_health_bar{glm::vec2{0.05f, 0.01f},
 	                                  glm::vec2{0.05f, 0.02f},
-	                                  0.0f, white, black};
+	                                  0.0f, color_lightred, black};
 
     std::optional<float> target_health_ = std::nullopt;
 
