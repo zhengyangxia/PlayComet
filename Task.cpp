@@ -7,7 +7,7 @@
 #include "gl_compile_program.hpp"
 
 Load<Sound::Sample> landing_sample(LoadTagDefault, []() -> Sound::Sample const * {
-    return new Sound::Sample(data_path("Mana Two - Part 1.wav"));
+    return new Sound::Sample(data_path("hit1.wav"));
 });
 
 ResultType TrajectTask::UpdateTask(float elapsed) {
@@ -77,6 +77,7 @@ ResultType TrajectTask::UpdateTask(float elapsed) {
         }else{
             state = ResultType::NOT_COMPLETE_LANDED;
         }
+        Sound::play(*landing_sample, 1.0f, 0.0f);
     }
 
     return state;
@@ -98,6 +99,7 @@ ResultType CourtTask::UpdateTask(float elapsed) {
     if (CheckLanded()){
         state = ResultType::SUCCESS;
         score = (size_t) (court_time * 10.f);
+        Sound::play(*landing_sample, 1.0f, 0.0f);
     }
 
     return state;
@@ -145,6 +147,7 @@ ResultType ShootTask::UpdateTask(float elapsed) {
             state = ResultType::SUCCESS;
             score = 100;
         }
+        Sound::play(*landing_sample, 1.0f, 0.0f);
     }
 
     return ResultType::NOT_COMPLETE;
