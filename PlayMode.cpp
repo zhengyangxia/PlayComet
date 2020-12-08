@@ -167,7 +167,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
                 trajectory_targets["Neptune"].push_back(TrajectoryTarget(&transform, 1));
             }
 
-        } else if (std::strncmp(transform.name.c_str(), "Flower", 8) == 0) {
+        } else if (std::strncmp(transform.name.c_str(), "Flower", 5) == 0) {
             std::cout << "found flower" << std::endl;
             flowers.push_back(&transform);
         }
@@ -427,7 +427,7 @@ void PlayMode::update(float elapsed) {
         new_comet_velocity += gravityUtil.get_acceleration(comet.transform->position) * elapsed;
         glm::quat rotation = glm::rotation(glm::normalize(comet_velocity), glm::normalize(new_comet_velocity));
         glm::vec3 deltav = glm::normalize(new_comet_velocity) * move.y * PlayerSpeed;
-        if (glm::length(new_comet_velocity) > 5.0f || move.y >= 0.0f)
+        if (glm::length(new_comet_velocity) > 10.0f || move.y >= 0.0f)
             comet_velocity = (deltav + new_comet_velocity) * 0.995f;
         else
             comet_velocity = new_comet_velocity * 0.995f;
