@@ -14,6 +14,7 @@
 #include <memory>
 #include <iostream>
 #include <random>
+#include <optional>
 
 static constexpr float COMET_RADIUS = 1.f;
 
@@ -152,7 +153,7 @@ public:
 			}
 		}
 		has_item = false;
-		item_idx = 0;
+		item_idx = rand()%asteroids_indices_current_task.size();
 		flower = f;
 		flower_time = 2.f;
 		flower->scale *= 0.f;

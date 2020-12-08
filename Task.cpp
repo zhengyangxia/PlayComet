@@ -9,7 +9,11 @@
 #include "data_path.hpp"
 
 Load<Sound::Sample> landing_sample(LoadTagDefault, []() -> Sound::Sample const * {
-    return new Sound::Sample(data_path("Mana Two - Part 1.wav"));
+    return new Sound::Sample(data_path("hit-1.wav"));
+});
+
+Load<Sound::Sample> laser_sample(LoadTagDefault, []() -> Sound::Sample const * {
+    return new Sound::Sample(data_path("laser.wav"));
 });
 
 ResultType TrajectTask::UpdateTask(float elapsed) {
@@ -76,6 +80,7 @@ ResultType TrajectTask::UpdateTask(float elapsed) {
         for (auto& t: *targets) {
             t.transform->scale = glm::vec3(5.f, 5.f, 5.f);
         }
+        Sound::play(*landing_sample, 1.0f, 0.0f);
         // }else{
         //     state = ResultType::NOT_COMPLETE_LANDED;
         // }
@@ -110,6 +115,7 @@ ResultType CourtTask::UpdateTask(float elapsed) {
     if (CheckLanded()){
         state = ResultType::SUCCESS;
         score = (size_t) (court_time * 10.f);
+        Sound::play(*landing_sample, 1.0f, 0.0f);
     }
 
     return state;
@@ -127,27 +133,25 @@ ResultType ShootTask::UpdateTask(float elapsed) {
         auto it = std::find(asteroids_indices_current_task.begin(), asteroids_indices_current_task.end(), asteroid_idx);
         if (it != asteroids_indices_current_task.end()) {
             asteroids->at(asteroid_idx).destroy();
+            if (it-asteroids_indices_current_task.begin() == item_idx){
+                has_item = true;
+                flower->scale = glm::vec3(10.f);
+                flower->position = asteroids->at(asteroid_idx).transform->make_local_to_world()[3];
+                flower->parent = comet->transform;
+                flower->position = glm::vec4(flower->position.x, flower->position.y, flower->position.z, 1.f) * glm::mat4(flower->make_world_to_local());
+                flower->rotation = glm::angleAxis(glm::radians(45.f), glm::vec3(1.f,0.f,0.f));
+            }
+
         }
     }
 
-    if (true && !has_item){
-        has_item = true;
-        flower->scale = glm::vec3(10.f);
-        flower->position = asteroids->at(item_idx).transform->make_local_to_world()[3];
-        
-        flower->parent = comet->transform;
-        flower->position = glm::vec4(flower->position.x, flower->position.y, flower->position.z, 1.f) * glm::mat4(flower->make_world_to_local());
-        flower->rotation = glm::angleAxis(glm::radians(45.f), glm::vec3(1.f,0.f,0.f));
-    }
-
     if (has_item && flower_time > 0.f){
-        
-        glm::vec3 delta = flower->position - comet->dirz;
+        glm::vec3 delta = flower->position;
         flower->position -= delta * 5.f * elapsed;
         flower_time -= elapsed;
         if (flower_time <= 0.f){
             flower_time = 0.f;
-            flower->position = glm::vec3(0.0f, 0.0f, 1.0f);
+            flower->position = glm::vec3(0.0f, 0.0f, 0.0f);
         }
     }
     // std::cout << flower_time << " " << flower->position.x << " " << flower->position.y << " " << flower->position.z << std::endl;
@@ -157,6 +161,7 @@ ResultType ShootTask::UpdateTask(float elapsed) {
             state = ResultType::SUCCESS;
             score = 100;
         }
+        Sound::play(*landing_sample, 1.0f, 0.0f);
     }
 
     return ResultType::NOT_COMPLETE;
@@ -427,7 +432,7 @@ void Shooter::setShooting(bool value) {
     if (value) {
         if (!is_shooting_) {
             is_shooting_ = true;
-            sound_effect = Sound::loop();
+            sound_effect = Sound::loop(*laser_sample, 1.0f, 0.0f);
         }
     } else {
         if (is_shooting_) {
