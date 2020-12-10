@@ -441,9 +441,9 @@ void PlayMode::update(float elapsed) {
         glm::quat rotation = glm::rotation(glm::normalize(comet_velocity), glm::normalize(new_comet_velocity));
         glm::vec3 deltav = glm::normalize(new_comet_velocity) * move.y * PlayerSpeed;
         if (glm::length(new_comet_velocity) > 5.0f || move.y >= 0.0f)
-            comet_velocity = (deltav + new_comet_velocity) * 0.999f;
+            comet_velocity = (deltav + new_comet_velocity) * 0.998f;
         else
-            comet_velocity = new_comet_velocity * 0.999f;
+            comet_velocity = new_comet_velocity * 0.998f;
         comet.dirx = rotation * comet.dirx;
         comet.dirz = rotation * comet.dirz;
 

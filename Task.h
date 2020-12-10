@@ -345,7 +345,7 @@ private:
     glm::vec4 beam_start_ = glm::vec4(-1000.0f, 0.0f, 0.0f, 1.0f);
     glm::vec4 beam_end_ = glm::vec4(1000.0f, 0.0f, 0.0f, 1.0f);
 
-    static constexpr float BEAM_MAX_LEN = 1000.0f;
+    static constexpr float BEAM_MAX_LEN = 500.0f;
     static constexpr float BEAM_WIDTH = 0.5f;
     glm::vec4 beam_colors_[4] = {
         glm::vec4(0.5f, 0.8f, 5.2f, 1.0f),
