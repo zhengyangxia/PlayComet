@@ -185,7 +185,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 
     planet_name_to_task["Earth"] = std::make_shared<TrajectTask>(
             &comet, planet_name_to_transform["Earth"],
-            175.f,
+            150.f,
             &cur_trajectory_target->second); // earth radius?
 
 
