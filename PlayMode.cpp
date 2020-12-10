@@ -383,16 +383,7 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 }
 
 void PlayMode::reset_speed(glm::vec3 speed_vector) {
-   
-
     
-    glm::quat rotation = glm::rotation(glm::normalize(comet_velocity), glm::normalize(speed_vector));
-    comet.transform->rotation = rotation * comet.transform->rotation;
-    comet.transform->scale = glm::vec3(1.0f);
-    comet.dirx = rotation * comet.dirx;
-    comet.dirz = rotation * comet.dirz;
-    constexpr float LaunchSpeed = 10.f;
-    comet_velocity = speed_vector * LaunchSpeed;
 
     return;
 }
@@ -400,11 +391,18 @@ void PlayMode::reset_speed(glm::vec3 speed_vector) {
 void PlayMode::reset_parent(){
     assert(comet.transform->parent);
     // TODO set position = local_to_world & set parent = null ?
-    glm::vec3 center = comet.transform->parent->position;
+    glm::vec3 center = comet.transform->parent->make_local_to_world()[3];
     comet.transform->position *= 1.1f;
-    comet.transform->position += comet.transform->parent->position;
+    comet.transform->position = comet.transform->make_local_to_world()[3];
     comet.transform->parent = comet_parent;
-    speed_vector = glm::normalize(comet.transform->position - center);
+    glm::vec3 speed_vector = glm::normalize(comet.transform->position - center);
+    glm::quat rotation = glm::rotation(glm::normalize(comet_velocity), glm::normalize(speed_vector));
+    comet.transform->rotation = rotation * comet.transform->rotation;
+    comet.transform->scale = glm::vec3(1.0f);
+    comet.dirx = rotation * comet.dirx;
+    comet.dirz = rotation * comet.dirz;
+    constexpr float LaunchSpeed = 10.f;
+    comet_velocity = speed_vector * LaunchSpeed;
 }
 
 void PlayMode::update(float elapsed) {
@@ -421,7 +419,7 @@ void PlayMode::update(float elapsed) {
     // }
 
     //player flying:
-    if (state != GameState::Grounded && state != GameState::Landed) {
+    if (state == GameState::Flying) {
         //combine inputs into a move:
         constexpr float PlayerSpeed = 1.f;
         glm::vec3 move = glm::vec3(0.0f);
@@ -515,7 +513,6 @@ void PlayMode::update(float elapsed) {
         } else {
             comet.camera->transform->position = glm::vec3(0.f, -25.f, 5.f);
             reset_parent();
-            reset_speed(speed_vector);
             speed_is_reset = false;
         }
         launch_duration = 0.f;

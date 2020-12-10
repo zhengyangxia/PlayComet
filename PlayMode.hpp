@@ -126,7 +126,7 @@ private:
 
 	size_t finished_task = 0;
     std::string notice_str{};
-	glm::vec3 speed_vector;
+	// glm::vec3 speed_vector;
 
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_WIDTH = 480;
 	static constexpr int GAUSSIAN_BLUR_OUTPUT_HEIGHT = 270;
