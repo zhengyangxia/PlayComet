@@ -70,7 +70,7 @@ Load<Scene> comet_scene(LoadTagDefault, []() -> Scene const * {
                          }
 
                          // Sphere.001 is the mesh for the sun.
-                         bool is_emissive = mesh_name == "Sphere.001";
+                         bool is_emissive = mesh_name == "Sun";
                          GLuint program_id = lit_color_texture_program_pipeline.program;
                          after_hit[drawable.transform->name] = 0.0f;
                          drawable.pipeline.set_uniforms = [=]() {
