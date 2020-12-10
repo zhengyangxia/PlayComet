@@ -191,7 +191,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 
     // todo shoot task -> asteroids
     planet_name_to_task["Mars"] = std::make_shared<ShootTask>
-            (&comet, planet_name_to_transform["Mars"], 150.f,
+            (&comet, planet_name_to_transform["Mars"], 100.f,
              &asteroids, flowers, &shooter);
 
     planet_name_to_task["Saturn"] = std::make_shared<CourtTask>(
@@ -224,7 +224,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
     planet_name_to_task["Venus2"] = std::make_shared<TrajectTask>(
             &comet,
             planet_name_to_transform["Venus2"],
-            200.f,
+            150.f,
             &cur_trajectory_target->second);
 
     planet_name_to_task["Neptune"] = std::make_shared<ShootTask>(
