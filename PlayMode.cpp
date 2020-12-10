@@ -307,7 +307,7 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
         if (state == GameState::Grounded) {
             speed_is_reset = true;
             state = GameState::Launched;
-            reset_parent();
+            
             camera_world_pos = comet.camera->transform->make_local_to_world()[3];
             // std::cout << camera_world_pos.x << " " << camera_world_pos.y << " " << camera_world_pos.z << std::endl;
             comet.camera->transform->parent = comet.transform;
@@ -374,12 +374,6 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
                 evt.motion.x / float(window_size.x) - 0.5,
                 evt.motion.y / float(window_size.y) - 0.5
         );
-        // std::cout << motion.x << " " << motion.y << std::endl;
-        // comet.camera->transform->rotation = glm::normalize(
-        // 	comet.camera->transform->rotation
-        // 	* glm::angleAxis(-motion.x * comet.camera->fovy, glm::vec3(0.0f, 1.0f, 0.0f))
-        // 	* glm::angleAxis(motion.y * comet.camera->fovy, glm::vec3(1.0f, 0.0f, 0.0f))
-        // );
 
 
         return true;
@@ -426,7 +420,7 @@ void PlayMode::update(float elapsed) {
     //     return;
     // }
 
-    //player walking:
+    //player flying:
     if (state != GameState::Grounded && state != GameState::Landed) {
         //combine inputs into a move:
         constexpr float PlayerSpeed = 1.f;
@@ -474,14 +468,17 @@ void PlayMode::update(float elapsed) {
     }
 
     // 0.1 update position
-    glm::vec3 next_pos = comet.transform->position;
-    particle_comet_tail->Update(elapsed, next_pos, comet.camera->transform->position,
-                                glm::mat4(comet.camera->transform->make_world_to_local()),
-                                comet.camera->make_projection());
+    
 
     // 1. collision -> sun & asteroids
-    if (state == GameState::Flying)
+    if (state == GameState::Flying){
+    
         detect_failure_collision();
+        glm::vec3 next_pos = comet.transform->position;
+        particle_comet_tail->Update(elapsed, next_pos, comet.camera->transform->position,
+                                glm::mat4(comet.camera->transform->make_world_to_local()),
+                                comet.camera->make_projection());
+    }
 
     if (state == GameState::Landed) {
         land_duration += elapsed;
@@ -517,6 +514,7 @@ void PlayMode::update(float elapsed) {
             return;
         } else {
             comet.camera->transform->position = glm::vec3(0.f, -25.f, 5.f);
+            reset_parent();
             reset_speed(speed_vector);
             speed_is_reset = false;
         }
@@ -657,7 +655,8 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
     scene.draw(*comet.camera);
     // todo
-    particle_comet_tail->Draw();
+    if (state == GameState::Flying)
+        particle_comet_tail->Draw();
     // if (state == GameState::Flying || state == GameState::EndLose || state == GameState::EndWin || state == GameState::Landed) {
 
     // } else {
@@ -830,10 +829,11 @@ void PlayMode::detect_failure_collision() {
         if (comet_planet_dist <= COMET_RADIUS + t->planet_radius) {
             state = GameState::Landed;
             comet.transform->parent = transform;
-            glm::vec3 planet_world_position = transform->position;
-            glm::vec3 comet_world_position = comet.transform->position;
+            // glm::vec3 planet_world_pos = transform->position;
+            glm::vec3 comet_world_pos = comet.transform->position;
 
-            comet.transform->position = comet_world_position - planet_world_position;
+            // comet.transform->position = comet_world_position - planet_world_position;
+            comet.transform->position = glm::mat4(comet.transform->parent->make_world_to_local()) * glm::vec4(comet_world_pos.x, comet_world_pos.y, comet_world_pos.z, 1.f);
             Sound::play(*landing_sample, 1.0f, 0.0f);
             break;
         }
