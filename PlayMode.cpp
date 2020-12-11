@@ -624,6 +624,7 @@ void PlayMode::update_arrow() {
 }
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
+    on_resize(glm::uvec2(0), drawable_size);
     //update camera aspect ratio for drawable:
     universal_camera->aspect = comet.camera->aspect = float(drawable_size.x) / float(drawable_size.y);
 

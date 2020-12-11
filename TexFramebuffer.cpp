@@ -16,7 +16,8 @@ void RenderCaptor::set_render_destination(TexFramebufferPtr dest) {
 }
 TexFramebuffer::TexFramebuffer(GLsizei drawable_width, GLsizei drawable_height) {
 	GL_ERRORS();
-
+	current_drawable_height = drawable_height;
+	current_drawable_width = drawable_width;
 	glGenFramebuffers(1, &framebuffer_);
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_);
 	GL_ERRORS();
@@ -53,6 +54,9 @@ TexFramebuffer::~TexFramebuffer() {
 }
 
 void TexFramebuffer::realloc(GLsizei drawable_width, GLsizei drawable_height) {
+	if (this->current_drawable_width == drawable_width && this->current_drawable_height == drawable_height) {
+		return;
+	}
 	glBindTexture(GL_TEXTURE_2D, texture_);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, drawable_width, drawable_height, 0, GL_RGBA, GL_FLOAT, nullptr);
 

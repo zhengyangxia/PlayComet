@@ -31,6 +31,9 @@ private:
 	GLuint texture_ = 0;
 	/** the attached depth buffer */
 	GLuint depth_render_buffer_ = 0;
+
+	int current_drawable_height = 0;
+	int current_drawable_width = 0;
 };
 
 }
