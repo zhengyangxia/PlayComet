@@ -185,7 +185,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 
     planet_name_to_task["Earth"] = std::make_shared<TrajectTask>(
             &comet, planet_name_to_transform["Earth"],
-            175.f,
+            150.f,
             &cur_trajectory_target->second); // earth radius?
 
 
@@ -624,6 +624,7 @@ void PlayMode::update_arrow() {
 }
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
+    on_resize(glm::uvec2(0), drawable_size);
     //update camera aspect ratio for drawable:
     universal_camera->aspect = comet.camera->aspect = float(drawable_size.x) / float(drawable_size.y);
 

@@ -104,6 +104,7 @@ GAME_NAMES =
 	WalkMesh
 	PlayMode
 	main
+	StartMode
 	LitColorTextureProgram
 	ColorTextureProgram #not used right now, but you might want it
 	Sound
