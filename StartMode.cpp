@@ -22,7 +22,7 @@ bool StartMode::handle_event(const SDL_Event &event, const glm::uvec2 &window_si
 		}
 	} else {
 		if (event.type == SDL_KEYDOWN) {
-			if (event.key.keysym.sym == SDLK_RETURN) {
+			if (event.key.keysym.sym == SDLK_RETURN || event.key.keysym.sym == SDLK_RETURN2) {
 				Mode::set_current(std::make_shared<PlayMode>());
 				return true;
 			} else if (event.key.keysym.sym == SDLK_h) {
