@@ -31,7 +31,7 @@ class ParticleGenerator
         // update all particles
         // void Update(float dt, GameObject &object, unsigned int newParticles, glm::vec2 offset = glm::vec2(0.0f, 0.0f));
         // render all particles
-        void Update(float elapsed, glm::vec3 next_pos, glm::vec3 camera_pos, glm::mat4 view_matrix, glm::mat4 projection_matrix);
+        void Update(float elapsed, glm::vec3 next_pos, glm::vec3 camera_pos, glm::mat4 view_matrix, glm::mat4 projection_matrix, float speed);
         void Draw();
     private:
         void init();

@@ -109,12 +109,12 @@ void ParticleGenerator::sort_particles(){
 	std::sort(&particles[0], &particles[MaxParticles]);
 }
 
-void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 camera_pos, glm::mat4 view_matrix, glm::mat4 projection_matrix){
+void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 camera_pos, glm::mat4 view_matrix, glm::mat4 projection_matrix, float speed){
     ParticlesCount = 0;
     
-    int newparticles = (int)(elapsed*1000.0);
-    if (newparticles > (int)(0.016f*1000.0))
-        newparticles = (int)(0.016f*1000.0);
+    int newparticles = (int)(elapsed*100000.0);
+    if (newparticles > (int)(0.016f*100000.0))
+        newparticles = (int)(0.016f*100000.0);
 
     this->shader->Use();
 
@@ -122,7 +122,7 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
 	GLuint CameraUp_worldspace_ID  = glGetUniformLocation(shader->ID, "CameraUp_worldspace");
 	GLuint ViewProjMatrixID = glGetUniformLocation(shader->ID, "VP");
 
-	glm::mat4 ViewProjectionMatrix = projection_matrix * view_matrix;    
+	glm::mat4 ViewProjectionMatrix = projection_matrix * view_matrix;
     
     glUniform3f(CameraRight_worldspace_ID, view_matrix[0][0], view_matrix[1][0], view_matrix[2][0]);
 	glUniform3f(CameraUp_worldspace_ID, view_matrix[0][1], view_matrix[1][1], view_matrix[2][1]);
@@ -133,31 +133,41 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
     glm::vec3 right_speed = glm::vec3(view_matrix[0][0], view_matrix[1][0], view_matrix[2][0]);
     glm::vec3 up_vector = glm::vec3(view_matrix[0][1], view_matrix[1][1], view_matrix[2][1]);
     glm::vec3 cross_vec = glm::cross(up_vector, right_speed);
-
+    int ispeed = (int) speed + 1;
     for (int i = 0; i < newparticles; i++)
     {
         int particleIndex = find_unused_particle();
-        particles[particleIndex].life = LifeSpan; // This particle will live LifeSpan seconds.
-        glm::vec3 offset = ((rand() % 120 - 60) / 200.0f) * right_speed;
+        particles[particleIndex].life = LifeSpan*(1-speed/1000.f); // This particle will live LifeSpan seconds.
+    
+        int vinit = rand()%(ispeed);
+        int hlimit = (60+vinit/5)*(rand()%2+2);
+        int hinit = rand() % hlimit;
+        glm::vec3 offset = ((hinit - hlimit/2.f)/ 200.0f) * right_speed;
+        
         // offset = rand() % 2 == 1 ? offset:-offset;
-        offset += ((rand()%120 - 80) / 200.f) * up_vector;
+        offset -= ((vinit - ispeed) / 200.f + 0.5f) * up_vector;
         // offset = rand() % 2 == 1 ? offset:-offset;
         offset -= cross_vec;
-
-        particles[particleIndex].pos = next_pos + 2.f * offset;
+        particles[particleIndex].pos = next_pos + offset - speed * elapsed * (rand()%ispeed/speed) * (up_vector - right_speed * ((hinit - hlimit/2.f)/ 200.0f));
+        // 
 
         float degree = rand() % 60 + 60.f;
+        
         glm::mat4 trans = glm::mat4(1.0f);
         trans = glm::rotate(trans, glm::radians(degree), cross_vec);
         // trans = glm::rotate(trans, glm::radians(degree), up_vector);
         glm::vec4 vec(right_speed.x, right_speed.y, right_speed.z, 1.0f);
         vec = trans * vec;
 
-        particles[particleIndex].speed = 2.f * vec;  
+        particles[particleIndex].speed = 100.f * vec; 
         // particles[particleIndex].size = (rand()%2500)/20000.0f + 0.075f;
-        particles[particleIndex].size = 0.05f;
+        particles[particleIndex].size = 0.1f;
         // Very bad way to generate a random color
-		particles[particleIndex].color = glm::vec4(247, 247, 224, 1.0);
+		// particles[particleIndex].color = glm::vec4(247, 247, 224, 1.0);
+        float color = (float)hinit/hlimit*255;
+        particles[particleIndex].color = glm::vec4(255-color, 255-abs(255/2.f-color), color, 1.0);
+        // float t = elapsed * (rand()%10)/10;
+        // particles[particleIndex].pos += particles[particleIndex].speed * t;
     }
     
     for (size_t i = 0; i < MaxParticles; i++)
@@ -166,14 +176,14 @@ void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 came
         if (p.life > 0.f)
         {
             p.life -= elapsed;
-            p.pos += p.speed * elapsed;
-            p.size += elapsed * 1.5f / LifeSpan;
+            // p.pos += p.speed * elapsed;
+            // p.size += elapsed * 0.5f / LifeSpan;
 
             // p.color.x -= elapsed * 0;
-            p.color.y -= elapsed * 80;
-            p.color.z -= elapsed * 150;
+            // p.color.y -= elapsed * 80;
+            // p.color.z -= elapsed * 150;
 
-            p.color.w = (float)(glm::pow((p.life / LifeSpan), 1) * 1.0 * 255.f);
+            p.color.w = (float)(glm::pow((p.life / LifeSpan), 1) * 1.0 * 100.f);
             if (p.life > 0.f)
             {
                 // Fill the GPU buffer

@@ -250,7 +250,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
     scene.cameras.emplace_back(&scene.transforms.back());
     comet.camera = &scene.cameras.back();
     comet.camera->fovy = glm::radians(45.0f);
-    comet.camera->near = 0.1f;
+    comet.camera->near = 0.5f;
     comet.camera->transform->parent = comet.transform;
 
     comet.camera->transform->position = glm::vec3(0.0f, -25.0f, 5.0f);
@@ -475,7 +475,7 @@ void PlayMode::update(float elapsed) {
         glm::vec3 next_pos = comet.transform->position;
         particle_comet_tail->Update(elapsed, next_pos, comet.camera->transform->position,
                                 glm::mat4(comet.camera->transform->make_world_to_local()),
-                                comet.camera->make_projection());
+                                comet.camera->make_projection(), glm::length(comet_velocity));
     }
 
     if (state == GameState::Landed) {
