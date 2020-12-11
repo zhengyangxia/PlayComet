@@ -11,4 +11,6 @@ struct StartMode : Mode {
 
 private:
 	PngView title_png_view{glm::vec2(-1.0f, 1.0f), glm::vec2(2.0f, 2.0f), data_path("title.png")};
+	PngView instruction_png_view{glm::vec2(-1.0f, 1.0f), glm::vec2(2.0f, 2.0f), data_path("instruction.png")};
+	bool show_instruction = false;
 };
