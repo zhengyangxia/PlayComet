@@ -283,7 +283,7 @@ PlayMode::PlayMode() : scene(*comet_scene) {
 
     particle_comet_tail = new ParticleGenerator();
 
-    bgm = Sound::loop(*music_sample, 2.5f, 0.0f);
+    bgm = Sound::loop(*music_sample, 0.5f, 0.0f);
 }
 
 PlayMode::~PlayMode() {

@@ -112,10 +112,9 @@ void ParticleGenerator::sort_particles(){
 void ParticleGenerator::Update(float elapsed, glm::vec3 next_pos, glm::vec3 camera_pos, glm::mat4 view_matrix, glm::mat4 projection_matrix, float speed){
     ParticlesCount = 0;
     
-    int newparticles = (int)(elapsed*100000.0);
-    if (newparticles > (int)(0.016f*100000.0))
-        newparticles = (int)(0.016f*100000.0);
-
+    int newparticles = (int)(elapsed*50000.0);
+    if (newparticles > (int)(0.016f*50000.0))
+        newparticles = (int)(0.016f*50000.0);
     this->shader->Use();
 
     GLuint CameraRight_worldspace_ID  = glGetUniformLocation(shader->ID, "CameraRight_worldspace");
